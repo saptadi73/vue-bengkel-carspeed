@@ -210,6 +210,14 @@ const navItems = reactive([
         text: 'Laba Rugi',
         url: '/finansial/labarugi',
       },
+      {
+        text: 'Table Hutang Mitra',
+        url: '/finansial/hutang',
+      },
+      {
+        text: 'Table Piutang Mitra',
+        url: '/finansial/piutang',
+      },
     ],
   },
   {

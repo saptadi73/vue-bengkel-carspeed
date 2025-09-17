@@ -208,6 +208,16 @@ const router = createRouter({
           name: 'labarugi',
           component: () => import('../pages/LaporanLabaRugi.vue'),
         },
+        {
+          path: 'hutang',
+          name: 'hutang',
+          component: () => import('../components/TableHutang.vue'),
+        },
+        {
+          path: 'piutang',
+          name: 'piutang',
+          component: () => import('../components/TablePiutang.vue'),
+        },
       ],
     },
   ],
