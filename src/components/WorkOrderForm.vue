@@ -1,6 +1,25 @@
 <template>
   <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
     <h2 class="text-xl font-bold mb-4">Work Order Form</h2>
+    <!-- Paket Pilihan -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-end gap-2">
+      <div class="flex-1">
+        <label class="block text-sm font-medium mb-1">Pilih Paket Servis</label>
+        <select v-model="selectedPaket" class="input">
+          <option value="">-- Pilih Paket --</option>
+          <option v-for="paket in paketList" :key="paket.nama" :value="paket.nama">
+            {{ paket.nama }}
+          </option>
+        </select>
+      </div>
+      <button
+        type="button"
+        class="bg-blue-600 text-white px-4 py-2 rounded font-semibold"
+        @click="applyPaket"
+      >
+        OK
+      </button>
+    </div>
     <form @submit.prevent="submitForm">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
         <div>
@@ -283,6 +302,36 @@ export default {
           { nama: 'Tune Up', qty: 1, satuan: 'Jasa', harga: 150000, discount: 0 },
         ],
       },
+      selectedPaket: '',
+      paketList: [
+        {
+          nama: 'Paket Ganti Oli',
+          productOrder: [
+            { nama: 'Oli Mesin', qty: 3, satuan: 'Ltr', harga: 85000, discount: 10000 },
+            { nama: 'Filter Oli', qty: 1, satuan: 'Pcs', harga: 35000, discount: 0 },
+          ],
+          serviceOrder: [
+            { nama: 'Ganti Oli', qty: 1, satuan: 'Jasa', harga: 50000, discount: 5000 },
+          ],
+        },
+        {
+          nama: 'Paket Tune Up',
+          productOrder: [{ nama: 'Busi', qty: 4, satuan: 'Pcs', harga: 65000, discount: 0 }],
+          serviceOrder: [
+            { nama: 'Tune Up', qty: 1, satuan: 'Jasa', harga: 150000, discount: 10000 },
+          ],
+        },
+        {
+          nama: 'Paket Rem Lengkap',
+          productOrder: [
+            { nama: 'Kampas Rem', qty: 1, satuan: 'Set', harga: 120000, discount: 10000 },
+            { nama: 'Minyak Rem', qty: 1, satuan: 'Botol', harga: 35000, discount: 0 },
+          ],
+          serviceOrder: [
+            { nama: 'Servis Rem', qty: 1, satuan: 'Jasa', harga: 100000, discount: 5000 },
+          ],
+        },
+      ],
     }
   },
   computed: {
@@ -425,6 +474,14 @@ export default {
       doc.text(`Total Discount: ${this.formatCurrency(this.grandTotalDiscount)}`, 70, y)
       doc.text(`Total Bayar: ${this.formatCurrency(this.totalPembayaran)}`, 140, y)
       doc.save('workorder.pdf')
+    },
+    applyPaket() {
+      if (!this.selectedPaket) return
+      const paket = this.paketList.find((p) => p.nama === this.selectedPaket)
+      if (paket) {
+        this.form.productOrder = JSON.parse(JSON.stringify(paket.productOrder))
+        this.form.serviceOrder = JSON.parse(JSON.stringify(paket.serviceOrder))
+      }
     },
   },
 }

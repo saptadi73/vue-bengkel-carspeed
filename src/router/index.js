@@ -63,6 +63,11 @@ const router = createRouter({
           component: () => import('../pages/TableWorkOrderAll.vue'),
         },
         {
+          path: 'booking',
+          name: 'booking work order',
+          component: () => import('../components/TableBookingList.vue'),
+        },
+        {
           path: 'new',
           name: 'new work order',
           component: () => import('../pages/CreateWorkOrder.vue'),

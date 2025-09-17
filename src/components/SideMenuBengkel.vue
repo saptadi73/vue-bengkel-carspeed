@@ -93,6 +93,10 @@ const navItems = reactive([
         },
       },
       {
+        text: 'Daftar Booking',
+        url: '/wo/booking',
+      },
+      {
         text: 'Buat WO Baru',
         url: '/wo/new/form',
       },
