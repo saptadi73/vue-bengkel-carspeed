@@ -112,6 +112,11 @@ const router = createRouter({
           name: 'Laporan Jasa Bengkel',
           component: () => import('../pages/LaporanJasaBengkel.vue'),
         },
+        {
+          path: 'paket',
+          name: 'paket',
+          component: () => import('../components/PaketOrderForm.vue'),
+        },
       ],
     },
     {

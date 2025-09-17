@@ -252,14 +252,34 @@
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            <h3 class="text-lg font-bold text-white">Detail Pelanggan & Mobil</h3>
+            <h3 class="text-lg font-bold text-white">
+              {{ selectedHistory.length ? 'History Service' : 'Detail Pelanggan & Mobil' }}
+            </h3>
           </div>
           <button @click="closeModal" class="text-white hover:text-blue-200 text-2xl font-bold">
             &times;
           </button>
         </div>
         <div class="px-6 py-4">
-          <div v-if="selectedPelanggan">
+          <div v-if="selectedHistory.length">
+            <table class="w-full text-sm border mb-2">
+              <thead>
+                <tr class="bg-gray-100">
+                  <th class="py-1 px-2">Tanggal</th>
+                  <th class="py-1 px-2">Aktivitas</th>
+                  <th class="py-1 px-2">PIC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, i) in selectedHistory" :key="i">
+                  <td>{{ item.tanggal }}</td>
+                  <td>{{ item.aktivitas }}</td>
+                  <td>{{ item.pic }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else-if="selectedPelanggan">
             <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-2">
               <div class="text-gray-500">Nama</div>
               <div class="font-semibold">{{ selectedPelanggan.nama }}</div>
@@ -446,10 +466,12 @@ export default {
     showHistory(pelanggan) {
       // Dummy data, ganti dengan fetch dari API jika sudah ada
       this.selectedHistory = [
-        { tanggal: '2025-06-10', aktivitas: 'Ganti Oli', pic: 'Budi' },
-        { tanggal: '2025-03-10', aktivitas: 'Tune Up', pic: 'Agus' },
-        { tanggal: '2024-12-10', aktivitas: 'Servis Rem', pic: 'Dewi' },
+        { tanggal: '2025-08-01', aktivitas: 'Ganti Oli & Filter', pic: 'Budi' },
+        { tanggal: '2025-05-01', aktivitas: 'Tune Up + Cek Rem', pic: 'Agus' },
+        { tanggal: '2025-02-01', aktivitas: 'Servis AC', pic: 'Dewi' },
+        { tanggal: '2024-11-15', aktivitas: 'Ganti Ban', pic: 'Rina' },
       ]
+      this.selectedPelanggan = pelanggan
       this.showModal = true
     },
     openModal(pelanggan) {
@@ -459,6 +481,7 @@ export default {
     closeModal() {
       this.showModal = false
       this.selectedPelanggan = null
+      this.selectedHistory = []
     },
     nextPage() {
       if (this.page < this.totalPages) this.page++
