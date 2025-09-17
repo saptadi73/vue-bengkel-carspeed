@@ -21,6 +21,11 @@ const router = createRouter({
       ],
     },
     {
+      path: '/booking',
+      name: 'booking',
+      component: () => import('../components/BookingForm.vue'),
+    },
+    {
       path: '/pelanggan',
       name: 'pelanggan',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
@@ -28,7 +33,7 @@ const router = createRouter({
         {
           path: 'all',
           name: 'all',
-          component: () => import('../pages/DaftarPelangganMobil.vue'),
+          component: () => import('../components/TablePelangganBengkel.vue'),
         },
         {
           path: 'baru',
@@ -85,7 +90,7 @@ const router = createRouter({
         {
           path: 'new/form',
           name: 'wo baru',
-          component: () => import('../pages/WOFormTemplate.vue'),
+          component: () => import('../components/WorkOrderForm.vue'),
         },
         {
           path: 'new/spk',
@@ -139,7 +144,7 @@ const router = createRouter({
         {
           path: 'list',
           name: 'list',
-          component: () => import('../pages/ListInventory.vue'),
+          component: () => import('../components/TableInventory.vue'),
         },
         {
           path: 'keluar',
