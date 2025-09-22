@@ -5,9 +5,9 @@
         href="#"
         class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
       >
-        <img class="w-8 h-8 mr-2" src="../assets//images/ac_lestari.png" alt="logo" />
-        <span class="font-bold text-[#ca13c5] font-Poppins">AC</span
-        ><span class="font-semibold text-[#2b94f1] font-Roboto">Lestari</span
+        <img class="w-8 h-8 mr-2" src="../assets/images/icon_bengkel_tnp.png" alt="logo" />
+        <span class="font-bold text-[#ca13c5] font-Poppins">Car</span
+        ><span class="font-semibold text-[#2b94f1] font-Roboto">Speed</span
         ><span class="text-base font-bold font-Poppins text-[#BDB76B}">.com</span>
       </a>
       <div
@@ -24,12 +24,12 @@
               <label
                 for="email"
                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Email</label
+                >User Name</label
               >
               <input
-                type="email"
-                name="email"
-                id="email"
+                type="text"
+                name="username"
+                id="username"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 placeholder="name@company.com"
                 required=""
@@ -76,11 +76,11 @@ const toastMessage = ref('')
 
 async function login() {
   localStorage.removeItem('token')
-  localStorage.removeItem('role')
+  localStorage.removeItem('username')
   localStorage.removeItem('email')
-  const email = document.getElementById('email').value
+  const username = document.getElementById('username').value
   const password = document.getElementById('password').value
-  const dataLogin = { email: email, password: password }
+  const dataLogin = { username: username, password: password }
   const response = await axios.post(`${BASE_URL}auth/login`, dataLogin, {
     headers: {
       'Content-Type': 'application/json',
@@ -88,15 +88,15 @@ async function login() {
   })
 
   // console.log(response.data.data.level.nama);
-  const token = response.data.data.token
+  const token = response.data.data.access_token
   localStorage.setItem('token', token)
-  localStorage.setItem('role', response.data.data.role)
-  localStorage.setItem('email', email)
+  localStorage.setItem('username', response.data.data.user.username)
+  localStorage.setItem('email', response.data.data.user.email)
 
-  if (response.data.status == true) {
-    // const tokenku = localStorage.getItem('token')
-    // console.log('datanya token Login', tokenku)
-    router.push('/main/dashboard')
+  if (response.data.status == 'success') {
+    const tokenku = localStorage.getItem('token')
+    console.log('datanya token Login', tokenku)
+    router.push('/')
   } else {
     showToast.value = true
     toastMessage.value = response.data.message

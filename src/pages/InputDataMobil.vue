@@ -7,236 +7,183 @@
 
     <!-- Form Section -->
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
-          <!-- Owner Name Input -->
-          <div>
-            <label for="ownerName" class="block text-sm font-medium text-gray-700 mb-2"
-              >Owner's Name</label
-            >
-            <select
-              v-model="formData.ownerName"
-              id="ownerName"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
-            >
-              <option value="" disabled>Select Owner</option>
-              <option v-for="(customer, index) in customers" :key="index" :value="customer.name">
-                {{ customer.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Car Type Input -->
-          <div class="mt-6">
-            <label for="carType" class="block text-sm font-medium text-gray-700 mb-2"
-              >Car Type</label
-            >
-            <select
-              v-model="formData.carType"
-              id="carType"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
-            >
-              <option value="" disabled>Select Car Type</option>
-              <option value="SUV">SUV</option>
-              <option value="MPV">MPV</option>
-              <option value="Sedan">Sedan</option>
-              <option value="Minibus">Minibus</option>
-            </select>
-          </div>
-
-          <!-- Brand Input -->
-          <div class="mt-6">
-            <label for="brand" class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-            <select
-              v-model="formData.brand"
-              id="brand"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
-            >
-              <option value="" disabled>Select Brand</option>
-              <option value="Toyota">Toyota</option>
-              <option value="Honda">Honda</option>
-              <option value="Suzuki">Suzuki</option>
-              <option value="Nissan">Nissan</option>
-              <option value="BMW">BMW</option>
-              <option value="Audi">Audi</option>
-              <option value="Kia">Kia</option>
-              <option value="Hyundai">Hyundai</option>
-              <option value="BYD">BYD</option>
-              <option value="Wuling">Wuling</option>
-              <option value="Cherry">Cherry</option>
-            </select>
-          </div>
-
-          <!-- Model Input -->
-          <div class="mt-6">
-            <label for="model" class="block text-sm font-medium text-gray-700 mb-2"
-              >Car Model</label
-            >
-            <input
-              v-model="formData.model"
-              id="model"
-              type="text"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter Car Model"
-              required
-            />
-          </div>
-
-          <!-- Year Input -->
-          <div class="mt-6">
-            <label for="year" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
-            <input
-              v-model="formData.year"
-              id="year"
-              type="number"
-              min="1900"
-              max="2099"
-              step="1"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter Car Year"
-              required
-            />
-          </div>
-
-          <!-- Chassis Number Input -->
-          <div class="mt-6">
-            <label for="chassisNumber" class="block text-sm font-medium text-gray-700 mb-2"
-              >Chassis Number</label
-            >
-            <input
-              v-model="formData.chassisNumber"
-              id="chassisNumber"
-              type="text"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter Chassis Number"
-              required
-            />
-          </div>
-
-          <!-- Engine Number Input -->
-          <div class="mt-6">
-            <label for="engineNumber" class="block text-sm font-medium text-gray-700 mb-2"
-              >Engine Number</label
-            >
-            <input
-              v-model="formData.engineNumber"
-              id="engineNumber"
-              type="text"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter Engine Number"
-              required
-            />
-          </div>
+      <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
+        <!-- Owner Name Input -->
+        <div>
+          <label for="ownerName" class="block text-sm font-medium text-gray-700 mb-2"
+            >Nama Pelanggan</label
+          >
+          <select
+            v-model="formData.customer_id"
+            id="customer_id"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            required
+          >
+            <option value="" disabled>Select Owner</option>
+            <option v-for="(customer, index) in customers" :key="index" :value="customer.id">
+              {{ customer.nama }}
+            </option>
+          </select>
+        </div>
+        <!-- Car Type Input -->
+        <div class="mt-6">
+          <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
+          <input
+            v-model="formData.type"
+            id="type"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            required
+          />
+        </div>
+        <!-- Brand Input -->
+        <div class="mt-6">
+          <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+          <select
+            v-model="formData.brand_id"
+            id="brand_id"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            required
+          >
+            <option value="" disabled>Select Brand</option>
+            <option value="Toyota">Toyota</option>
+            <option value="Honda">Honda</option>
+            <option value="Suzuki">Suzuki</option>
+            <option value="Nissan">Nissan</option>
+            <option value="BMW">BMW</option>
+            <option value="Audi">Audi</option>
+            <option value="Kia">Kia</option>
+            <option value="Hyundai">Hyundai</option>
+            <option value="BYD">BYD</option>
+            <option value="Wuling">Wuling</option>
+            <option value="Cherry">Cherry</option>
+          </select>
+        </div>
+        <!-- Model Input -->
+        <div class="mt-6">
+          <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+          <input
+            v-model="formData.model"
+            id="model"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan Model Kendaraan"
+          />
+        </div>
+        <!-- Year Input -->
+        <div class="mt-6">
+          <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
+          <input
+            v-model="formData.tahun"
+            id="year"
+            type="number"
+            min="1900"
+            max="2099"
+            step="1"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan tahun kendaraan"
+          />
+        </div>
+        <!-- Chassis Number Input -->
+        <div class="mt-6">
+          <label for="no_rangka" class="block text-sm font-medium text-gray-700 mb-2"
+            >Nomor Rangka</label
+          >
+          <input
+            v-model="formData.no_rangka"
+            id="no_rangka"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan Nomor Rangka Kendaraan"
+          />
+        </div>
+        <!-- Engine Number Input -->
+        <div class="mt-6">
+          <label for="no_mesin" class="block text-sm font-medium text-gray-700 mb-2"
+            >Nomor Mesin</label
+          >
+          <input
+            v-model="formData.no_mesin"
+            id="no_mesin"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan Nomor Mesin"
+          />
+        </div>
+        <!-- Engine Capacity Input -->
+        <div class="mt-6">
+          <label for="kapasitas" class="block text-sm font-medium text-gray-700 mb-2"
+            >Kapsitas Mesin (CC)</label
+          >
+          <input
+            v-model="formData.kapasitas"
+            id="kapasitas"
+            type="number"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="MAsukkan Kapasitas Mesin dalam CC"
+          />
+        </div>
+        <!-- License Plate Input -->
+        <div class="mt-6">
+          <label for="no_pol" class="block text-sm font-medium text-gray-700 mb-2"
+            >Nomor Polisi</label
+          >
+          <input
+            v-model="formData.no_pol"
+            id="no_pol"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan Nomor Polisi"
+            required
+          />
         </div>
 
-        <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
-          <!-- Engine Type Input -->
-          <div class="mt-6">
-            <label for="engineType" class="block text-sm font-medium text-gray-700 mb-2"
-              >Engine Type</label
-            >
-            <select
-              v-model="formData.engineType"
-              id="engineType"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
-            >
-              <option value="" disabled>Select Engine Type</option>
-              <option value="Bensin">Gasoline</option>
-              <option value="Diesel">Diesel</option>
-              <option value="Electric">Electric</option>
-            </select>
-          </div>
-
-          <!-- Engine Capacity Input -->
-          <div class="mt-6">
-            <label for="cc" class="block text-sm font-medium text-gray-700 mb-2"
-              >Engine Capacity (CC)</label
-            >
-            <input
-              v-model="formData.cc"
-              id="cc"
-              type="number"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter Engine Capacity"
-              required
-            />
-          </div>
-
-          <!-- License Plate Input -->
-          <div class="mt-6">
-            <label for="licensePlate" class="block text-sm font-medium text-gray-700 mb-2"
-              >License Plate</label
-            >
-            <input
-              v-model="formData.licensePlate"
-              id="licensePlate"
-              type="text"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              placeholder="Enter License Plate Number"
-              required
-            />
-          </div>
-
-          <!-- Car Photo Upload -->
-          <div class="mt-6">
-            <label for="carPhoto" class="block text-sm font-medium text-gray-700 mb-2"
-              >Upload Car Photo</label
-            >
-            <input
-              id="carPhoto"
-              type="file"
-              accept="image/*"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              @change="handleCarPhotoUpload"
-            />
-          </div>
-
-          <!-- Car Photo Preview -->
-          <div v-if="formData.carPhotoPreview" class="mt-6 rounded-lg shadow-xl overflow-hidden">
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Car Photo Preview:</h4>
-            <img
-              :src="formData.carPhotoPreview"
-              alt="Car Photo Preview"
-              class="w-full h-auto object-cover rounded-md transition-transform transform hover:scale-105"
-            />
-          </div>
+        <!-- Submit Button -->
+        <div>
+          <button
+            type="submit"
+            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          >
+            Submit
+          </button>
         </div>
-      </div>
-
-      <!-- Submit Button -->
-      <div>
-        <button
-          type="submit"
-          class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-        >
-          Submit
-        </button>
       </div>
     </form>
+    <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
+import api from '@/user/axios'
+import { useLoadingStore } from '@/stores/loading'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
+import ToastCard from '@/components/ToastCard.vue'
+import axios from 'axios'
+
 export default {
+  name: 'InputDataMobil',
+  components: { LoadingOverlay, ToastCard },
+  setup() {
+    const loadingStore = useLoadingStore()
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { loadingStore, show_toast, message_toast }
+  },
   data() {
     return {
       formData: {
-        ownerName: '',
-        carType: '',
-        brand: '',
+        customer_id: '',
+        type: '',
+        brand_id: '',
         model: '',
-        year: '',
-        chassisNumber: '',
-        engineNumber: '',
-        engineType: '',
-        cc: '',
-        licensePlate: '',
-        carPhoto: null, // Store the uploaded car photo here
-        carPhotoPreview: '', // Store the car photo preview URL here
+        tahun: '',
+        no_rangka: '',
+        no_mesin: '',
+        kapasitas: '',
+        no_pol: '',
       },
       customers: [
         // Dummy customer data for the select options
@@ -247,24 +194,32 @@ export default {
       ],
     }
   },
+  created() {
+    this.fetchCustomers()
+  },
   methods: {
-    // Handle car photo upload and store the selected file
-    handleCarPhotoUpload(event) {
-      const file = event.target.files[0]
-      if (file) {
-        this.formData.carPhoto = file
-
-        // Generate a preview URL for the uploaded car image
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          this.formData.carPhotoPreview = reader.result // Store the preview URL
-        }
-        reader.readAsDataURL(file) // Read the file as a Data URL
-      }
-    },
     handleSubmit() {
       console.log('Vehicle Form Submitted', this.formData)
       // Process form data (e.g., send to API or display confirmation)
+    },
+
+    async tutupToast() {
+      this.show_toast = false
+      this.message_toast = ''
+    },
+
+    async fetchCustomers() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}customers/all`)
+        this.customers = Array.isArray(response.data.data) ? response.data.data : []
+        console.log('Fetched Customers:', response.data.data)
+      } catch (error) {
+        console.error('Error fetching customers:', error)
+        this.customers = []
+      } finally {
+        this.loadingStore.hide()
+      }
     },
   },
 }

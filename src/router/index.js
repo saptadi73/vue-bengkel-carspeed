@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('../layouts/LayoutDashboard.vue'),
     },
     {
+      path: '/login',
+      name: 'login',
+      component: () => import('../user/loginUser.vue'),
+    },
+    {
       path: '/main',
       name: 'main',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
@@ -49,6 +54,11 @@ const router = createRouter({
           path: 'reminder',
           name: 'reminder',
           component: () => import('../pages/TableReminderservice.vue'),
+        },
+        {
+          path: 'history/:id',
+          name: 'history',
+          component: () => import('../components/TableHistoryOrders.vue'),
         },
       ],
     },

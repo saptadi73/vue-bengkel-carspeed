@@ -1,19 +1,54 @@
+import axios from 'axios';
 <template>
   <div>
-    <h2 class="text-xl font-bold mb-4 text-blue-700">Daftar Pelanggan</h2>
-    <!-- Search input and pagination (always visible) -->
-    <div class="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="Cari pelanggan..."
-        class="border px-2 py-1 rounded w-full sm:w-64 mb-2 sm:mb-0"
-      />
-      <div class="text-sm text-gray-500 mt-1 sm:mt-0">
-        Menampilkan {{ paginatedList.length ? startIdx + 1 : 0 }}-{{
-          startIdx + paginatedList.length
-        }}
-        dari {{ filteredList.length }} data
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
+      <div class="flex items-center gap-3">
+        <span
+          class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg"
+        >
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            />
+          </svg>
+        </span>
+        <h2
+          class="text-2xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent tracking-tight"
+        >
+          Daftar Pelanggan Bengkel
+        </h2>
+      </div>
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+        <div class="relative w-full sm:w-64">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Cari nama, hp, nopol, brand, dll..."
+            class="pl-10 pr-3 py-2 border-2 border-blue-200 focus:border-blue-500 rounded-lg w-full shadow-sm focus:outline-none transition"
+          />
+          <span class="absolute left-3 top-2.5 text-blue-400">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"
+              />
+            </svg>
+          </span>
+        </div>
+        <div class="text-xs text-gray-500 sm:ml-4 mt-1 sm:mt-0 text-right">
+          Menampilkan
+          <span class="font-semibold"
+            >{{ paginatedList.length ? startIdx + 1 : 0 }}-{{
+              startIdx + paginatedList.length
+            }}</span
+          >
+          dari <span class="font-semibold">{{ filteredList.length }}</span> data
+        </div>
       </div>
     </div>
     <!-- Card view for mobile -->
@@ -24,7 +59,7 @@
         class="bg-white rounded-xl shadow p-4 mb-4 border border-gray-200"
       >
         <div class="flex justify-between items-center mb-2">
-          <div class="font-bold text-lg">{{ pelanggan.nama }}</div>
+          <div class="font-bold text-lg">{{ pelanggan.customer.nama }}</div>
           <span
             :class="[
               'inline-block px-2 py-1 rounded text-xs font-semibold',
@@ -38,11 +73,11 @@
         </div>
         <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm mb-2">
           <div class="text-gray-500">HP</div>
-          <div>{{ pelanggan.hp }}</div>
+          <div>{{ pelanggan.customer.hp }}</div>
           <div class="text-gray-500">No. Pol</div>
-          <div>{{ pelanggan.nopol }}</div>
+          <div>{{ pelanggan.no_pol }}</div>
           <div class="text-gray-500">Brand</div>
-          <div>{{ pelanggan.brand }}</div>
+          <div>{{ pelanggan.brand_name }}</div>
           <div class="text-gray-500">Tipe</div>
           <div>{{ pelanggan.type }}</div>
           <div class="text-gray-500">Model</div>
@@ -50,9 +85,9 @@
           <div class="text-gray-500">Warna</div>
           <div>{{ pelanggan.warna }}</div>
           <div class="text-gray-500">Last Visited</div>
-          <div>{{ formatDate(pelanggan.kunjunganTerakhir) }}</div>
+          <div>{{ formatDate(pelanggan.last_visit_date) }}</div>
           <div class="text-gray-500">Next Service</div>
-          <div>{{ estimasiService(pelanggan.kunjunganTerakhir) }}</div>
+          <div>{{ estimasiService(pelanggan.last_visit_date) }}</div>
         </div>
         <div class="flex gap-2 mt-2">
           <button
@@ -147,31 +182,25 @@
             :key="startIdx + idx"
             :class="{ 'bg-gray-50': idx % 2 === 1 }"
           >
-            <td>
-              <span
-                class="text-blue-700 font-semibold cursor-pointer hover:underline"
-                @click="openModal(pelanggan)"
-                >{{ pelanggan.nama }}</span
-              >
-            </td>
-            <td>{{ pelanggan.hp }}</td>
-            <td>{{ pelanggan.nopol }}</td>
-            <td>{{ pelanggan.brand }}</td>
+            <td>{{ pelanggan.customer.nama }}</td>
+            <td>{{ pelanggan.customer.hp }}</td>
+            <td>{{ pelanggan.no_pol }}</td>
+            <td>{{ pelanggan.brand_name }}</td>
             <td>{{ pelanggan.type }}</td>
             <td>{{ pelanggan.model }}</td>
             <td>{{ pelanggan.warna }}</td>
-            <td>{{ formatDate(pelanggan.kunjunganTerakhir) }}</td>
-            <td>{{ estimasiService(pelanggan.kunjunganTerakhir) }}</td>
+            <td>{{ formatDate(pelanggan.last_visit_date) }}</td>
+            <td>{{ estimasiService(pelanggan.last_visit_date) }}</td>
             <td>
               <span
                 :class="[
                   'inline-block px-2 py-1 rounded text-xs font-semibold',
-                  isLewat(pelanggan.kunjunganTerakhir)
+                  isLewat(pelanggan.last_visit_date)
                     ? 'bg-red-100 text-red-700 border border-red-300'
                     : 'bg-green-100 text-green-700 border border-green-300',
                 ]"
               >
-                {{ isLewat(pelanggan.kunjunganTerakhir) ? 'Lewat' : 'Aman' }}
+                {{ isLewat(pelanggan.last_visit_date) ? 'Lewat' : 'Aman' }}
               </span>
             </td>
             <td>
@@ -187,10 +216,11 @@
               >
                 Edit
               </button>
-              <button
+              <a
                 class="bg-gray-200 text-blue-700 px-2 py-1 rounded flex items-center hover:bg-gray-300"
+                :href="`${BASE_URL2}pelanggan/history/${pelanggan.id}`"
+                target="_blank"
                 title="History Service"
-                @click="showHistory(pelanggan)"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -207,7 +237,7 @@
                   />
                 </svg>
                 History
-              </button>
+              </a>
             </td>
           </tr>
           <tr v-if="paginatedList.length === 0">
@@ -233,205 +263,55 @@
         </button>
       </div>
     </div>
-    <div
-      v-if="showModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-2 p-0 relative border border-blue-200"
-      >
-        <div
-          class="flex items-center justify-between px-6 py-4 rounded-t-2xl bg-gradient-to-r from-blue-500 to-blue-700"
-        >
-          <div class="flex items-center gap-2">
-            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <h3 class="text-lg font-bold text-white">
-              {{ selectedHistory.length ? 'History Service' : 'Detail Pelanggan & Mobil' }}
-            </h3>
-          </div>
-          <button @click="closeModal" class="text-white hover:text-blue-200 text-2xl font-bold">
-            &times;
-          </button>
-        </div>
-        <div class="px-6 py-4">
-          <div v-if="selectedHistory.length">
-            <table class="w-full text-sm border mb-2">
-              <thead>
-                <tr class="bg-gray-100">
-                  <th class="py-1 px-2">Tanggal</th>
-                  <th class="py-1 px-2">Aktivitas</th>
-                  <th class="py-1 px-2">PIC</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(item, i) in selectedHistory" :key="i">
-                  <td>{{ item.tanggal }}</td>
-                  <td>{{ item.aktivitas }}</td>
-                  <td>{{ item.pic }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-else-if="selectedPelanggan">
-            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-2">
-              <div class="text-gray-500">Nama</div>
-              <div class="font-semibold">{{ selectedPelanggan.nama }}</div>
-              <div class="text-gray-500">No. HP</div>
-              <div>{{ selectedPelanggan.hp }}</div>
-              <div class="text-gray-500">Email</div>
-              <div>{{ selectedPelanggan.email }}</div>
-              <div class="text-gray-500">Alamat</div>
-              <div>{{ selectedPelanggan.alamat }}</div>
-              <div class="text-gray-500">No. Polisi</div>
-              <div>{{ selectedPelanggan.nopol }}</div>
-              <div class="text-gray-500">Brand</div>
-              <div>{{ selectedPelanggan.brand }}</div>
-              <div class="text-gray-500">Type</div>
-              <div>{{ selectedPelanggan.type }}</div>
-              <div class="text-gray-500">Model</div>
-              <div>{{ selectedPelanggan.model }}</div>
-              <div class="text-gray-500">Warna</div>
-              <div>{{ selectedPelanggan.warna }}</div>
-              <div class="text-gray-500">No Mesin</div>
-              <div>{{ selectedPelanggan.no_mesin }}</div>
-              <div class="text-gray-500">No Rangka</div>
-              <div>{{ selectedPelanggan.no_rangka }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Modal and related code removed -->
+    <loading-overlay />
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+import LoadingOverlay from './LoadingOverlay.vue'
+import { useLoadingStore } from '@/stores/loading'
+import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
+
 export default {
   name: 'TablePelangganBengkel',
-  props: {
-    pelangganList: {
-      type: Array,
-      required: false,
-      default: () => [],
-    },
-  },
+  components: { LoadingOverlay },
   data() {
     return {
       searchQuery: '',
       page: 1,
       perPage: 10,
-      dummyList: [
-        {
-          nama: 'Budi Santoso',
-          hp: '08123456789',
-          nopol: 'B 1234 CD',
-          brand: 'Toyota',
-          type: 'Avanza',
-          model: 'G',
-          warna: 'Hitam',
-          kunjunganTerakhir: '2025-08-01',
-          no_mesin: '1NZ-1234567',
-          no_rangka: 'MHFCM123456789012',
-          email: 'budi@email.com',
-          alamat: 'Jl. Melati No. 10, Jakarta',
-        },
-        {
-          nama: 'Siti Aminah',
-          hp: '082233445566',
-          nopol: 'D 5678 EF',
-          brand: 'Honda',
-          type: 'Brio',
-          model: 'RS',
-          warna: 'Merah',
-          kunjunganTerakhir: '2025-07-15',
-          no_mesin: 'MR5-1234567',
-          no_rangka: 'MHFCM123456789013',
-          email: 'siti@email.com',
-          alamat: 'Jl. Kenanga No. 20, Bandung',
-        },
-        {
-          nama: 'Joko Widodo',
-          hp: '081122334455',
-          nopol: 'F 9876 GH',
-          brand: 'Suzuki',
-          type: 'Ertiga',
-          model: 'GL',
-          warna: 'Putih',
-          kunjunganTerakhir: '2025-06-10',
-          no_mesin: 'K14B-1234567',
-          no_rangka: 'MHFCM123456789014',
-          email: 'joko@email.com',
-          alamat: 'Jl. Anggrek No. 30, Surabaya',
-        },
-        {
-          nama: 'Agus Salim',
-          hp: '085566778899',
-          nopol: 'B 4321 IJ',
-          brand: 'Daihatsu',
-          type: 'Xenia',
-          model: 'R',
-          warna: 'Silver',
-          kunjunganTerakhir: '2025-09-01',
-          no_mesin: 'HR15-1234567',
-          no_rangka: 'MHFCM123456789015',
-          email: 'agus@email.com',
-          alamat: 'Jl. Melati No. 40, Jakarta',
-        },
-        {
-          nama: 'Dewi Lestari',
-          hp: '087788990011',
-          nopol: 'E 2468 KL',
-          brand: 'Mitsubishi',
-          type: 'Xpander',
-          model: 'Sport',
-          warna: 'Abu-abu',
-          kunjunganTerakhir: '2025-05-20',
-          no_mesin: '4B12-1234567',
-          no_rangka: 'MHFCM123456789016',
-          email: 'dewi@email.com',
-          alamat: 'Jl. Cempaka No. 50, Bandung',
-        },
-      ],
-      showModal: false,
-      selectedPelanggan: null,
-      selectedHistory: [],
+      dummyList: [],
     }
+  },
+  setup() {
+    return { BASE_URL, BASE_URL2 }
   },
   computed: {
     filteredList() {
-      let list = []
-      if (this.$props.pelangganList && this.$props.pelangganList.length > 0) {
-        list = Array.isArray(this.pelangganList) ? this.pelangganList : []
-      } else {
-        list = this.dummyList
-      }
-      if (!this.searchQuery) return list
+      if (!this.searchQuery) return this.dummyList
       const q = this.searchQuery.toLowerCase()
-      return list.filter(
-        (p) =>
-          (p.nama || '').toLowerCase().includes(q) ||
-          (p.hp || '').toLowerCase().includes(q) ||
-          (p.nopol || '').toLowerCase().includes(q) ||
-          (p.brand || '').toLowerCase().includes(q) ||
-          (p.type || '').toLowerCase().includes(q) ||
-          (p.model || '').toLowerCase().includes(q) ||
-          (p.warna || '').toLowerCase().includes(q),
-      )
+      return this.dummyList.filter((p) => {
+        return (
+          (p.customer.nama && p.customer.nama.toLowerCase().includes(q)) ||
+          (p.customer.hp && p.customer.hp.toLowerCase().includes(q)) ||
+          (p.no_pol && p.no_pol.toLowerCase().includes(q)) ||
+          (p.brand_name && p.brand_name.toLowerCase().includes(q)) ||
+          (p.type && p.type.toLowerCase().includes(q)) ||
+          (p.model && p.model.toLowerCase().includes(q)) ||
+          (p.warna && p.warna.toLowerCase().includes(q))
+        )
+      })
+    },
+    paginatedList() {
+      return this.filteredList.slice(this.startIdx, this.startIdx + this.perPage)
     },
     totalPages() {
       return Math.ceil(this.filteredList.length / this.perPage)
     },
     startIdx() {
       return (this.page - 1) * this.perPage
-    },
-    paginatedList() {
-      return this.filteredList.slice(this.startIdx, this.startIdx + this.perPage)
     },
   },
   watch: {
@@ -463,32 +343,31 @@ export default {
     editPelanggan(pelanggan) {
       this.$emit('edit-pelanggan', pelanggan)
     },
-    showHistory(pelanggan) {
-      // Dummy data, ganti dengan fetch dari API jika sudah ada
-      this.selectedHistory = [
-        { tanggal: '2025-08-01', aktivitas: 'Ganti Oli & Filter', pic: 'Budi' },
-        { tanggal: '2025-05-01', aktivitas: 'Tune Up + Cek Rem', pic: 'Agus' },
-        { tanggal: '2025-02-01', aktivitas: 'Servis AC', pic: 'Dewi' },
-        { tanggal: '2024-11-15', aktivitas: 'Ganti Ban', pic: 'Rina' },
-      ]
-      this.selectedPelanggan = pelanggan
-      this.showModal = true
-    },
-    openModal(pelanggan) {
-      this.selectedPelanggan = pelanggan
-      this.showModal = true
-    },
-    closeModal() {
-      this.showModal = false
-      this.selectedPelanggan = null
-      this.selectedHistory = []
-    },
     nextPage() {
       if (this.page < this.totalPages) this.page++
     },
     prevPage() {
       if (this.page > 1) this.page--
     },
+    async getTablePelanggan() {
+      const loadingStore = useLoadingStore()
+      loadingStore.show()
+      await axios
+        .get(`${BASE_URL}customers/with-vehicles`)
+        .then((response) => {
+          this.dummyList = response.data.data
+          console.log('Data Pelanggan:', this.dummyList)
+        })
+        .catch((error) => {
+          console.error('Error fetching pelanggan:', error)
+        })
+        .finally(() => {
+          loadingStore.hide()
+        })
+    },
+  },
+  created() {
+    this.getTablePelanggan()
   },
 }
 </script>

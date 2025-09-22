@@ -1,6 +1,78 @@
 <template>
   <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-bold mb-4">Work Order Form</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold">Work Order Form</h2>
+      <button
+        type="button"
+        class="bg-gray-700 text-white px-3 py-1 rounded flex items-center gap-1 hover:bg-gray-900"
+        @click="openActivityModal"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
+          />
+        </svg>
+        Activity Log
+      </button>
+    </div>
+    <!-- Modal Activity Log -->
+    <div
+      v-if="showActivityModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+    >
+      <div
+        class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-2 p-0 relative border border-blue-200"
+      >
+        <div
+          class="flex items-center justify-between px-6 py-4 rounded-t-xl bg-gradient-to-r from-blue-500 to-blue-700"
+        >
+          <div class="flex items-center gap-2">
+            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
+              />
+            </svg>
+            <h3 class="text-lg font-bold text-white">Activity Log</h3>
+          </div>
+          <button
+            @click="closeActivityModal"
+            class="text-white hover:text-blue-200 text-2xl font-bold"
+          >
+            &times;
+          </button>
+        </div>
+        <form @submit.prevent="saveActivityLog" class="px-6 py-4">
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">Tanggal</label>
+            <input v-model="activityLog.tanggal" type="date" class="input w-full" required />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1">Activity</label>
+            <input v-model="activityLog.aktivitas" type="text" class="input w-full" required />
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded font-semibold">
+              Simpan
+            </button>
+            <button type="button" @click="closeActivityModal" class="bg-gray-300 px-4 py-2 rounded">
+              Batal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
     <!-- Paket Pilihan -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-end gap-2">
       <div class="flex-1">
@@ -332,6 +404,8 @@ export default {
           ],
         },
       ],
+      showActivityModal: false,
+      activityLog: { tanggal: '', aktivitas: '' },
     }
   },
   computed: {
@@ -364,6 +438,27 @@ export default {
     },
   },
   methods: {
+    openActivityModal() {
+      // Set tanggal ke current date (yyyy-MM-dd)
+      const now = new Date()
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const dd = String(now.getDate()).padStart(2, '0')
+      this.activityLog = {
+        tanggal: `${yyyy}-${mm}-${dd}`,
+        aktivitas: '',
+      }
+      this.showActivityModal = true
+    },
+    closeActivityModal() {
+      this.showActivityModal = false
+      // Selalu reset ke object default, bukan undefined/null
+      this.activityLog = { tanggal: '', aktivitas: '' }
+    },
+    saveActivityLog() {
+      // Simpan log ke backend/array, di sini hanya reset form dan tutup modal
+      this.closeActivityModal()
+    },
     addProductOrder() {
       this.form.productOrder.push({ nama: '', qty: 1, satuan: '', harga: 0, discount: 0 })
     },

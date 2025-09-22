@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import mitt from 'mitt'
+import { createPinia } from 'pinia'
 
 const emitter = mitt()
 
@@ -20,5 +21,5 @@ app.component('font-awesome-icon', FontAwesomeIcon)
 app.provide('$emitter', emitter)
 
 app.use(router)
-
+app.use(createPinia())
 app.mount('#app')
