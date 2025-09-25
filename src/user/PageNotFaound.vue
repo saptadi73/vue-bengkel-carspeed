@@ -1,17 +1,11 @@
 <template>
-  <main
-    class="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8"
-  >
+  <main class="grid min-h-full place-items-center bg-white px-6 py-24 sm:py-32 lg:px-8">
     <div class="text-center">
       <p class="text-base font-semibold text-indigo-600">TERIMAKASIH</p>
-      <h1
-        class="mt-4 text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl"
-      >
+      <h1 class="mt-4 text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl">
         Anda telah Logout
       </h1>
-      <p
-        class="mt-6 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8"
-      >
+      <p class="mt-6 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8">
         Anda telah berhasil logout dari aplikasi silakan klik tombol di bawah untuk kembali login.
       </p>
       <div class="mt-10 flex items-center justify-center gap-x-6">

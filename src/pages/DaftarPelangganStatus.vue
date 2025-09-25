@@ -177,9 +177,9 @@ export default {
           estimatedCompletion: '2025-08-10 14:00',
         },
       ],
-    };
+    }
   },
-};
+}
 </script>
 
 <style scoped>
@@ -191,7 +191,8 @@ export default {
     display: block;
   }
 
-  th, td {
+  th,
+  td {
     padding: 8px;
     text-align: left;
     font-size: 12px;

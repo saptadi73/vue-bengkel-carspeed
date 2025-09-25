@@ -25,6 +25,19 @@
             </option>
           </select>
         </div>
+
+        <!-- Model Input -->
+        <div class="mt-6">
+          <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Model</label>
+          <input
+            v-model="formData.model"
+            id="model"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="Masukkan Model Kendaraan"
+          />
+        </div>
+
         <!-- Car Type Input -->
         <div class="mt-6">
           <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Type</label>
@@ -45,31 +58,13 @@
             class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             required
           >
-            <option value="" disabled>Select Brand</option>
-            <option value="Toyota">Toyota</option>
-            <option value="Honda">Honda</option>
-            <option value="Suzuki">Suzuki</option>
-            <option value="Nissan">Nissan</option>
-            <option value="BMW">BMW</option>
-            <option value="Audi">Audi</option>
-            <option value="Kia">Kia</option>
-            <option value="Hyundai">Hyundai</option>
-            <option value="BYD">BYD</option>
-            <option value="Wuling">Wuling</option>
-            <option value="Cherry">Cherry</option>
+            <option value="" disabled selected>Select Brand</option>
+            <option v-for="value in brands" :key="value.id" :value="value.id">
+              {{ value.name }}
+            </option>
           </select>
         </div>
-        <!-- Model Input -->
-        <div class="mt-6">
-          <label for="model" class="block text-sm font-medium text-gray-700 mb-2">Model</label>
-          <input
-            v-model="formData.model"
-            id="model"
-            type="text"
-            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            placeholder="Masukkan Model Kendaraan"
-          />
-        </div>
+
         <!-- Year Input -->
         <div class="mt-6">
           <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Year</label>
@@ -82,6 +77,16 @@
             step="1"
             class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             placeholder="Masukkan tahun kendaraan"
+          />
+        </div>
+        <div class="mt-6">
+          <label for="warna" class="block text-sm font-medium text-gray-700 mb-2">Warna</label>
+          <input
+            v-model="formData.warna"
+            id="warna"
+            type="text"
+            class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            placeholder="MAsukkan Kapasitas Mesin dalam CC"
           />
         </div>
         <!-- Chassis Number Input -->
@@ -118,7 +123,7 @@
           <input
             v-model="formData.kapasitas"
             id="kapasitas"
-            type="number"
+            type="text"
             class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             placeholder="MAsukkan Kapasitas Mesin dalam CC"
           />
@@ -142,7 +147,8 @@
         <div>
           <button
             type="submit"
-            class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            @click="handleSubmit"
+            class="w-full mt-5 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           >
             Submit
           </button>
@@ -159,7 +165,7 @@ import { ref } from 'vue'
 import api from '@/user/axios'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
-import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
+import { BASE_URL } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 
@@ -184,6 +190,7 @@ export default {
         no_mesin: '',
         kapasitas: '',
         no_pol: '',
+        warna: '',
       },
       customers: [
         // Dummy customer data for the select options
@@ -192,15 +199,44 @@ export default {
         { name: 'Ali Rahman' },
         // Add more customers as needed
       ],
+      brands: [],
     }
   },
   created() {
     this.fetchCustomers()
+    this.getbrandsAll()
   },
   methods: {
-    handleSubmit() {
-      console.log('Vehicle Form Submitted', this.formData)
-      // Process form data (e.g., send to API or display confirmation)
+    async handleSubmit() {
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}customers/add-vehicle`, this.formData)
+        this.message_toast = response.data.message || 'Vehicle added successfully!'
+        this.show_toast = true
+        console.log('Form submitted successfully:', response.data)
+        console.log('Form Data to be submitted:', this.formData)
+      } catch (error) {
+        this.message_toast =
+          (error.response && error.response.data && error.response.data.message) ||
+          'An error occurred while submitting the form.'
+        this.show_toast = true
+        console.error('Error submitting form:', error)
+      } finally {
+        this.loadingStore.hide()
+        // Reset form after submission
+        this.formData = {
+          customer_id: '',
+          type: '',
+          brand_id: '',
+          model: '',
+          tahun: '',
+          no_rangka: '',
+          no_mesin: '',
+          kapasitas: '',
+          no_pol: '',
+          warna: '',
+        }
+      }
     },
 
     async tutupToast() {
@@ -217,6 +253,20 @@ export default {
       } catch (error) {
         console.error('Error fetching customers:', error)
         this.customers = []
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+
+    async getbrandsAll() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/brands/all`)
+        this.brands = Array.isArray(response.data.data) ? response.data.data : []
+        console.log('Fetched Brands:', response.data.data)
+      } catch (error) {
+        console.error('Error fetching brands:', error)
+        this.brands = []
       } finally {
         this.loadingStore.hide()
       }

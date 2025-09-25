@@ -71,6 +71,10 @@ const navItems = reactive([
         url: '/pelanggan/mobil',
       },
       {
+        text: 'Registrasi Pemilik & Kendaraan',
+        url: '/pelanggan/pelanggan-mobil/baru',
+      },
+      {
         text: 'Service Reminder',
         url: '/pelanggan/reminder',
       },

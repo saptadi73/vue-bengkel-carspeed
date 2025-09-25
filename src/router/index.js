@@ -51,6 +51,11 @@ const router = createRouter({
           component: () => import('../pages/InputDataMobil.vue'),
         },
         {
+          path: 'pelanggan-mobil/baru',
+          name: 'Pelanggan & Mobil',
+          component: () => import('../pages/InputDataPelangganMobil.vue'),
+        },
+        {
           path: 'reminder',
           name: 'reminder',
           component: () => import('../pages/TableReminderservice.vue'),
@@ -67,6 +72,11 @@ const router = createRouter({
       name: 'work order',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
       children: [
+        {
+          path: 'booking',
+          name: 'booking list',
+          component: () => import('../components/TableBookingBaru.vue'),
+        },
         {
           path: 'all',
           name: 'all work order',
@@ -126,6 +136,11 @@ const router = createRouter({
           path: 'paket',
           name: 'paket',
           component: () => import('../components/PaketOrderForm.vue'),
+        },
+        {
+          path: 'paket/baru',
+          name: 'paket baru',
+          component: () => import('../components/FormCreatePaket.vue'),
         },
       ],
     },

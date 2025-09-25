@@ -34,11 +34,22 @@
       </div>
       <div v-if="foundCustomer" class="mb-4 p-4 border rounded bg-blue-50">
         <div class="font-semibold mb-2 text-blue-700">Data Pelanggan</div>
-        <div class="mb-1"><span class="font-medium">Nama:</span> {{ foundCustomer.nama }}</div>
-        <div class="mb-1"><span class="font-medium">No. HP:</span> {{ foundCustomer.nohp }}</div>
-        <div class="mb-1"><span class="font-medium">Brand:</span> {{ foundCustomer.brand }}</div>
-        <div class="mb-1"><span class="font-medium">Tipe:</span> {{ foundCustomer.tipe }}</div>
+        <div class="mb-1">
+          <span class="font-medium">Nama:</span> {{ foundCustomer.customer.nama }}
+        </div>
+        <div class="mb-1">
+          <span class="font-medium">No. HP:</span> {{ foundCustomer.customer.hp }}
+        </div>
+        <div class="mb-1">
+          <span class="font-medium">Brand:</span> {{ foundCustomer.brand_name }}
+        </div>
+        <div class="mb-1"><span class="font-medium">Model:</span> {{ foundCustomer.model }}</div>
+        <div class="mb-1"><span class="font-medium">Tipe:</span> {{ foundCustomer.type }}</div>
         <div class="mb-1"><span class="font-medium">Warna:</span> {{ foundCustomer.warna }}</div>
+        <div class="mb-1">
+          <span class="font-medium">Customer ID:</span> {{ foundCustomer.customer_id }}
+        </div>
+        <div class="mb-1"><span class="font-medium">Vehicle ID:</span> {{ foundCustomer.id }}</div>
       </div>
       <div v-else-if="searched">
         <div class="mb-4 p-4 border rounded bg-yellow-50 text-yellow-700">
@@ -53,27 +64,37 @@
           />
         </div>
         <div class="mb-2">
-          <label class="block mb-1">No. HP</label>
+          <label class="block mb-1">Nomor Polisi</label>
           <input
-            v-model="form.nohp"
+            v-model="form.no_pol"
             type="text"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
           />
         </div>
         <div class="mb-2">
-          <label class="block mb-1">Brand</label>
+          <label class="block mb-1">No. HP</label>
           <input
-            v-model="form.brand"
+            v-model="form.hp"
             type="text"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+          />
+        </div>
+        <div class="mb-2">
+          <label class="block mb-1">Model</label>
+          <input
+            v-model="form.model"
+            type="text"
+            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+            placeholder="Avanza, Brio, Innova, City, dll"
           />
         </div>
         <div class="mb-2">
           <label class="block mb-1">Tipe</label>
           <input
-            v-model="form.tipe"
+            v-model="form.type"
             type="text"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+            placeholder="G, GX, LX, Q, RS, Turbo, LG, GR, VRZ, dll"
           />
         </div>
         <div class="mb-2">
@@ -89,17 +110,19 @@
         <div class="mb-2">
           <label class="block mb-1">Tanggal Booking</label>
           <input
-            v-model="form.tanggal"
+            v-model="form.tanggal_booking"
             type="date"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+            required
           />
         </div>
         <div class="mb-4">
-          <label class="block mb-1">Jam Booking</label>
+          <label class="block mb-1">Jam Booking (format HH:mm AM/PM)</label>
           <input
-            v-model="form.jam"
+            v-model="form.jam_booking"
             type="time"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+            required
           />
         </div>
         <button
@@ -116,12 +139,22 @@
         {{ successMsg }}
       </div>
     </div>
+    <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
+import { useLoadingStore } from '@/stores/loading'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import { BASE_URL } from '@/base.utils.url'
+import ToastCard from '@/components/ToastCard.vue'
+import axios from 'axios'
+
 export default {
   name: 'BookingForm',
+  components: { LoadingOverlay, ToastCard },
   data() {
     return {
       searchNopol: '',
@@ -130,84 +163,108 @@ export default {
       successMsg: '',
       form: {
         nama: '',
-        nohp: '',
-        brand: '',
-        tipe: '',
+        hp: '',
+        model: '',
+        type: '',
         warna: '',
-        tanggal: '',
-        jam: '',
+        tanggal_booking: '',
+        jam_booking: '',
+        no_pol: '',
+        vehicle_id: null,
+        customer_id: null,
       },
-      customers: [
-        {
-          nopol: 'B 1234 XYZ',
-          nama: 'Andi Wijaya',
-          nohp: '08123456789',
-          brand: 'Toyota',
-          tipe: 'Avanza',
-          warna: 'Hitam',
-        },
-        {
-          nopol: 'D 5678 ABC',
-          nama: 'Siti Aminah',
-          nohp: '082233445566',
-          brand: 'Honda',
-          tipe: 'Brio',
-          warna: 'Merah',
-        },
-      ],
+      customers: [],
     }
   },
+  setup() {
+    const loadingStore = useLoadingStore()
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { loadingStore, show_toast, message_toast }
+  },
   methods: {
+    async tutupToast() {
+      this.show_toast = false
+      this.message_toast = ''
+    },
+    async getCustomerWithVehicles() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}customers/with-vehicles`)
+        this.customers = Array.isArray(response.data.data) ? response.data.data : []
+        console.log('Fetched customers with vehicles:', this.customers)
+      } catch (error) {
+        console.error('Error fetching customers with vehicles:', error)
+        this.show_toast = true
+        this.message_toast = 'Gagal memuat data pelanggan.'
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     searchCustomer() {
       this.successMsg = ''
       const input = this.searchNopol.trim().toLowerCase()
       const found = this.customers.find(
         (c) =>
-          c.nopol.toLowerCase() === input ||
-          c.nohp.replace(/\D/g, '').endsWith(input.replace(/\D/g, '')),
+          c.no_pol.toLowerCase() === input ||
+          c.customer.hp.replace(/\D/g, '').endsWith(input.replace(/\D/g, '')),
       )
       this.foundCustomer = found || null
       this.searched = true
       if (found) {
         this.form = {
-          nama: found.nama,
-          nohp: found.nohp,
-          brand: found.brand,
-          tipe: found.tipe,
+          nama: found.customer.nama,
+          hp: found.customer.hp,
+          type: found.type,
           warna: found.warna,
-          tanggal: '',
-          jam: '',
+          model: found.model,
+          tanggal_booking: '',
+          jam_booking: '',
+          no_pol: found.no_pol,
+          vehicle_id: found.id || null, // Assuming vehicle_id exists in customer data
+          customer_id: found.customer.id || null, // Assuming customer_id exists in customer data
         }
       } else {
+        const val = this.searchNopol.trim()
+        const isAllDigits = /^\d+$/.test(val)
+        const isAlphaNum = /[a-zA-Z]/.test(val) && /\d/.test(val)
         this.form = {
           nama: '',
-          nohp: '',
-          brand: '',
-          tipe: '',
+          hp: isAllDigits ? val : '',
+          model: '',
+          type: '',
           warna: '',
-          tanggal: '',
-          jam: '',
+          _booking: '',
+          jam_booking: '',
+          no_pol: isAlphaNum ? val.toUpperCase() : '',
+          vehicle_id: null, // Reset vehicle_id when not found
+          customer_id: null, // New customer, so no ID yet
         }
       }
     },
-    submitBooking() {
-      if (!this.form.tanggal || !this.form.jam) {
+    async submitBooking() {
+      if (!this.form.tanggal_booking || !this.form.jam_booking) {
         this.successMsg = 'Tanggal dan jam booking wajib diisi!'
         return
       }
-      if (!this.foundCustomer) {
-        // Simulasi tambah data baru
-        this.customers.push({
-          nopol: this.searchNopol.trim().toUpperCase(),
-          nama: this.form.nama,
-          nohp: this.form.nohp,
-          brand: this.form.brand,
-          tipe: this.form.tipe,
-          warna: this.form.warna,
+      try {
+        this.loadingStore.show()
+        const response = await axios.post(`${BASE_URL}bookings/create/new`, this.form, {
+          headers: { 'Content-Type': 'application/json' },
         })
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Booking berhasil dibuat!'
+        console.log('Response:', response.data.data)
+        console.log('Booking submitted:', this.form)
+      } catch (error) {
+        console.error('Error submitting booking:', error)
+        this.show_toast = true
+        this.message_toast =
+          (error.response && error.response.status) || 'Gagal membuat booking. Silakan coba lagi.'
+      } finally {
+        this.loadingStore.hide()
+        this.resetForm()
       }
-      this.successMsg = `Booking untuk ${this.form.nama} pada ${this.form.tanggal} jam ${this.form.jam} berhasil!`
-      this.resetForm()
     },
     resetForm() {
       setTimeout(() => {
@@ -220,12 +277,17 @@ export default {
           brand: '',
           tipe: '',
           warna: '',
-          tanggal: '',
-          jam: '',
+          tanggal_booking: '',
+          jam_booking: '',
+          vehicle_id: '',
+          customer_id: '',
         }
         this.successMsg = ''
       }, 2000)
     },
+  },
+  created() {
+    this.getCustomerWithVehicles()
   },
 }
 </script>
