@@ -1,58 +1,65 @@
 <template>
-  <div class="container mx-auto p-6">
-    <h2 class="text-center font-montserrat font-bold text-blue-600 text-2xl ipad:text-4xl">
+  <div class="container mx-auto p-6 ipad:w-[50vw]">
+    <h2 class="text-center font-montserrat font-bold text-purple-700 text-2xl ipad:text-4xl">
       Form Penambahan Jasa Bengkel
     </h2>
     <!-- Form Product -->
-    <div class="mb-4 mt-10">
-      <label for="name" class="block text-gray-700 font-semibold">Nama Jasa</label>
-      <input
-        v-model="form.name"
-        type="text"
-        id="name"
-        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Masukkan nama produk"
-      />
+    <div class="info-card">
+      <div class="relative">
+        <label for="name" class="modern-label-label">Nama Jasa</label>
+        <input
+          v-model="form.name"
+          type="text"
+          id="name"
+          class="modern-input peer"
+          placeholder="Masukkan nama produk"
+          required
+        />
+      </div>
     </div>
 
-    <div class="mb-4">
-      <label for="price" class="block text-gray-700 font-semibold">Harga</label>
-      <input
-        v-model="form.price"
-        type="text"
-        id="price"
-        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Isikan harga"
-      />
+    <div class="info-card">
+      <div class="relative">
+        <label for="price" class="modern-label-label">Harga</label>
+        <input
+          v-model="form.price"
+          type="text"
+          id="price"
+          class="modern-input peer"
+          placeholder="Isikan harga"
+        />
+      </div>
     </div>
 
-    <div class="mb-4">
-      <label for="cost" class="block text-gray-700 font-semibold">Biaya</label>
-      <input
-        v-model="form.cost"
-        type="text"
-        id="price"
-        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Isikan Biaya"
-      />
+    <div class="info-card">
+      <div class="relative"></div>
+      <div class="relative">
+        <label for="cost" class="modern-label-label">Biaya</label>
+        <input
+          v-model="form.cost"
+          type="text"
+          id="price"
+          class="modern-input peer"
+          placeholder="Isikan Biaya"
+        />
+      </div>
     </div>
 
-    <div class="mb-4">
-      <label for="description" class="block text-gray-700 font-semibold">Keterangan</label>
-      <input
-        v-model="form.description"
-        type="text"
-        id="description"
-        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        placeholder="Keterangan yang perlu ditambahkan"
-      />
+    <div class="info-card">
+      <div class="relative">
+        <label for="description" class="modern-label-label">Keterangan</label>
+        <input
+          v-model="form.description"
+          type="text"
+          id="description"
+          class="modern-input peer"
+          placeholder="Keterangan yang perlu ditambahkan"
+        />
+      </div>
     </div>
 
     <div class="mt-4">
-      <button
-        @click="submitForm"
-        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 focus:outline-none font-lexend"
-      >
+      <button @click="submitForm" class="modern-btn-secondary">
         <span class="material-symbols-outlined">backup</span> Submit
       </button>
     </div>
@@ -67,7 +74,6 @@ import api from '@/user/axios'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
-import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
@@ -89,11 +95,24 @@ export default {
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   methods: {
-    submitForm() {
-      console.log('Nama Produk:', this.productName)
-      console.log('Kategori:', this.selectedCategory)
-      console.log('Brand:', this.selectedBrand)
-      console.log('Satuan:', this.selectedUnit)
+    async tutupToast() {
+      this.show_toast = false
+      this.message_toast = ''
+      window.location.reload()
+    },
+
+    async submitForm() {
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}products/service/create/new`, this.form)
+        console.log('Add Create Jasa: ', response.data.data)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
     },
   },
 }
@@ -381,7 +400,9 @@ export default {
   border: 1px solid #e2e8f0;
   border-radius: 0.75rem;
   padding: 1rem;
+  margin-bottom: 1rem;
   transition: all 0.3s ease-in-out;
+  font-weight: 600;
 }
 
 .info-card:hover {

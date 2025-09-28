@@ -109,8 +109,8 @@ const navItems = reactive([
         url: '/wo/sales/list',
       },
       {
-        text: 'Buat SPK',
-        url: '/wo/new/spk',
+        text: 'Registrasi Jasa Bengkel',
+        url: '/wo/jasa/new',
       },
       {
         text: 'Penjualan Barang',

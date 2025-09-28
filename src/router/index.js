@@ -93,6 +93,11 @@ const router = createRouter({
           component: () => import('../pages/CreateWorkOrder.vue'),
         },
         {
+          path: 'jasa/new',
+          name: 'new service',
+          component: () => import('../pages/CreateJasa.vue'),
+        },
+        {
           path: 'sales/new',
           name: 'new sales order',
           component: () => import('../pages/CreateSalesOrder.vue'),
