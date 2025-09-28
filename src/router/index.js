@@ -182,6 +182,16 @@ const router = createRouter({
           component: () => import('../components/TableInventory.vue'),
         },
         {
+          path: 'product/new',
+          name: 'product new',
+          component: () => import('../pages/CreateProduct.vue'),
+        },
+        {
+          path: 'product/packet/new',
+          name: 'produk paket new',
+          component: () => import('../pages/CreateProductPaket.vue'),
+        },
+        {
           path: 'keluar',
           name: 'pengeluaran',
           component: () => import('../pages/TablePengeluaranBarang.vue'),

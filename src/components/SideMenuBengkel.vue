@@ -177,6 +177,14 @@ const navItems = reactive([
         url: '/inventory/list',
       },
       {
+        text: 'Registrasi Barang/Produk',
+        url: '/inventory/product/new',
+      },
+      {
+        text: 'Registrasi Produk Paket',
+        url: '/inventory/product/packet/new',
+      },
+      {
         text: 'Laporan Pengeluaran',
         url: '/inventory/keluar',
       },

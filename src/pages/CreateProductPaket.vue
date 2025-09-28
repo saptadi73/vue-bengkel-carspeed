@@ -1,304 +1,228 @@
 <template>
-  <div class="p-8 space-y-8 ipad:w-[60vw] mx-auto">
-    <!-- Form Header -->
-    <h2 class="text-3xl font-bold text-blue-800 text-center mb-6 font-lexend">
-      Vehicle Registration Form
-    </h2>
-
-    <!-- Form Section -->
-    <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
-        <!-- Owner Name Input -->
-        <div class="info-card">
-          <div class="relative"></div>
-          <label for="ownerName" class="modern-label-label text-blue-700 font-bold"
-            >Nama Pelanggan</label
-          >
-          <select
-            v-model="formData.customer_id"
-            id="customer_id"
-            class="modern-select peer"
-            required
-          >
-            <option value="" disabled>Select Owner</option>
-            <option v-for="(customer, index) in customers" :key="index" :value="customer.id">
-              {{ customer.nama }}
-            </option>
-          </select>
-        </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Model Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="model" class="modern-label-label text-green-700 font-bold">Model</label>
-              <input
-                v-model="formData.model"
-                id="model"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Model Kendaraan"
-              />
-            </div>
-          </div>
-          <!-- Car Type Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="type" class="modern-label-label text-green-700 font-bold">Type</label>
-              <input
-                v-model="formData.type"
-                id="type"
-                type="text"
-                class="modern-input peer"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Brand Input -->
-        <div class="info-card mt-3">
-          <label for="brand_id" class="modern-label-label text-blue-700 font-bold">Brand</label>
-          <select v-model="formData.brand_id" id="brand_id" class="modern-select peer" required>
-            <option value="" disabled selected>Select Brand</option>
-            <option v-for="value in brands" :key="value.id" :value="value.id">
-              {{ value.name }}
-            </option>
-          </select>
-        </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Year Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="tahun" class="modern-label-label text-red-700 font-bold">Tahun</label>
-              <input
-                v-model="formData.tahun"
-                id="year"
-                type="number"
-                min="1900"
-                max="2099"
-                step="1"
-                class="modern-input peer"
-                placeholder="Masukkan tahun kendaraan"
-              />
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="relative">
-              <label for="warna" class="modern-label-label text-red-700 font-bold">Warna</label>
-              <input
-                v-model="formData.warna"
-                id="warna"
-                type="text"
-                class="modern-input peer"
-                placeholder="MAsukkan Kapasitas Mesin dalam CC"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Chassis Number Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="no_rangka" class="modern-label-label text-green-700 font-bold"
-                >Nomor Rangka</label
+  <div class="max-w-6xl mx-auto mt-8 mb-8">
+    <!-- Main Card Container -->
+    <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 overflow-hidden">
+      <!-- Gradient Header -->
+      <div class="gradient-header px-8 py-6">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-lg">
+              <svg
+                class="h-12 w-12 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-              <input
-                v-model="formData.no_rangka"
-                id="no_rangka"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Rangka Kendaraan"
-              />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
             </div>
-          </div>
-
-          <!-- Engine Number Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="no_mesin" class="modern-label-label text-green-700 font-bold"
-                >Nomor Mesin</label
-              >
-              <input
-                v-model="formData.no_mesin"
-                id="no_mesin"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Mesin"
-              />
+            <div>
+              <h2 class="text-2xl font-bold text-white">Pembuatan Paket Produk</h2>
+              <p class="text-blue-100 text-sm">
+                Produk Gabungan Terdiri Atas Beberapa Produk Dikemas Jadi Satu
+              </p>
+              <p class="text-blue-100 text-sm">
+                Stok Produk Gabungan dinyatakan dalam Paket dan Satuan tersendiri di Inventory
+              </p>
             </div>
           </div>
         </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Engine Capacity Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="kapasitas" class="modern-label-label text-blue-700 font-bold"
-                >Kapasitas Mesin (CC)</label
-              >
-              <input
-                v-model="formData.kapasitas"
-                id="kapasitas"
-                type="text"
-                class="modern-input peer"
-                placeholder="MAsukkan Kapasitas Mesin dalam CC"
+      </div>
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-6">
+          <div class="bg-blue-100 p-2 rounded-lg">
+            <svg
+              class="h-5 w-5 text-blue-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-gray-800">Informasi Product</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="info-card">
+            <label class="info-label">Nama Product</label>
+            <div class="info-value">
+              <select id="name" v-model="form.name" class="modern-select peer">
+                <option value="" disabled selected>Pilih Produk Paket</option>
+              </select>
             </div>
           </div>
-          <!-- License Plate Input -->
           <div class="info-card">
-            <div class="relative">
-              <label for="no_pol" class="modern-label-label text-blue-700 font-bold"
-                >Nomor Polisi</label
+            <label class="info-label">Kategori</label>
+            <div class="info-value">{{ form.hp }}</div>
+          </div>
+          <div class="info-card">
+            <label class="info-label">Email</label>
+            <div class="info-value">{{ form.email }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Content -->
+      <div class="px-8 py-8">
+        <!-- Product Order Section -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-2">
+              <div class="bg-green-100 p-2 rounded-lg">
+                <svg
+                  class="h-5 w-5 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800">Product Order (Sparepart)</h3>
+            </div>
+            <button
+              type="button"
+              class="modern-btn-primary flex items-center gap-2"
+              @click="addProductOrder"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Product
+            </button>
+          </div>
+
+          <!-- Product Items -->
+          <div class="space-y-4">
+            <div
+              v-for="(item, idx) in form.productOrder"
+              :key="'prod-' + idx"
+              class="product-item-card"
+            >
+              <div class="flex items-center justify-between mb-4 space-x-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="relative">
+                    <input
+                      v-model="item.nama"
+                      type="text"
+                      class="modern-input peer"
+                      placeholder=" "
+                    />
+                    <label class="modern-label">Nama Sparepart</label>
+                  </div>
+                  <div class="relative">
+                    <input
+                      v-model.number="item.qty"
+                      type="number"
+                      min="1"
+                      class="modern-input peer"
+                      placeholder=" "
+                    />
+                    <label class="modern-label">Qty</label>
+                  </div>
+                  <div class="relative">
+                    <input
+                      v-model="item.satuan"
+                      type="text"
+                      class="modern-input peer"
+                      placeholder=" "
+                    />
+                    <label class="modern-label">Satuan</label>
+                  </div>
+                </div>
+                <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                  Hapus Item
+                </button>
+              </div>
+            </div>
+            <div v-if="form.productOrder.length === 0" class="empty-state">
+              <svg
+                class="h-12 w-12 text-gray-400 mx-auto mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-              <input
-                v-model="formData.no_pol"
-                id="no_pol"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Polisi"
-                required
-              />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                />
+              </svg>
+              <p class="text-gray-500">Belum ada sparepart yang ditambahkan</p>
             </div>
           </div>
         </div>
 
         <!-- Submit Button -->
-        <div>
-          <div class="flex items-center">
-            <button type="submit" @click="handleSubmit" class="modern-btn-primary mt-5">
-              <span class="material-symbols-outlined">car_tag</span> Simpan
-            </button>
-          </div>
+        <div class="flex justify-end">
+          <button type="submit" class="modern-btn-success flex items-center gap-2">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            Submit Work Order
+          </button>
         </div>
       </div>
-    </form>
-    <loading-overlay />
-    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+    </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
-import api from '@/user/axios'
-import { useLoadingStore } from '@/stores/loading'
-import LoadingOverlay from '@/components/LoadingOverlay.vue'
-import { BASE_URL } from '@/base.utils.url'
-import ToastCard from '@/components/ToastCard.vue'
-import axios from 'axios'
-
 export default {
-  name: 'InputDataMobil',
-  components: { LoadingOverlay, ToastCard },
-  setup() {
-    const loadingStore = useLoadingStore()
-    const show_toast = ref(false)
-    const message_toast = ref('')
-    return { loadingStore, show_toast, message_toast }
-  },
   data() {
     return {
-      formData: {
-        customer_id: '',
-        type: '',
-        brand_id: '',
-        model: '',
-        tahun: '',
-        no_rangka: '',
-        no_mesin: '',
-        kapasitas: '',
-        no_pol: '',
-        warna: '',
+      form: {
+        productOrder: [],
       },
-      customers: [
-        // Dummy customer data for the select options
-        { name: 'John Doe' },
-        { name: 'Maria Sari' },
-        { name: 'Ali Rahman' },
-        // Add more customers as needed
-      ],
-      brands: [],
     }
   },
-  created() {
-    this.fetchCustomers()
-    this.getbrandsAll()
-  },
   methods: {
-    async handleSubmit() {
-      try {
-        this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}customers/add-vehicle`, this.formData)
-        this.message_toast = response.data.message || 'Vehicle added successfully!'
-        this.show_toast = true
-        console.log('Form submitted successfully:', response.data)
-        console.log('Form Data to be submitted:', this.formData)
-      } catch (error) {
-        this.message_toast =
-          (error.response && error.response.data && error.response.data.message) ||
-          'An error occurred while submitting the form.'
-        this.show_toast = true
-        console.error('Error submitting form:', error)
-      } finally {
-        this.loadingStore.hide()
-        // Reset form after submission
-        this.formData = {
-          customer_id: '',
-          type: '',
-          brand_id: '',
-          model: '',
-          tahun: '',
-          no_rangka: '',
-          no_mesin: '',
-          kapasitas: '',
-          no_pol: '',
-          warna: '',
-        }
-      }
+    addProductOrder() {
+      this.form.productOrder.push({
+        nama: '',
+        qty: 1,
+        satuan: '',
+      })
     },
-
-    async tutupToast() {
-      this.show_toast = false
-      this.message_toast = ''
+    removeProductOrder(index) {
+      this.form.productOrder.splice(index, 1)
     },
-
-    async fetchCustomers() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}customers/all`)
-        this.customers = Array.isArray(response.data.data) ? response.data.data : []
-        console.log('Fetched Customers:', response.data.data)
-      } catch (error) {
-        console.error('Error fetching customers:', error)
-        this.customers = []
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-
-    async getbrandsAll() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/brands/all`)
-        this.brands = Array.isArray(response.data.data) ? response.data.data : []
-        console.log('Fetched Brands:', response.data.data)
-      } catch (error) {
-        console.error('Error fetching brands:', error)
-        this.brands = []
-      } finally {
-        this.loadingStore.hide()
-      }
+    submitForm() {
+      alert('Form submitted!')
     },
   },
 }
@@ -379,7 +303,7 @@ export default {
 .modern-label {
   position: absolute;
   left: 1rem;
-  top: 0.2rem;
+  top: 0.75rem;
   color: #6b7280;
   font-size: 0.875rem;
   font-family: 'Lexend', sans-serif;

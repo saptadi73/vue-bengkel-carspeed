@@ -1,192 +1,64 @@
 <template>
-  <div class="p-8 space-y-8 ipad:w-[60vw] mx-auto">
-    <!-- Form Header -->
-    <h2 class="text-3xl font-bold text-blue-800 text-center mb-6 font-lexend">
-      Vehicle Registration Form
+  <div class="container mx-auto p-6">
+    <h2 class="text-center font-montserrat font-bold text-blue-600 text-2xl ipad:text-4xl">
+      Form Penambahan Jasa Bengkel
     </h2>
+    <!-- Form Product -->
+    <div class="mb-4 mt-10">
+      <label for="name" class="block text-gray-700 font-semibold">Nama Jasa</label>
+      <input
+        v-model="form.name"
+        type="text"
+        id="name"
+        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Masukkan nama produk"
+      />
+    </div>
 
-    <!-- Form Section -->
-    <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
-        <!-- Owner Name Input -->
-        <div class="info-card">
-          <div class="relative"></div>
-          <label for="ownerName" class="modern-label-label text-blue-700 font-bold"
-            >Nama Pelanggan</label
-          >
-          <select
-            v-model="formData.customer_id"
-            id="customer_id"
-            class="modern-select peer"
-            required
-          >
-            <option value="" disabled>Select Owner</option>
-            <option v-for="(customer, index) in customers" :key="index" :value="customer.id">
-              {{ customer.nama }}
-            </option>
-          </select>
-        </div>
+    <div class="mb-4">
+      <label for="price" class="block text-gray-700 font-semibold">Harga</label>
+      <input
+        v-model="form.price"
+        type="text"
+        id="price"
+        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Isikan harga"
+      />
+    </div>
 
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Model Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="model" class="modern-label-label text-green-700 font-bold">Model</label>
-              <input
-                v-model="formData.model"
-                id="model"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Model Kendaraan"
-              />
-            </div>
-          </div>
-          <!-- Car Type Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="type" class="modern-label-label text-green-700 font-bold">Type</label>
-              <input
-                v-model="formData.type"
-                id="type"
-                type="text"
-                class="modern-input peer"
-                required
-              />
-            </div>
-          </div>
-        </div>
+    <div class="mb-4">
+      <label for="cost" class="block text-gray-700 font-semibold">Biaya</label>
+      <input
+        v-model="form.cost"
+        type="text"
+        id="price"
+        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Isikan Biaya"
+      />
+    </div>
 
-        <!-- Brand Input -->
-        <div class="info-card mt-3">
-          <label for="brand_id" class="modern-label-label text-blue-700 font-bold">Brand</label>
-          <select v-model="formData.brand_id" id="brand_id" class="modern-select peer" required>
-            <option value="" disabled selected>Select Brand</option>
-            <option v-for="value in brands" :key="value.id" :value="value.id">
-              {{ value.name }}
-            </option>
-          </select>
-        </div>
+    <div class="mb-4">
+      <label for="description" class="block text-gray-700 font-semibold">Keterangan</label>
+      <input
+        v-model="form.description"
+        type="text"
+        id="description"
+        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        placeholder="Keterangan yang perlu ditambahkan"
+      />
+    </div>
 
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Year Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="tahun" class="modern-label-label text-red-700 font-bold">Tahun</label>
-              <input
-                v-model="formData.tahun"
-                id="year"
-                type="number"
-                min="1900"
-                max="2099"
-                step="1"
-                class="modern-input peer"
-                placeholder="Masukkan tahun kendaraan"
-              />
-            </div>
-          </div>
-          <div class="info-card">
-            <div class="relative">
-              <label for="warna" class="modern-label-label text-red-700 font-bold">Warna</label>
-              <input
-                v-model="formData.warna"
-                id="warna"
-                type="text"
-                class="modern-input peer"
-                placeholder="MAsukkan Kapasitas Mesin dalam CC"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Chassis Number Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="no_rangka" class="modern-label-label text-green-700 font-bold"
-                >Nomor Rangka</label
-              >
-              <input
-                v-model="formData.no_rangka"
-                id="no_rangka"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Rangka Kendaraan"
-              />
-            </div>
-          </div>
-
-          <!-- Engine Number Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="no_mesin" class="modern-label-label text-green-700 font-bold"
-                >Nomor Mesin</label
-              >
-              <input
-                v-model="formData.no_mesin"
-                id="no_mesin"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Mesin"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
-        >
-          <!-- Engine Capacity Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="kapasitas" class="modern-label-label text-blue-700 font-bold"
-                >Kapasitas Mesin (CC)</label
-              >
-              <input
-                v-model="formData.kapasitas"
-                id="kapasitas"
-                type="text"
-                class="modern-input peer"
-                placeholder="MAsukkan Kapasitas Mesin dalam CC"
-              />
-            </div>
-          </div>
-          <!-- License Plate Input -->
-          <div class="info-card">
-            <div class="relative">
-              <label for="no_pol" class="modern-label-label text-blue-700 font-bold"
-                >Nomor Polisi</label
-              >
-              <input
-                v-model="formData.no_pol"
-                id="no_pol"
-                type="text"
-                class="modern-input peer"
-                placeholder="Masukkan Nomor Polisi"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div>
-          <div class="flex items-center">
-            <button type="submit" @click="handleSubmit" class="modern-btn-primary mt-5">
-              <span class="material-symbols-outlined">car_tag</span> Simpan
-            </button>
-          </div>
-        </div>
-      </div>
-    </form>
-    <loading-overlay />
-    <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+    <div class="mt-4">
+      <button
+        @click="submitForm"
+        class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-700 focus:outline-none font-lexend"
+      >
+        <span class="material-symbols-outlined">backup</span> Submit
+      </button>
+    </div>
   </div>
+  <loading-overlay />
+  <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
 
 <script>
@@ -194,111 +66,34 @@ import { ref } from 'vue'
 import api from '@/user/axios'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
-import { BASE_URL } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
+import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
-  name: 'InputDataMobil',
   components: { LoadingOverlay, ToastCard },
+  data() {
+    return {
+      form: {
+        name: '',
+        description: '',
+        cost: '',
+        price: '',
+      },
+    }
+  },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
     const message_toast = ref('')
-    return { loadingStore, show_toast, message_toast }
-  },
-  data() {
-    return {
-      formData: {
-        customer_id: '',
-        type: '',
-        brand_id: '',
-        model: '',
-        tahun: '',
-        no_rangka: '',
-        no_mesin: '',
-        kapasitas: '',
-        no_pol: '',
-        warna: '',
-      },
-      customers: [
-        // Dummy customer data for the select options
-        { name: 'John Doe' },
-        { name: 'Maria Sari' },
-        { name: 'Ali Rahman' },
-        // Add more customers as needed
-      ],
-      brands: [],
-    }
-  },
-  created() {
-    this.fetchCustomers()
-    this.getbrandsAll()
+    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   methods: {
-    async handleSubmit() {
-      try {
-        this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}customers/add-vehicle`, this.formData)
-        this.message_toast = response.data.message || 'Vehicle added successfully!'
-        this.show_toast = true
-        console.log('Form submitted successfully:', response.data)
-        console.log('Form Data to be submitted:', this.formData)
-      } catch (error) {
-        this.message_toast =
-          (error.response && error.response.data && error.response.data.message) ||
-          'An error occurred while submitting the form.'
-        this.show_toast = true
-        console.error('Error submitting form:', error)
-      } finally {
-        this.loadingStore.hide()
-        // Reset form after submission
-        this.formData = {
-          customer_id: '',
-          type: '',
-          brand_id: '',
-          model: '',
-          tahun: '',
-          no_rangka: '',
-          no_mesin: '',
-          kapasitas: '',
-          no_pol: '',
-          warna: '',
-        }
-      }
-    },
-
-    async tutupToast() {
-      this.show_toast = false
-      this.message_toast = ''
-    },
-
-    async fetchCustomers() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}customers/all`)
-        this.customers = Array.isArray(response.data.data) ? response.data.data : []
-        console.log('Fetched Customers:', response.data.data)
-      } catch (error) {
-        console.error('Error fetching customers:', error)
-        this.customers = []
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-
-    async getbrandsAll() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/brands/all`)
-        this.brands = Array.isArray(response.data.data) ? response.data.data : []
-        console.log('Fetched Brands:', response.data.data)
-      } catch (error) {
-        console.error('Error fetching brands:', error)
-        this.brands = []
-      } finally {
-        this.loadingStore.hide()
-      }
+    submitForm() {
+      console.log('Nama Produk:', this.productName)
+      console.log('Kategori:', this.selectedCategory)
+      console.log('Brand:', this.selectedBrand)
+      console.log('Satuan:', this.selectedUnit)
     },
   },
 }
