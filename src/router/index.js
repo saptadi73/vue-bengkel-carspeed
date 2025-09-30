@@ -118,7 +118,7 @@ const router = createRouter({
           component: () => import('../pages/TableSalesorder.vue'),
         },
         {
-          path: 'new/form',
+          path: 'new/form/:id',
           name: 'wo baru',
           component: () => import('../components/WorkOrderForm.vue'),
         },

@@ -206,7 +206,7 @@ import axios from 'axios';
             <td>
               <button
                 class="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                @click="createWO(pelanggan)"
+                @click="createWO(pelanggan.id)"
               >
                 Create WO
               </button>
@@ -337,8 +337,9 @@ export default {
       nextService.setMonth(nextService.getMonth() + 3)
       return new Date() > nextService
     },
-    createWO(pelanggan) {
-      this.$emit('create-wo', pelanggan)
+    createWO(id) {
+      this.$emit('create-wo', id)
+      this.$router.push(`/wo/new/form/${id}`)
     },
     editPelanggan(pelanggan) {
       this.$emit('edit-pelanggan', pelanggan)

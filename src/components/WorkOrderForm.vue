@@ -65,8 +65,8 @@
             <div class="flex-1 relative">
               <select v-model="selectedPaket" class="modern-select peer">
                 <option value="">-- Pilih Paket --</option>
-                <option v-for="paket in paketList" :key="paket.nama" :value="paket.nama">
-                  {{ paket.nama }}
+                <option v-for="paket in packetorders" :key="paket.id" :value="paket.id">
+                  {{ paket.name }}
                 </option>
               </select>
               <label class="modern-select-label">Paket Servis</label>
@@ -179,42 +179,46 @@
             <!-- Product Items -->
             <div class="space-y-4">
               <div
-                v-for="(item, idx) in form.productOrder"
+                v-for="(item, idx) in form.product_line_packet_order"
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
                   <div class="relative">
-                    <input
-                      v-model="item.nama"
-                      type="text"
-                      class="modern-input peer"
-                      placeholder=" "
-                    />
+                    <select v-model="item.product_id" class="modern-select peer">
+                      <option value="" disabled selected>Pilih Product</option>
+                      <option
+                        v-for="productku in products"
+                        :key="productku.id"
+                        :value="productku.id"
+                      >
+                        {{ productku.name }}
+                      </option>
+                    </select>
                     <label class="modern-label">Nama Sparepart</label>
                   </div>
                   <div class="relative">
                     <input
-                      v-model.number="item.qty"
+                      v-model.number="item.quantity"
                       type="number"
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
                     />
-                    <label class="modern-label">Qty</label>
+                    <label class="modern-label">quantity</label>
                   </div>
                   <div class="relative">
-                    <input
-                      v-model="item.satuan"
-                      type="text"
-                      class="modern-input peer"
-                      placeholder=" "
-                    />
+                    <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
+                      <option value="" disabled selected>Pilih Satuan</option>
+                      <option v-for="value in satuans" :key="value.id" :value="value.id">
+                        {{ value.name }}
+                      </option>
+                    </select>
                     <label class="modern-label">Satuan</label>
                   </div>
                   <div class="relative">
                     <input
-                      v-model.number="item.harga"
+                      v-model.number="item.price"
                       type="number"
                       min="0"
                       class="modern-input peer"
@@ -253,7 +257,7 @@
                   </button>
                 </div>
               </div>
-              <div v-if="form.productOrder.length === 0" class="empty-state">
+              <div v-if="form.product_line_packet_order.length === 0" class="empty-state">
                 <svg
                   class="h-12 w-12 text-gray-400 mx-auto mb-4"
                   fill="none"
@@ -337,42 +341,38 @@
             <!-- Service Items -->
             <div class="space-y-4">
               <div
-                v-for="(item, idx) in form.serviceOrder"
+                v-for="(item, idx) in form.service_line_packet_order"
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
                   <div class="relative">
-                    <input
-                      v-model="item.nama"
-                      type="text"
-                      class="modern-input peer"
-                      placeholder=" "
-                    />
+                    <select v-model="item.service_id" class="modern-select peer">
+                      <option value="" disabled selected>Pilih Service/Jasa</option>
+                      <option
+                        v-for="serviceku in services"
+                        :key="serviceku.id"
+                        :value="serviceku.id"
+                      >
+                        {{ serviceku.name }}
+                      </option>
+                    </select>
                     <label class="modern-label">Nama Jasa</label>
                   </div>
                   <div class="relative">
                     <input
-                      v-model.number="item.qty"
+                      v-model.number="item.quantity"
                       type="number"
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
                     />
-                    <label class="modern-label">Qty</label>
+                    <label class="modern-label">quantity</label>
                   </div>
+
                   <div class="relative">
                     <input
-                      v-model="item.satuan"
-                      type="text"
-                      class="modern-input peer"
-                      placeholder=" "
-                    />
-                    <label class="modern-label">Satuan</label>
-                  </div>
-                  <div class="relative">
-                    <input
-                      v-model.number="item.harga"
+                      v-model.number="item.price"
                       type="number"
                       min="0"
                       class="modern-input peer"
@@ -411,7 +411,7 @@
                   </button>
                 </div>
               </div>
-              <div v-if="form.serviceOrder.length === 0" class="empty-state">
+              <div v-if="form.service_line_packet_order.length === 0" class="empty-state">
                 <svg
                   class="h-12 w-12 text-gray-400 mx-auto mb-4"
                   fill="none"
@@ -598,15 +598,31 @@
       </div>
     </div>
   </div>
+  <loading-overlay />
+  <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
 
 <script>
+import { ref } from 'vue'
+import api from '@/user/axios'
+import { useLoadingStore } from '@/stores/loading'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import ToastCard from '@/components/ToastCard.vue'
+import axios from 'axios'
+import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+
 import jsPDF from 'jspdf'
 
 export default {
   name: 'WorkOrderForm',
+  components: { LoadingOverlay, ToastCard },
   data() {
     return {
+      services: [],
+      products: [],
+      packetorders: [],
+      satuans: [],
+      dataVehiclesPelanggan: [],
       form: {
         nama: 'Budi Santoso',
         hp: '08123456789',
@@ -617,42 +633,44 @@ export default {
         type: 'Avanza',
         model: 'G',
         kapasitas: '7',
-        productOrder: [
-          { nama: 'Oli Mesin', qty: 2, satuan: 'Ltr', harga: 85000, discount: 10000 },
-          { nama: 'Filter Oli', qty: 1, satuan: 'Pcs', harga: 35000, discount: 0 },
+        product_line_packet_order: [
+          { nama: 'Oli Mesin', quantity: 2, satuan: 'Ltr', price: 85000, discount: 10000 },
+          { nama: 'Filter Oli', quantity: 1, satuan: 'Pcs', price: 35000, discount: 0 },
         ],
-        serviceOrder: [
-          { nama: 'Ganti Oli', qty: 1, satuan: 'Jasa', harga: 50000, discount: 5000 },
-          { nama: 'Tune Up', qty: 1, satuan: 'Jasa', harga: 150000, discount: 0 },
+        service_line_packet_order: [
+          { nama: 'Ganti Oli', quantity: 1, satuan: 'Jasa', price: 50000, discount: 5000 },
+          { nama: 'Tune Up', quantity: 1, satuan: 'Jasa', price: 150000, discount: 0 },
         ],
       },
       selectedPaket: '',
       paketList: [
         {
           nama: 'Paket Ganti Oli',
-          productOrder: [
-            { nama: 'Oli Mesin', qty: 3, satuan: 'Ltr', harga: 85000, discount: 10000 },
-            { nama: 'Filter Oli', qty: 1, satuan: 'Pcs', harga: 35000, discount: 0 },
+          product_line_packet_order: [
+            { nama: 'Oli Mesin', quantity: 3, satuan: 'Ltr', price: 85000, discount: 10000 },
+            { nama: 'Filter Oli', quantity: 1, satuan: 'Pcs', price: 35000, discount: 0 },
           ],
-          serviceOrder: [
-            { nama: 'Ganti Oli', qty: 1, satuan: 'Jasa', harga: 50000, discount: 5000 },
+          service_line_packet_order: [
+            { nama: 'Ganti Oli', quantity: 1, satuan: 'Jasa', price: 50000, discount: 5000 },
           ],
         },
         {
           nama: 'Paket Tune Up',
-          productOrder: [{ nama: 'Busi', qty: 4, satuan: 'Pcs', harga: 65000, discount: 0 }],
-          serviceOrder: [
-            { nama: 'Tune Up', qty: 1, satuan: 'Jasa', harga: 150000, discount: 10000 },
+          product_line_packet_order: [
+            { nama: 'Busi', quantity: 4, satuan: 'Pcs', price: 65000, discount: 0 },
+          ],
+          service_line_packet_order: [
+            { nama: 'Tune Up', quantity: 1, satuan: 'Jasa', price: 150000, discount: 10000 },
           ],
         },
         {
           nama: 'Paket Rem Lengkap',
-          productOrder: [
-            { nama: 'Kampas Rem', qty: 1, satuan: 'Set', harga: 120000, discount: 10000 },
-            { nama: 'Minyak Rem', qty: 1, satuan: 'Botol', harga: 35000, discount: 0 },
+          product_line_packet_order: [
+            { nama: 'Kampas Rem', quantity: 1, satuan: 'Set', price: 120000, discount: 10000 },
+            { nama: 'Minyak Rem', quantity: 1, satuan: 'Botol', price: 35000, discount: 0 },
           ],
-          serviceOrder: [
-            { nama: 'Servis Rem', qty: 1, satuan: 'Jasa', harga: 100000, discount: 5000 },
+          service_line_packet_order: [
+            { nama: 'Servis Rem', quantity: 1, satuan: 'Jasa', price: 100000, discount: 5000 },
           ],
         },
       ],
@@ -662,22 +680,28 @@ export default {
   },
   computed: {
     totalProductHarga() {
-      return this.form.productOrder.reduce(
-        (sum, item) => sum + (Number(item.qty) || 0) * (Number(item.harga) || 0),
+      return this.form.product_line_packet_order.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
         0,
       )
     },
     totalProductDiscount() {
-      return this.form.productOrder.reduce((sum, item) => sum + (Number(item.discount) || 0), 0)
+      return this.form.product_line_packet_order.reduce(
+        (sum, item) => sum + (Number(item.discount) || 0),
+        0,
+      )
     },
     totalServiceHarga() {
-      return this.form.serviceOrder.reduce(
-        (sum, item) => sum + (Number(item.qty) || 0) * (Number(item.harga) || 0),
+      return this.form.service_line_packet_order.reduce(
+        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
         0,
       )
     },
     totalServiceDiscount() {
-      return this.form.serviceOrder.reduce((sum, item) => sum + (Number(item.discount) || 0), 0)
+      return this.form.service_line_packet_order.reduce(
+        (sum, item) => sum + (Number(item.discount) || 0),
+        0,
+      )
     },
     grandTotalHarga() {
       return this.totalProductHarga + this.totalServiceHarga
@@ -689,7 +713,98 @@ export default {
       return Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
     },
   },
+  setup() {
+    const loadingStore = useLoadingStore()
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
+  },
+  created() {
+    this.getProduct()
+    this.getService()
+    this.getPacketOrders()
+    this.getSatuans()
+    this.getVehiclesPelanggan()
+  },
   methods: {
+    tutupToast() {
+      this.show_toast = false
+      this.message_toast = ''
+      window.location.reload()
+    },
+
+    async getVehiclesPelanggan() {
+      try {
+        this.loadingStore.show()
+        const idku = this.$route.params.id
+        const response = await axios.get(`${BASE_URL}customers/with-vehicles/${idku}`)
+        console.log('Pelanggan Vehicles Data: ', response.data.data)
+        this.dataVehiclesPelanggan = response.data.data
+        this.form.nama = this.dataVehiclesPelanggan[0].customer_nama
+        this.form.alamat = this.dataVehiclesPelanggan[0].customer.alamat
+        this.form.hp = this.dataVehiclesPelanggan[0].customer.hp
+        this.form.email = this.dataVehiclesPelanggan[0].customer.email
+        this.form.brand = this.dataVehiclesPelanggan[0].brand_name
+        this.form.kapasitas = this.dataVehiclesPelanggan[0].kapasitas
+        this.form.model = this.dataVehiclesPelanggan[0].model
+        this.form.no_pol = this.dataVehiclesPelanggan[0].no_pol
+        this.form.type = this.dataVehiclesPelanggan[0].type
+        console.log('Nama Customer: ', this.dataVehiclesPelanggan[0].customer_nama)
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getSatuans() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/satuans/all`)
+        console.log('Satuan Data: ', response.data.data)
+        this.satuans = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getPacketOrders() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}packetorders/all`)
+        console.log('Packet Orders: ', response.data.data)
+        this.packetorders = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+
+    async getProduct() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/all`)
+        console.log('Data Products: ', response.data.data)
+        this.products = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getService() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/service/all`)
+        console.log('Data Services: ', response.data.data)
+        this.services = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     openActivityModal() {
       const now = new Date()
       const yyyy = now.getFullYear()
@@ -709,28 +824,40 @@ export default {
       this.closeActivityModal()
     },
     addProductOrder() {
-      this.form.productOrder.push({ nama: '', qty: 1, satuan: '', harga: 0, discount: 0 })
+      this.form.product_line_packet_order.push({
+        nama: '',
+        quantity: 1,
+        satuan: '',
+        price: 0,
+        discount: 0,
+      })
     },
     removeProductOrder(idx) {
-      this.form.productOrder.splice(idx, 1)
+      this.form.product_line_packet_order.splice(idx, 1)
     },
     addServiceOrder() {
-      this.form.serviceOrder.push({ nama: '', qty: 1, satuan: '', harga: 0, discount: 0 })
+      this.form.service_line_packet_order.push({
+        nama: '',
+        quantity: 1,
+        satuan: '',
+        price: 0,
+        discount: 0,
+      })
     },
     removeServiceOrder(idx) {
-      this.form.serviceOrder.splice(idx, 1)
+      this.form.service_line_packet_order.splice(idx, 1)
     },
     productSubtotal(item) {
-      const qty = Number(item.qty) || 0
-      const harga = Number(item.harga) || 0
+      const quantity = Number(item.quantity) || 0
+      const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      return Math.max(0, qty * harga - discount)
+      return Math.max(0, quantity * price - discount)
     },
     serviceSubtotal(item) {
-      const qty = Number(item.qty) || 0
-      const harga = Number(item.harga) || 0
+      const quantity = Number(item.quantity) || 0
+      const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      return Math.max(0, qty * harga - discount)
+      return Math.max(0, quantity * price - discount)
     },
     formatCurrency(val) {
       if (!val || isNaN(val)) return 'Rp 0'
@@ -778,17 +905,17 @@ export default {
       y += 5
       doc.setFontSize(9)
       doc.text('Nama', 10, y)
-      doc.text('Qty', 60, y)
+      doc.text('quantity', 60, y)
       doc.text('Satuan', 75, y)
-      doc.text('Harga', 95, y)
+      doc.text('price', 95, y)
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
-      this.form.productOrder.forEach((item) => {
+      this.form.product_line_packet_order.forEach((item) => {
         doc.text(String(item.nama), 10, y)
-        doc.text(String(item.qty), 60, y)
+        doc.text(String(item.quantity), 60, y)
         doc.text(String(item.satuan), 75, y)
-        doc.text(this.formatCurrency(item.harga), 95, y)
+        doc.text(this.formatCurrency(item.price), 95, y)
         doc.text(this.formatCurrency(item.discount), 120, y)
         doc.text(this.formatCurrency(this.productSubtotal(item)), 140, y)
         y += 4
@@ -800,17 +927,17 @@ export default {
       y += 5
       doc.setFontSize(9)
       doc.text('Nama', 10, y)
-      doc.text('Qty', 60, y)
+      doc.text('quantity', 60, y)
       doc.text('Satuan', 75, y)
-      doc.text('Harga', 95, y)
+      doc.text('price', 95, y)
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
-      this.form.serviceOrder.forEach((item) => {
+      this.form.service_line_packet_order.forEach((item) => {
         doc.text(String(item.nama), 10, y)
-        doc.text(String(item.qty), 60, y)
+        doc.text(String(item.quantity), 60, y)
         doc.text(String(item.satuan), 75, y)
-        doc.text(this.formatCurrency(item.harga), 95, y)
+        doc.text(this.formatCurrency(item.price), 95, y)
         doc.text(this.formatCurrency(item.discount), 120, y)
         doc.text(this.formatCurrency(this.serviceSubtotal(item)), 140, y)
         y += 4
@@ -827,8 +954,12 @@ export default {
       if (!this.selectedPaket) return
       const paket = this.paketList.find((p) => p.nama === this.selectedPaket)
       if (paket) {
-        this.form.productOrder = JSON.parse(JSON.stringify(paket.productOrder))
-        this.form.serviceOrder = JSON.parse(JSON.stringify(paket.serviceOrder))
+        this.form.product_line_packet_order = JSON.parse(
+          JSON.stringify(paket.product_line_packet_order),
+        )
+        this.form.service_line_packet_order = JSON.parse(
+          JSON.stringify(paket.service_line_packet_order),
+        )
       }
     },
   },
