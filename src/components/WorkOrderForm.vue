@@ -138,6 +138,18 @@
         </div>
 
         <form @submit.prevent="submitForm">
+          <!-- Input Keluhan dan Saran -->
+          <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="relative">
+              <input v-model="form.keluhan" type="text" class="modern-input peer" placeholder=" " />
+              <label class="modern-label">Keluhan</label>
+            </div>
+            <div class="relative">
+              <input v-model="form.saran" type="text" class="modern-input peer" placeholder=" " />
+              <label class="modern-label">Saran</label>
+            </div>
+          </div>
+
           <!-- Product Order Section -->
           <div class="mb-8">
             <div class="flex items-center justify-between mb-6">
@@ -179,7 +191,7 @@
             <!-- Product Items -->
             <div class="space-y-4">
               <div
-                v-for="(item, idx) in form.product_line_packet_order"
+                v-for="(item, idx) in form.product_ordered"
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
@@ -201,6 +213,7 @@
                     </select>
                     <label class="modern-select-label">Nama Sparepart</label>
                   </div>
+                  <input type="hidden" v-model="item.product_name" />
                   <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
@@ -208,6 +221,7 @@
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="productSubtotal(item)"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -227,6 +241,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="productSubtotal(item)"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -237,12 +252,13 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="productSubtotal(item)"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
                     <div class="subtotal-display">
-                      {{ formatCurrency(productSubtotal(item)) }}
+                      {{ formatCurrency(item.subtotal) }}
                     </div>
                     <label class="subtotal-label">Subtotal</label>
                   </div>
@@ -261,7 +277,7 @@
                   </button>
                 </div>
               </div>
-              <div v-if="form.product_line_packet_order.length === 0" class="empty-state">
+              <div v-if="form.product_ordered.length === 0" class="empty-state">
                 <svg
                   class="h-12 w-12 text-gray-400 mx-auto mb-4"
                   fill="none"
@@ -345,7 +361,7 @@
             <!-- Service Items -->
             <div class="space-y-4">
               <div
-                v-for="(item, idx) in form.service_line_packet_order"
+                v-for="(item, idx) in form.service_ordered"
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
@@ -419,7 +435,7 @@
                   </button>
                 </div>
               </div>
-              <div v-if="form.service_line_packet_order.length === 0" class="empty-state">
+              <div v-if="form.service_ordered.length === 0" class="empty-state">
                 <svg
                   class="h-12 w-12 text-gray-400 mx-auto mb-4"
                   fill="none"
@@ -462,6 +478,12 @@
             </div>
           </div>
 
+          <!-- Pajak Section -->
+          <div class="mb-6 flex items-center gap-3">
+            <input type="checkbox" id="useTax" v-model="isUseTax" class="mr-2" />
+            <label for="useTax" class="text-sm font-semibold">Gunakan Pajak 11%</label>
+          </div>
+
           <!-- Grand Total Summary -->
           <div class="gradient-summary rounded-xl p-6 mb-8">
             <div class="flex items-center gap-2 mb-4">
@@ -495,30 +517,17 @@
                   {{ formatCurrency(grandTotalDiscount) }}
                 </div>
               </div>
+              <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                <div class="text-sm text-gray-600 mb-1">Pajak (11%)</div>
+                <div class="text-xl font-bold text-yellow-600">
+                  {{ formatCurrency(pajakAmount) }}
+                </div>
+              </div>
               <div class="bg-white rounded-lg p-4 border border-blue-200">
                 <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
                 <div class="text-2xl font-bold text-blue-600">
                   {{ formatCurrency(totalPembayaran) }}
                 </div>
-              </div>
-              <div
-                class="bg-white rounded-lg p-4 border border-gray-200 flex items-center justify-center"
-              >
-                <button
-                  type="button"
-                  class="modern-btn-info flex items-center gap-2"
-                  @click="printPDF"
-                >
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                    />
-                  </svg>
-                  Print PDF
-                </button>
               </div>
             </div>
           </div>
@@ -631,177 +640,69 @@ export default {
       packetorders: [],
       satuans: [],
       dataVehiclesPelanggan: [],
+      stockku: 0,
+      isitotalProductHarga: 0,
+      isitotalServiceHarga: 0,
+      isitotalProductDiscount: 0,
+      isitotalServiceDiscount: 0,
+      isitotalPembayaran: 0,
+      isiPajakAmount: 0,
       form: {
-        nama: 'Budi Santoso',
-        hp: '08123456789',
-        alamat: 'Jl. Melati No. 10, Jakarta',
-        email: 'budi@email.com',
-        no_pol: 'B 1234 CD',
-        brand: 'Toyota',
-        type: 'Avanza',
-        model: 'G',
-        kapasitas: '7',
-        product_line_packet_order: [
-          {
-            product_id: 'Oli Mesin',
-            quantity: 2,
-            satuan_id: 'Ltr',
-            price: 85000,
-            discount: 10000,
-            subtotal: 160000,
-          },
-          {
-            product_id: 'Filter Oli',
-            quantity: 1,
-            satuan_id: 'Pcs',
-            price: 35000,
-            discount: 0,
-            subtotal: 35000,
-          },
-        ],
-        service_line_packet_order: [
-          {
-            product_id: 'Ganti Oli',
-            quantity: 1,
-            satuan_id: 'Jasa',
-            price: 50000,
-            discount: 5000,
-            subtotal: 45000,
-          },
-          {
-            product_id: 'Tune Up',
-            quantity: 1,
-            satuan_id: 'Jasa',
-            price: 150000,
-            discount: 0,
-            subtotal: 150000,
-          },
-        ],
+        customer_id: '',
+        vehicle_id: this.$route.params.id || '',
+        nama: '',
+        hp: '',
+        alamat: '',
+        email: '',
+        no_pol: '',
+        brand: '',
+        type: '',
+        model: '',
+        kapasitas: '',
+        product_ordered: [],
+        service_ordered: [],
+        keluhan: '',
+        saran: '',
       },
       selectedPaket: '',
-      paketList: [
-        {
-          nama: 'Paket Ganti Oli',
-          product_line_packet_order: [
-            {
-              product_id: 'Oli Mesin',
-              quantity: 3,
-              satuan_id: 'Ltr',
-              price: 85000,
-              discount: 10000,
-              subtotal: 155000,
-            },
-            {
-              product_id: 'Filter Oli',
-              quantity: 1,
-              satuan_id: 'Pcs',
-              price: 35000,
-              discount: 0,
-              subtotal: 35000,
-            },
-          ],
-          service_line_packet_order: [
-            {
-              product_id: 'Ganti Oli',
-              quantity: 1,
-              satuan_id: 'Jasa',
-              price: 50000,
-              discount: 5000,
-              subtotal: 45000,
-            },
-          ],
-        },
-        {
-          nama: 'Paket Tune Up',
-          product_line_packet_order: [
-            {
-              product_id: 'Busi',
-              quantity: 4,
-              satuan_id: 'Pcs',
-              price: 65000,
-              discount: 0,
-              subtotal: 260000,
-            },
-            {
-              product_id: 'Filter Udara',
-              quantity: 1,
-              satuan_id: 'Pcs',
-              price: 45000,
-              discount: 5000,
-              subtotal: 40000,
-            },
-          ],
-          service_line_packet_order: [
-            {
-              product_id: 'Tune Up',
-              quantity: 1,
-              satuan_id: 'Jasa',
-              price: 150000,
-              discount: 10000,
-              subtotal: 140000,
-            },
-          ],
-        },
-        {
-          nama: 'Paket Rem Lengkap',
-          product_line_packet_order: [
-            {
-              product_id: 'Kampas Rem',
-              quantity: 1,
-              satuan_id: 'Set',
-              price: 120000,
-              discount: 10000,
-              subtotal: 110000,
-            },
-            {
-              product_id: 'Minyak Rem',
-              quantity: 1,
-              satuan_id: 'Botol',
-              price: 35000,
-              discount: 0,
-              subtotal: 35000,
-            },
-          ],
-          service_line_packet_order: [
-            {
-              product_id: 'Servis Rem',
-              quantity: 1,
-              satuan_id: 'Jasa',
-              price: 100000,
-              discount: 5000,
-              subtotal: 95000,
-            },
-          ],
-        },
-      ],
+      paketList: [],
       showActivityModal: false,
       activityLog: { tanggal: '', aktivitas: '' },
+      isUseTax: false,
     }
   },
   computed: {
     totalProductHarga() {
-      return this.form.product_line_packet_order.reduce(
+      return this.form.product_ordered.reduce(
         (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
         0,
       )
     },
     totalProductDiscount() {
-      return this.form.product_line_packet_order.reduce(
-        (sum, item) => sum + (Number(item.discount) || 0),
-        0,
-      )
+      // Discount as percentage, like in productSubtotal
+      return this.form.product_ordered.reduce((sum, item) => {
+        const quantity = Number(item.quantity) || 0
+        const price = Number(item.price) || 0
+        const discount = Number(item.discount) || 0
+        // discount is percentage (0-100)
+        return sum + price * quantity * (discount / 100)
+      }, 0)
     },
     totalServiceHarga() {
-      return this.form.service_line_packet_order.reduce(
+      return this.form.service_ordered.reduce(
         (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
         0,
       )
     },
     totalServiceDiscount() {
-      return this.form.service_line_packet_order.reduce(
-        (sum, item) => sum + (Number(item.discount) || 0),
-        0,
-      )
+      // Discount as percentage, like in totalProductDiscount
+      return this.form.service_ordered.reduce((sum, item) => {
+        const quantity = Number(item.quantity) || 0
+        const price = Number(item.price) || 0
+        const discount = Number(item.discount) || 0
+        // discount is percentage (0-100)
+        return sum + price * quantity * (discount / 100)
+      }, 0)
     },
     grandTotalHarga() {
       return this.totalProductHarga + this.totalServiceHarga
@@ -809,8 +710,34 @@ export default {
     grandTotalDiscount() {
       return this.totalProductDiscount + this.totalServiceDiscount
     },
+    pajakAmount() {
+      if (!this.isUseTax) return 0
+      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      return subtotal * 0.11
+    },
     totalPembayaran() {
-      return Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      return subtotal + this.pajakAmount
+    },
+  },
+  watch: {
+    totalPembayaran(newVal) {
+      this.isitotalPembayaran = newVal
+    },
+    totalProductHarga(newVal) {
+      this.isitotalProductHarga = newVal
+    },
+    totalServiceHarga(newVal) {
+      this.isitotalServiceHarga = newVal
+    },
+    totalProductDiscount(newVal) {
+      this.isitotalProductDiscount = newVal
+    },
+    totalServiceDiscount(newVal) {
+      this.isitotalServiceDiscount = newVal
+    },
+    totalPajakAmount(newVal) {
+      this.isiPajakAmount = newVal
     },
   },
   setup() {
@@ -840,6 +767,7 @@ export default {
         const response = await axios.get(`${BASE_URL}customers/with-vehicles/${idku}`)
         console.log('Pelanggan Vehicles Data: ', response.data.data)
         this.dataVehiclesPelanggan = response.data.data
+        this.form.customer_id = this.dataVehiclesPelanggan[0].customer.id
         this.form.nama = this.dataVehiclesPelanggan[0].customer_nama
         this.form.alamat = this.dataVehiclesPelanggan[0].customer.alamat
         this.form.hp = this.dataVehiclesPelanggan[0].customer.hp
@@ -862,6 +790,20 @@ export default {
         const response = await axios.get(`${BASE_URL}products/satuans/all`)
         console.log('Satuan Data: ', response.data.data)
         this.satuans = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getStock(item) {
+      if (!item.product_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
+        const data = response.data.data
+        // Update satuan_id dan price pada item yang dipilih
+        if (data.total_stock) this.stockku = data.total_stock
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -924,9 +866,9 @@ export default {
       this.closeActivityModal()
     },
     addProductOrder() {
-      this.form.product_line_packet_order.push({
+      this.form.product_ordered.push({
         product_id: '',
-        quantity: 1,
+        quantity: 0,
         satuan_id: '',
         price: 0,
         discount: 0,
@@ -934,25 +876,25 @@ export default {
       })
     },
     removeProductOrder(idx) {
-      this.form.product_line_packet_order.splice(idx, 1)
+      this.form.product_ordered.splice(idx, 1)
     },
     addServiceOrder() {
-      this.form.service_line_packet_order.push({
-        nama: '',
-        quantity: 1,
+      this.form.service_ordered.push({
+        service_id: '',
+        quantity: 0,
         price: 0,
         discount: 0,
         subtotal: 0,
       })
     },
     removeServiceOrder(idx) {
-      this.form.service_line_packet_order.splice(idx, 1)
+      this.form.service_ordered.splice(idx, 1)
     },
     productSubtotal(item) {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      return Math.max(0, quantity * price - discount)
+      item.subtotal = Math.max(0, quantity * price - discount)
     },
     serviceSubtotal(item) {
       const quantity = Number(item.quantity) || 0
@@ -972,6 +914,11 @@ export default {
     },
     submitForm() {
       alert('Work Order submitted!')
+      this.form.total_biaya = this.isitotalPembayaran
+      this.form.pajak = this.isiPajakAmount
+      this.form.total_discount = this.isitotalProductDiscount + this.isitotalServiceDiscount
+
+      console.log('Form Data:', this.form)
     },
     printPDF() {
       const doc = new jsPDF()
@@ -1013,13 +960,13 @@ export default {
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
-      this.form.product_line_packet_order.forEach((item) => {
+      this.form.product_ordered.forEach((item) => {
         doc.text(String(item.nama), 10, y)
         doc.text(String(item.quantity), 60, y)
         doc.text(String(item.satuan), 75, y)
         doc.text(this.formatCurrency(item.price), 95, y)
         doc.text(this.formatCurrency(item.discount), 120, y)
-        doc.text(this.formatCurrency(this.productSubtotal(item)), 140, y)
+        doc.text(this.formatCurrency(this.item.subtotal), 140, y)
         y += 4
       })
       y += 2
@@ -1035,7 +982,7 @@ export default {
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
-      this.form.service_line_packet_order.forEach((item) => {
+      this.form.service_ordered.forEach((item) => {
         doc.text(String(item.nama), 10, y)
         doc.text(String(item.quantity), 60, y)
         doc.text(String(item.satuan), 75, y)
@@ -1049,6 +996,7 @@ export default {
       doc.setFontSize(11)
       doc.text(`Total Harga: ${this.formatCurrency(this.grandTotalHarga)}`, 10, y)
       doc.text(`Total Discount: ${this.formatCurrency(this.grandTotalDiscount)}`, 70, y)
+      doc.text(`Pajak (11%): ${this.formatCurrency(this.pajakAmount)}`, 120, y)
       doc.text(`Total Bayar: ${this.formatCurrency(this.totalPembayaran)}`, 140, y)
       doc.save('workorder.pdf')
     },
@@ -1060,6 +1008,7 @@ export default {
         const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
         item.satuan_id = data.satuan_id
+        item.product_name = data.name
         if (data.price) item.price = data.price
       } catch (error) {
         console.log('error: ', error)
@@ -1094,8 +1043,16 @@ export default {
       }
       const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
       if (paket && paket.product_line && paket.service_line) {
-        this.form.product_line_packet_order = JSON.parse(JSON.stringify(paket.product_line))
-        this.form.service_line_packet_order = JSON.parse(JSON.stringify(paket.service_line))
+        this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
+        this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
+        // Jalankan getStock untuk setiap item produk hasil paket
+        this.form.product_ordered.forEach((item) => {
+          this.getStock(item)
+          if (this.stockku < item.quantity) {
+            this.message_toast = `Stok untuk produk ID ${item.product_name} tidak mencukupi.`
+            this.show_toast = true
+          }
+        })
       } else {
         console.error(
           'Paket tidak ditemukan atau data tidak lengkap:',

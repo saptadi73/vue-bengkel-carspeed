@@ -275,14 +275,13 @@ export default {
 
     calculateSubtotal(item) {
       this.getStock(item)
-      const availability = this.stockku - item.quantity
-      console.log('Availibility : ', this.stockku)
-
-      if (availability < 0) {
-        this.show_toast = true
-        this.message_toast = 'Stoc not Vailable '
+      console.log('Stocknya: ', this.stockku)
+      if (item.quantity > this.stockku) {
         item.subtotal = 0
-        item.quantity = item.stock >= 0 ? item.stock : 0
+        item.quantity = 0
+        item.price = 0
+        this.show_toast = true
+        this.message_toast = 'Quantity melebihi stock yang ada!'
       } else {
         const qty = item.quantity || 0
         const price = item.price || 0
@@ -325,7 +324,7 @@ export default {
     addProduct() {
       this.paket.product_line_packet_order.push({
         product_id: '',
-        quantity: 1,
+        quantity: 0,
         satuan_id: '',
         price: '',
         discount: 0,
@@ -338,7 +337,7 @@ export default {
     addService() {
       this.paket.service_line_packet_order.push({
         service_id: '',
-        quantity: 1,
+        quantity: 0,
         price: '',
         discount: 0,
         subtotal: 0,
