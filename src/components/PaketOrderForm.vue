@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto bg-white rounded-xl shadow p-6 ipad:w-[60vw]">
+  <div class="mx-auto bg-white rounded-xl shadow p-6 ipad:w-[75vw]">
     <h2 class="text-xl font-bold mb-4">Form Paket Order</h2>
     <form @submit.prevent="submitPaket">
       <div class="info-card">
@@ -18,7 +18,11 @@
           class="flex gap-2 mb-2"
         >
           <!-- Select Product -->
-          <select v-model="item.product_id" class="modern-select peer">
+          <select
+            v-model="item.product_id"
+            class="modern-select peer"
+            @change="getProductsId(item)"
+          >
             <option value="" disabled selected>Pilih Product</option>
             <option v-for="productku in products" :key="productku.id" :value="productku.id">
               {{ productku.name }}
@@ -33,6 +37,15 @@
             class="modern-input peer"
             @input="calculateSubtotal(item)"
           />
+          <input v-model.number="item.stock" type="hidden" placeholder="Stock" />
+
+          <!-- Select Product -->
+          <select v-model="item.satuan_id" class="modern-select peer">
+            <option value="" disabled selected>Pilih Satuan</option>
+            <option v-for="satuanku in satuans" :key="satuanku.id" :value="satuanku.id">
+              {{ satuanku.name }}
+            </option>
+          </select>
 
           <!-- Price -->
           <input
@@ -84,7 +97,11 @@
           class="flex gap-2 mb-2"
         >
           <!-- Select Service -->
-          <select v-model="item.service_id" class="modern-select peer">
+          <select
+            v-model="item.service_id"
+            class="modern-select peer"
+            @change="getServicesId(item)"
+          >
             <option value="" disabled selected>Pilih Service/Jasa</option>
             <option v-for="serviceku in services" :key="serviceku.id" :value="serviceku.id">
               {{ serviceku.name }}
@@ -177,6 +194,9 @@ export default {
         : { name: '', product_line_packet_order: [], service_line_packet_order: [] },
       products: [],
       services: [],
+      satuans: [],
+      productID: [],
+      stockku: '',
     }
   },
   setup() {
@@ -188,8 +208,65 @@ export default {
   created() {
     this.getProduct()
     this.getService()
+    this.getSatuans()
   },
   methods: {
+    async getProductsId(item) {
+      if (!item.product_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/${item.product_id}`)
+        const data = response.data.data
+        item.satuan_id = data.satuan_id
+        if (data.price) item.price = data.price
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+
+    async getStock(item) {
+      if (!item.product_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
+        const data = response.data.data
+        // Update satuan_id dan price pada item yang dipilih
+        if (data.total_stock) this.stockku = data.total_stock
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getServicesId(item) {
+      if (!item.service_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
+        const data = response.data.data
+        // Update satuan_id dan price pada item yang dipilih
+        if (data.price) item.price = data.price
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+
+    async getSatuans() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/satuans/all`)
+        console.log('Satuan Data: ', response.data.data)
+        this.satuans = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -197,11 +274,23 @@ export default {
     },
 
     calculateSubtotal(item) {
-      const qty = item.quantity || 0
-      const price = item.price || 0
-      const discount = item.discount || 0
-      item.subtotal = price * qty - price * qty * (discount / 100)
+      this.getStock(item)
+      const availability = this.stockku - item.quantity
+      console.log('Availibility : ', this.stockku)
+
+      if (availability < 0) {
+        this.show_toast = true
+        this.message_toast = 'Stoc not Vailable '
+        item.subtotal = 0
+        item.quantity = item.stock >= 0 ? item.stock : 0
+      } else {
+        const qty = item.quantity || 0
+        const price = item.price || 0
+        const discount = item.discount || 0
+        item.subtotal = price * qty - price * qty * (discount / 100)
+      }
     },
+
     calculateSubtotalService(item) {
       const qty = item.quantity || 0
       const price = item.price || 0
@@ -237,6 +326,7 @@ export default {
       this.paket.product_line_packet_order.push({
         product_id: '',
         quantity: 1,
+        satuan_id: '',
         price: '',
         discount: 0,
         subtotal: 0,

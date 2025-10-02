@@ -183,9 +183,13 @@
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
-                  <div class="relative">
-                    <select v-model="item.product_id" class="modern-select peer">
+                <div class="grid grid-cols-9 gap-4 mb-4">
+                  <div class="relative col-span-2">
+                    <select
+                      v-model="item.product_id"
+                      class="modern-select peer"
+                      @change="getProductsId(item)"
+                    >
                       <option value="" disabled selected>Pilih Product</option>
                       <option
                         v-for="productku in products"
@@ -195,9 +199,9 @@
                         {{ productku.name }}
                       </option>
                     </select>
-                    <label class="modern-label">Nama Sparepart</label>
+                    <label class="modern-select-label">Nama Sparepart</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
                       type="number"
@@ -207,16 +211,16 @@
                     />
                     <label class="modern-label">quantity</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-1">
                     <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
                         {{ value.name }}
                       </option>
                     </select>
-                    <label class="modern-label">Satuan</label>
+                    <label class="modern-select-label">Satuan</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-2">
                     <input
                       v-model.number="item.price"
                       type="number"
@@ -226,7 +230,7 @@
                     />
                     <label class="modern-label">Harga</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-1">
                     <input
                       v-model.number="item.discount"
                       type="number"
@@ -236,7 +240,7 @@
                     />
                     <label class="modern-label">Discount</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-2">
                     <div class="subtotal-display">
                       {{ formatCurrency(productSubtotal(item)) }}
                     </div>
@@ -345,9 +349,13 @@
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
-                <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
-                  <div class="relative">
-                    <select v-model="item.service_id" class="modern-select peer">
+                <div class="grid grid-cols-8 gap-4 mb-4">
+                  <div class="relative col-span-2">
+                    <select
+                      v-model="item.service_id"
+                      @change="getServicesId(item)"
+                      class="modern-select peer"
+                    >
                       <option value="" disabled selected>Pilih Service/Jasa</option>
                       <option
                         v-for="serviceku in services"
@@ -357,9 +365,9 @@
                         {{ serviceku.name }}
                       </option>
                     </select>
-                    <label class="modern-label">Nama Jasa</label>
+                    <label class="modern-select-label">Nama Jasa</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
                       type="number"
@@ -370,7 +378,7 @@
                     <label class="modern-label">quantity</label>
                   </div>
 
-                  <div class="relative">
+                  <div class="relative col-span-2">
                     <input
                       v-model.number="item.price"
                       type="number"
@@ -380,7 +388,7 @@
                     />
                     <label class="modern-label">Harga</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-1">
                     <input
                       v-model.number="item.discount"
                       type="number"
@@ -390,7 +398,7 @@
                     />
                     <label class="modern-label">Discount</label>
                   </div>
-                  <div class="relative">
+                  <div class="relative col-span-2">
                     <div class="subtotal-display">
                       {{ formatCurrency(serviceSubtotal(item)) }}
                     </div>
@@ -634,12 +642,40 @@ export default {
         model: 'G',
         kapasitas: '7',
         product_line_packet_order: [
-          { nama: 'Oli Mesin', quantity: 2, satuan: 'Ltr', price: 85000, discount: 10000 },
-          { nama: 'Filter Oli', quantity: 1, satuan: 'Pcs', price: 35000, discount: 0 },
+          {
+            product_id: 'Oli Mesin',
+            quantity: 2,
+            satuan_id: 'Ltr',
+            price: 85000,
+            discount: 10000,
+            subtotal: 160000,
+          },
+          {
+            product_id: 'Filter Oli',
+            quantity: 1,
+            satuan_id: 'Pcs',
+            price: 35000,
+            discount: 0,
+            subtotal: 35000,
+          },
         ],
         service_line_packet_order: [
-          { nama: 'Ganti Oli', quantity: 1, satuan: 'Jasa', price: 50000, discount: 5000 },
-          { nama: 'Tune Up', quantity: 1, satuan: 'Jasa', price: 150000, discount: 0 },
+          {
+            product_id: 'Ganti Oli',
+            quantity: 1,
+            satuan_id: 'Jasa',
+            price: 50000,
+            discount: 5000,
+            subtotal: 45000,
+          },
+          {
+            product_id: 'Tune Up',
+            quantity: 1,
+            satuan_id: 'Jasa',
+            price: 150000,
+            discount: 0,
+            subtotal: 150000,
+          },
         ],
       },
       selectedPaket: '',
@@ -647,30 +683,94 @@ export default {
         {
           nama: 'Paket Ganti Oli',
           product_line_packet_order: [
-            { nama: 'Oli Mesin', quantity: 3, satuan: 'Ltr', price: 85000, discount: 10000 },
-            { nama: 'Filter Oli', quantity: 1, satuan: 'Pcs', price: 35000, discount: 0 },
+            {
+              product_id: 'Oli Mesin',
+              quantity: 3,
+              satuan_id: 'Ltr',
+              price: 85000,
+              discount: 10000,
+              subtotal: 155000,
+            },
+            {
+              product_id: 'Filter Oli',
+              quantity: 1,
+              satuan_id: 'Pcs',
+              price: 35000,
+              discount: 0,
+              subtotal: 35000,
+            },
           ],
           service_line_packet_order: [
-            { nama: 'Ganti Oli', quantity: 1, satuan: 'Jasa', price: 50000, discount: 5000 },
+            {
+              product_id: 'Ganti Oli',
+              quantity: 1,
+              satuan_id: 'Jasa',
+              price: 50000,
+              discount: 5000,
+              subtotal: 45000,
+            },
           ],
         },
         {
           nama: 'Paket Tune Up',
           product_line_packet_order: [
-            { nama: 'Busi', quantity: 4, satuan: 'Pcs', price: 65000, discount: 0 },
+            {
+              product_id: 'Busi',
+              quantity: 4,
+              satuan_id: 'Pcs',
+              price: 65000,
+              discount: 0,
+              subtotal: 260000,
+            },
+            {
+              product_id: 'Filter Udara',
+              quantity: 1,
+              satuan_id: 'Pcs',
+              price: 45000,
+              discount: 5000,
+              subtotal: 40000,
+            },
           ],
           service_line_packet_order: [
-            { nama: 'Tune Up', quantity: 1, satuan: 'Jasa', price: 150000, discount: 10000 },
+            {
+              product_id: 'Tune Up',
+              quantity: 1,
+              satuan_id: 'Jasa',
+              price: 150000,
+              discount: 10000,
+              subtotal: 140000,
+            },
           ],
         },
         {
           nama: 'Paket Rem Lengkap',
           product_line_packet_order: [
-            { nama: 'Kampas Rem', quantity: 1, satuan: 'Set', price: 120000, discount: 10000 },
-            { nama: 'Minyak Rem', quantity: 1, satuan: 'Botol', price: 35000, discount: 0 },
+            {
+              product_id: 'Kampas Rem',
+              quantity: 1,
+              satuan_id: 'Set',
+              price: 120000,
+              discount: 10000,
+              subtotal: 110000,
+            },
+            {
+              product_id: 'Minyak Rem',
+              quantity: 1,
+              satuan_id: 'Botol',
+              price: 35000,
+              discount: 0,
+              subtotal: 35000,
+            },
           ],
           service_line_packet_order: [
-            { nama: 'Servis Rem', quantity: 1, satuan: 'Jasa', price: 100000, discount: 5000 },
+            {
+              product_id: 'Servis Rem',
+              quantity: 1,
+              satuan_id: 'Jasa',
+              price: 100000,
+              discount: 5000,
+              subtotal: 95000,
+            },
           ],
         },
       ],
@@ -825,11 +925,12 @@ export default {
     },
     addProductOrder() {
       this.form.product_line_packet_order.push({
-        nama: '',
+        product_id: '',
         quantity: 1,
-        satuan: '',
+        satuan_id: '',
         price: 0,
         discount: 0,
+        subtotal: 0,
       })
     },
     removeProductOrder(idx) {
@@ -839,9 +940,9 @@ export default {
       this.form.service_line_packet_order.push({
         nama: '',
         quantity: 1,
-        satuan: '',
         price: 0,
         discount: 0,
+        subtotal: 0,
       })
     },
     removeServiceOrder(idx) {
@@ -857,7 +958,8 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      return Math.max(0, quantity * price - discount)
+      // Diskon sebagai persentase
+      return Math.max(0, price * quantity - price * quantity * (discount / 100))
     },
     formatCurrency(val) {
       if (!val || isNaN(val)) return 'Rp 0'
@@ -950,16 +1052,58 @@ export default {
       doc.text(`Total Bayar: ${this.formatCurrency(this.totalPembayaran)}`, 140, y)
       doc.save('workorder.pdf')
     },
+    async getProductsId(item) {
+      if (!item.product_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/${item.product_id}`)
+        const data = response.data.data
+        // Update satuan_id dan price pada item yang dipilih
+        item.satuan_id = data.satuan_id
+        if (data.price) item.price = data.price
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getServicesId(item) {
+      if (!item.service_id) return
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
+        const data = response.data.data
+        // Update satuan_id dan price pada item yang dipilih
+        if (data.price) item.price = data.price
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     applyPaket() {
-      if (!this.selectedPaket) return
-      const paket = this.paketList.find((p) => p.nama === this.selectedPaket)
-      if (paket) {
-        this.form.product_line_packet_order = JSON.parse(
-          JSON.stringify(paket.product_line_packet_order),
+      if (!this.selectedPaket) {
+        this.message_toast = 'Silakan pilih paket terlebih dahulu.'
+        this.show_toast = true
+        return
+      }
+      if (!Array.isArray(this.packetorders) || this.packetorders.length === 0) {
+        this.message_toast = 'Data paket belum dimuat. Silakan coba lagi.'
+        this.show_toast = true
+        return
+      }
+      const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
+      if (paket && paket.product_line && paket.service_line) {
+        this.form.product_line_packet_order = JSON.parse(JSON.stringify(paket.product_line))
+        this.form.service_line_packet_order = JSON.parse(JSON.stringify(paket.service_line))
+      } else {
+        console.error(
+          'Paket tidak ditemukan atau data tidak lengkap:',
+          this.selectedPaket,
+          this.packetorders,
         )
-        this.form.service_line_packet_order = JSON.parse(
-          JSON.stringify(paket.service_line_packet_order),
-        )
+        this.message_toast = 'Paket tidak ditemukan atau data tidak lengkap.'
+        this.show_toast = true
       }
     },
   },
