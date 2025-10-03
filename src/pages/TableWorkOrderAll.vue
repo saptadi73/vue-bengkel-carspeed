@@ -58,18 +58,23 @@
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
             <option value="">Semua Status</option>
-            <option value="Progress">Progress</option>
-            <option value="Selesai">Selesai</option>
+            <option value="draft">Draft</option>
+            <option value="dikerjakan">Dikerjakan</option>
+            <option value="selesai">Selesai</option>
           </select>
         </div>
       </div>
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
       <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg shadow-sm">
         <h3 class="text-sm font-medium text-blue-800 mb-1">Total Work Order</h3>
         <p class="text-2xl font-bold text-blue-600">{{ filteredOrders.length }}</p>
+      </div>
+      <div class="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-lg shadow-sm">
+        <h3 class="text-sm font-medium text-orange-800 mb-1">Draft(sementara)</h3>
+        <p class="text-2xl font-bold text-orange-600">{{ draftCount }}</p>
       </div>
       <div class="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-lg shadow-sm">
         <h3 class="text-sm font-medium text-orange-800 mb-1">Dalam Progress</h3>
@@ -119,7 +124,7 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
-                Layanan
+                HP
               </th>
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
@@ -164,23 +169,22 @@
                     </div>
                   </div>
                   <div class="ml-4">
-                    <div class="text-sm font-medium text-gray-900">{{ order.workOrderNumber }}</div>
-                    <div class="text-sm text-gray-500">{{ formatDate(order.registerDate) }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ order.no_wo }}</div>
+                    <div class="text-sm text-gray-500">{{ formatDate(order.tanggal_masuk) }}</div>
                   </div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ order.customerName }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ order.customer_name }}</div>
                 <div class="text-sm text-gray-500">
-                  Terdaftar: {{ formatDateTime(order.registerDate) }}
+                  Terdaftar: {{ formatDateTime(order.tanggal_masuk) }}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                >
-                  {{ order.licensePlate }}
-                </span>
+                <div class="text-sm font-medium text-gray-900">{{ order.vehicle_no_pol }}</div>
+                <div class="text-sm text-gray-500">
+                  {{ order.vehicle_brand }}, {{ order.vehicle_model }}, {{ order.vehicle_color }}
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
@@ -202,7 +206,7 @@
                     </div>
                   </div>
                   <div class="ml-3">
-                    <div class="text-sm font-medium text-gray-900">{{ order.handledBy }}</div>
+                    <div class="text-sm font-medium text-gray-900">{{ order.karyawan_name }}</div>
                   </div>
                 </div>
               </td>
@@ -211,7 +215,7 @@
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   :class="getServiceTypeClass(order.serviceType)"
                 >
-                  {{ order.serviceType }}
+                  {{ order.customer_hp }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -223,7 +227,10 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                <button @click="showSalesOrder(order)" class="modern-btn-info">
+                <a
+                  :href="`${BASE_URL2}pelanggan/history/${order.vehicle_id}`"
+                  class="modern-btn-info"
+                >
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
@@ -232,19 +239,8 @@
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  SO
-                </button>
-                <button @click="showRepairNotes(order)" class="modern-btn-success">
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  Catatan
-                </button>
+                  history
+                </a>
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
@@ -298,7 +294,7 @@
               </svg>
             </div>
             <div>
-              <div class="font-semibold text-gray-900">{{ order.workOrderNumber }}</div>
+              <div class="font-semibold text-gray-900">{{ order.no_wo }}</div>
               <div class="text-sm text-gray-500">#{{ index + 1 }}</div>
             </div>
           </div>
@@ -325,7 +321,7 @@
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            <span class="text-sm"><strong>Pelanggan:</strong> {{ order.customerName }}</span>
+            <span class="text-sm"><strong>Pelanggan:</strong> {{ order.customer_name }}</span>
           </div>
 
           <div class="flex items-center">
@@ -342,7 +338,7 @@
                 d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
               />
             </svg>
-            <span class="text-sm"><strong>No. Polisi:</strong> {{ order.licensePlate }}</span>
+            <span class="text-sm"><strong>No. Polisi:</strong> {{ order.vehicle_no_pol }}</span>
           </div>
 
           <div class="flex items-center">
@@ -359,7 +355,7 @@
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            <span class="text-sm"><strong>Teknisi:</strong> {{ order.handledBy }}</span>
+            <span class="text-sm"><strong>Teknisi:</strong> {{ order.karyawan_name }}</span>
           </div>
 
           <div class="flex items-center">
@@ -382,7 +378,7 @@
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <span class="text-sm"><strong>Layanan:</strong> {{ order.serviceType }}</span>
+            <span class="text-sm"><strong>HP Customer:</strong> {{ order.customer_hp }}</span>
           </div>
 
           <div class="flex items-center">
@@ -400,13 +396,13 @@
               />
             </svg>
             <span class="text-sm"
-              ><strong>Estimasi Selesai:</strong> {{ formatDateTime(order.estimatedFinish) }}</span
+              ><strong>Estimasi Selesai:</strong> {{ formatDateTime(order.tanggal_keluar) }}</span
             >
           </div>
         </div>
 
         <div class="flex gap-2 mt-4">
-          <button @click="showSalesOrder(order)" class="modern-btn-info flex-1">
+          <a :href="`${BASE_URL2}pelanggan/history/${order.id}`" class="modern-btn-info flex-1">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -416,7 +412,7 @@
               />
             </svg>
             Sales Order
-          </button>
+          </a>
           <button @click="showRepairNotes(order)" class="modern-btn-success flex-1">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -479,15 +475,15 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p class="text-sm text-blue-600 font-medium">Nama Pelanggan</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.customerName }}</p>
+                <p class="text-blue-900 font-semibold">{{ selectedOrder?.customer_name }}</p>
               </div>
               <div>
                 <p class="text-sm text-blue-600 font-medium">No. Polisi</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.licensePlate }}</p>
+                <p class="text-blue-900 font-semibold">{{ selectedOrder?.vehicle_no_pol }}</p>
               </div>
               <div>
                 <p class="text-sm text-blue-600 font-medium">Work Order</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.workOrderNumber }}</p>
+                <p class="text-blue-900 font-semibold">{{ selectedOrder?.no_wo }}</p>
               </div>
             </div>
           </div>
@@ -594,7 +590,7 @@
                 />
               </svg>
               <h3 class="text-lg font-bold text-white">
-                Catatan Perbaikan - {{ selectedOrder?.workOrderNumber }}
+                Catatan Perbaikan - {{ selectedOrder?.no_wo }}
               </h3>
             </div>
             <button
@@ -631,16 +627,26 @@
       </div>
     </div>
   </div>
+  <loading-overlay />
+  <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
 
 <script>
+import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
+import LoadingOverlay from '@/components/LoadingOverlay.vue'
+import ToastCard from '@/components/ToastCard.vue'
+import axios from 'axios'
+import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
   name: 'TableWorkOrderAll',
+  components: { LoadingOverlay, ToastCard },
   setup() {
     const loadingStore = useLoadingStore()
-    return { loadingStore }
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   data() {
     return {
@@ -649,66 +655,7 @@ export default {
       showSalesOrderModal: false,
       showRepairNotesModal: false,
       selectedOrder: null,
-      workOrders: [
-        // Sample data - replace with API call
-        {
-          workOrderNumber: 'WO-2024-001',
-          customerName: 'John Doe',
-          licensePlate: 'B 1234 ABC',
-          handledBy: 'Ahmad Teknisi',
-          serviceType: 'Service Rutin',
-          status: 'Progress',
-          registerDate: '2024-01-15T08:00:00Z',
-          estimatedFinish: '2024-01-16T17:00:00Z',
-          repairNotes:
-            'Ganti oli mesin, filter udara, dan cek sistem rem. Kondisi kendaraan secara keseluruhan baik.',
-          salesOrder: {
-            items: [
-              { name: 'Oli Mesin 5W-30', price: 150000 },
-              { name: 'Filter Udara', price: 75000 },
-              { name: 'Jasa Service', price: 100000 },
-            ],
-          },
-        },
-        {
-          workOrderNumber: 'WO-2024-002',
-          customerName: 'Jane Smith',
-          licensePlate: 'B 5678 DEF',
-          handledBy: 'Budi Mekanik',
-          serviceType: 'Perbaikan',
-          status: 'Selesai',
-          registerDate: '2024-01-14T09:30:00Z',
-          estimatedFinish: '2024-01-15T16:00:00Z',
-          repairNotes:
-            'Perbaikan sistem AC, ganti freon dan bersihkan evaporator. AC sudah dingin normal.',
-          salesOrder: {
-            items: [
-              { name: 'Freon R134a', price: 200000 },
-              { name: 'Jasa Perbaikan AC', price: 250000 },
-            ],
-          },
-        },
-        {
-          workOrderNumber: 'WO-2024-003',
-          customerName: 'Robert Johnson',
-          licensePlate: 'B 9012 GHI',
-          handledBy: 'Candra Teknisi',
-          serviceType: 'Tune Up',
-          status: 'Progress',
-          registerDate: '2024-01-16T10:15:00Z',
-          estimatedFinish: '2024-01-17T15:30:00Z',
-          repairNotes:
-            'Tune up lengkap: ganti busi, filter oli, filter udara, dan cek timing belt.',
-          salesOrder: {
-            items: [
-              { name: 'Busi Iridium', price: 120000 },
-              { name: 'Filter Oli', price: 45000 },
-              { name: 'Filter Udara', price: 75000 },
-              { name: 'Jasa Tune Up', price: 200000 },
-            ],
-          },
-        },
-      ],
+      workOrders: [],
     }
   },
   computed: {
@@ -720,10 +667,10 @@ export default {
         const query = this.searchQuery.toLowerCase()
         filtered = filtered.filter(
           (order) =>
-            order.workOrderNumber.toLowerCase().includes(query) ||
-            order.customerName.toLowerCase().includes(query) ||
-            order.licensePlate.toLowerCase().includes(query) ||
-            order.handledBy.toLowerCase().includes(query),
+            order.no_wo.toLowerCase().includes(query) ||
+            order.customer_name.toLowerCase().includes(query) ||
+            order.vehicle_no_pol.toLowerCase().includes(query) ||
+            order.karyawan_name.toLowerCase().includes(query),
         )
       }
 
@@ -735,13 +682,16 @@ export default {
       return filtered
     },
     progressCount() {
-      return this.workOrders.filter((order) => order.status === 'Progress').length
+      return this.workOrders.filter((order) => order.status === 'dikerjakan').length
+    },
+    draftCount() {
+      return this.workOrders.filter((order) => order.status === 'draft').length
     },
     completedCount() {
-      return this.workOrders.filter((order) => order.status === 'Selesai').length
+      return this.workOrders.filter((order) => order.status === 'selesai').length
     },
     uniqueTechnicians() {
-      const technicians = new Set(this.workOrders.map((order) => order.handledBy))
+      const technicians = new Set(this.workOrders.map((order) => order.karyawan_name))
       return technicians.size
     },
   },
@@ -752,12 +702,12 @@ export default {
     async fetchWorkOrders() {
       try {
         this.loadingStore.show()
-        // Replace with actual API endpoint
-        // const response = await axios.get(`${BASE_URL}work-orders`)
-        // this.workOrders = response.data.data || []
-        console.log('Fetching work orders...')
+        const response = await axios.get(`${BASE_URL}workorders/all`)
+        this.workOrders = response.data.data
+        console.log('Fetching work orders...: ', this.workOrders)
       } catch (error) {
         console.error('Error fetching work orders:', error)
+        console.log('Using sample data due to fetch error.', error)
         // Keep sample data for now
       } finally {
         this.loadingStore.hide()

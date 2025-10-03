@@ -134,6 +134,54 @@
               <label class="info-label">Kapasitas</label>
               <div class="info-value">{{ form.kapasitas }}</div>
             </div>
+            <div class="info-card">
+              <div class="relative">
+                <select v-model="form.status" id="status" class="modern-select peer">
+                  <option value="" disabled selected>Pilih Status</option>
+                  <option value="draft">draft</option>
+                  <option value="in_progress">in_progress</option>
+                  <option value="completed">completed</option>
+                </select>
+                <label class="modern-select-label">Tahun</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Karyawan Selection Section -->
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="bg-indigo-100 p-2 rounded-lg">
+              <svg
+                class="h-5 w-5 text-indigo-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Pilih Karyawan</h3>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+              <select v-model="form.karyawan_id" class="modern-select peer">
+                <option value="">-- Pilih Karyawan --</option>
+                <option
+                  v-for="karyawanItem in karyawan"
+                  :key="karyawanItem.id"
+                  :value="karyawanItem.id"
+                >
+                  {{ karyawanItem.nama }}
+                </option>
+              </select>
+              <label class="modern-select-label">Karyawan</label>
+            </div>
           </div>
         </div>
 
@@ -647,6 +695,7 @@ export default {
       isitotalServiceDiscount: 0,
       isitotalPembayaran: 0,
       isiPajakAmount: 0,
+      karyawan: [],
       form: {
         customer_id: '',
         vehicle_id: this.$route.params.id || '',
@@ -663,6 +712,9 @@ export default {
         service_ordered: [],
         keluhan: '',
         saran: '',
+        status: 'draft',
+        pajak: 0,
+        karyawan_id: '',
       },
       selectedPaket: '',
       paketList: [],
@@ -736,7 +788,7 @@ export default {
     totalServiceDiscount(newVal) {
       this.isitotalServiceDiscount = newVal
     },
-    totalPajakAmount(newVal) {
+    pajakAmount(newVal) {
       this.isiPajakAmount = newVal
     },
   },
@@ -752,6 +804,7 @@ export default {
     this.getPacketOrders()
     this.getSatuans()
     this.getVehiclesPelanggan()
+    this.getKaryawan()
   },
   methods: {
     tutupToast() {
@@ -760,6 +813,18 @@ export default {
       window.location.reload()
     },
 
+    async getKaryawan() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}karyawans/all`)
+        console.log('Karyawan Data: ', response.data.data)
+        this.karyawan = response.data.data
+      } catch (error) {
+        console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     async getVehiclesPelanggan() {
       try {
         this.loadingStore.show()
@@ -802,10 +867,20 @@ export default {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
         const data = response.data.data
-        // Update satuan_id dan price pada item yang dipilih
-        if (data.total_stock) this.stockku = data.total_stock
+        // Simpan stok di item
+        item.stockku = data.total_stock || 0
+
+        // Validasi: jika quantity melebihi stok, reset dan beri warning
+        if (item.quantity > item.stockku) {
+          this.message_toast = `Stok untuk produk "${item.product_name || item.product_id}" tidak mencukupi (tersedia: ${item.stockku}, diminta: ${item.quantity}). Quantity, harga, dan subtotal direset ke 0.`
+          this.show_toast = true
+          item.quantity = 0
+          item.price = 0
+          item.subtotal = 0
+        }
       } catch (error) {
         console.log('error: ', error)
+        item.stockku = 0
       } finally {
         this.loadingStore.hide()
       }
@@ -894,7 +969,9 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      item.subtotal = Math.max(0, quantity * price - discount)
+      item.subtotal = Math.max(0, quantity * price - quantity * price * (discount / 100))
+      // Cek stok setiap kali subtotal dihitung
+      this.getStock(item)
     },
     serviceSubtotal(item) {
       const quantity = Number(item.quantity) || 0
@@ -912,11 +989,26 @@ export default {
         maximumFractionDigits: 0,
       }).format(val)
     },
-    submitForm() {
-      alert('Work Order submitted!')
+    async submitForm() {
+      // Tanggal masuk: now lengkap dengan jam (format ISO)
+      this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
       this.form.total_biaya = this.isitotalPembayaran
       this.form.pajak = this.isiPajakAmount
       this.form.total_discount = this.isitotalProductDiscount + this.isitotalServiceDiscount
+
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+        this.show_toast = true
+        this.message_toast = response.data.message
+        console.log('Response: ', response.data.data)
+      } catch (error) {
+        console.log('error: ', error)
+        this.show_toast = true
+        this.message_toast = 'Gagal submit work order!'
+      } finally {
+        this.loadingStore.hide()
+      }
 
       console.log('Form Data:', this.form)
     },
@@ -1006,10 +1098,10 @@ export default {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/${item.product_id}`)
         const data = response.data.data
-        // Update satuan_id dan price pada item yang dipilih
         item.satuan_id = data.satuan_id
         item.product_name = data.name
         if (data.price) item.price = data.price
+        await this.getStock(item)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -1030,7 +1122,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    applyPaket() {
+    async applyPaket() {
       if (!this.selectedPaket) {
         this.message_toast = 'Silakan pilih paket terlebih dahulu.'
         this.show_toast = true
@@ -1045,14 +1137,12 @@ export default {
       if (paket && paket.product_line && paket.service_line) {
         this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
         this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
-        // Jalankan getStock untuk setiap item produk hasil paket
-        this.form.product_ordered.forEach((item) => {
-          this.getStock(item)
-          if (this.stockku < item.quantity) {
-            this.message_toast = `Stok untuk produk ID ${item.product_name} tidak mencukupi.`
-            this.show_toast = true
-          }
-        })
+        // Jalankan getStock untuk setiap item produk hasil paket, tunggu semua selesai
+        await Promise.all(
+          this.form.product_ordered.map(async (item) => {
+            await this.getStock(item)
+          }),
+        )
       } else {
         console.error(
           'Paket tidak ditemukan atau data tidak lengkap:',

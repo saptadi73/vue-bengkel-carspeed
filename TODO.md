@@ -1,7 +1,9 @@
-# TODO: Add Close Buttons to Modals in TableWorkOrderAll.vue
+# TODO: Percantik Table History Orders
 
-- [x] Add click-outside-to-close for Sales Order Modal
-- [x] Add "Tutup" button at bottom of Sales Order Modal
-- [x] Add click-outside-to-close for Repair Notes Modal
-- [x] Add "Tutup" button at bottom of Repair Notes Modal
-- [ ] Test modal close functionality
+- [ ] Tambahkan ikon pada judul "History Orders"
+- [ ] Perbaiki styling search bar dengan efek yang lebih menarik
+- [ ] Tingkatkan tabel desktop: baris bergantian, efek hover, ikon pada header
+- [ ] Perbaiki kartu mobile: tambahkan ikon untuk setiap bagian
+- [ ] Style tombol pagination dengan ikon dan warna yang lebih baik
+- [ ] Tambahkan transisi dan animasi halus
+- [ ] Update style scoped dengan warna dan efek modern
