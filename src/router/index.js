@@ -52,7 +52,7 @@ const router = createRouter({
         },
         {
           path: 'pelanggan-mobil/baru',
-          name: 'Pelanggan & Mobil',
+          name: 'Pelanggan_Mobil',
           component: () => import('../pages/InputDataPelangganMobil.vue'),
         },
         {

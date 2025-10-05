@@ -45,10 +45,15 @@
               <button
                 v-if="booking.customer_id"
                 class="p-2 bg-blue-800 rounded-lg text-white shadow-lg"
+                @click="saveToWO(booking)"
               >
                 Create WO
               </button>
-              <button v-else class="p-2 bg-blue-700 rounded-lg text-white shadow-lg">
+              <button
+                v-else
+                class="p-2 bg-blue-700 rounded-lg text-white shadow-lg"
+                @click="saveToCustomer(booking)"
+              >
                 Create Customer
               </button>
             </td>
@@ -81,10 +86,15 @@
             <button
               v-if="booking.customer_id"
               class="p-2 bg-blue-800 rounded-lg text-white shadow-lg"
+              @click="saveToWO(booking)"
             >
               Create WO
             </button>
-            <button v-else class="p-2 bg-blue-700 rounded-lg text-white shadow-lg">
+            <button
+              v-else
+              class="p-2 bg-blue-700 rounded-lg text-white shadow-lg"
+              @click="saveToCustomer(booking)"
+            >
               Create Customer
             </button>
           </div>
@@ -116,11 +126,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import LoadingOverlay from './LoadingOverlay.vue'
 import { useLoadingStore } from '@/stores/loading'
 import { BASE_URL } from '@/base.utils.url'
 
+const router = useRouter()
 const loadingStore = useLoadingStore()
 
 // Data Booking
@@ -176,6 +188,46 @@ const filteredBookings = computed(() => {
       booking.no_pol.toLowerCase().includes(query),
   )
 })
+function saveToCustomer(booking) {
+  localStorage.removeItem('bookingDataSaveToCustomer')
+  const bookingku = {
+    nama: booking.nama,
+    hp: booking.hp,
+    no_pol: booking.no_pol,
+    model: booking.model,
+    type: booking.type,
+    warna: booking.warna,
+    tanggal_booking: booking.tanggal_booking,
+    jam_booking: booking.jam_booking,
+    booking_id: booking.id,
+  }
+  localStorage.setItem('bookingDataSaveToCustomer', JSON.stringify(bookingku))
+  router.push({ name: 'Pelanggan_Mobil' })
+}
+
+function saveToWO(booking) {
+  localStorage.removeItem('bookingDataSaveToWO')
+  const bookingku = {
+    nama: booking.nama,
+    hp: booking.hp,
+    no_pol: booking.no_pol,
+    model: booking.model,
+    type: booking.type,
+    warna: booking.warna,
+    tanggal_booking: booking.tanggal_booking,
+    jam_booking: booking.jam_booking,
+    booking_id: booking.id,
+    customer_id: booking.customer_id,
+    vehicle_id: booking.vehicle_id,
+  }
+  localStorage.setItem('bookingDataSaveToWO', JSON.stringify(bookingku))
+  router.push({
+    name: 'wo baru',
+    params: {
+      id: booking.vehicle_id,
+    },
+  })
+}
 
 // Paginate filtered bookings
 const paginatedBookings = computed(() => {

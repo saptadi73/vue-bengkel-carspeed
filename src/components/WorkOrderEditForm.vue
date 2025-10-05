@@ -1049,6 +1049,11 @@ export default {
         this.form.type = this.dataWorkorder.vehicle_type
         this.form.product_ordered = this.dataWorkorder.product_ordered || []
         this.form.service_ordered = this.dataWorkorder.service_ordered || []
+        if (this.dataWorkorder.pajak > 0) {
+          this.isUseTax = true
+        } else {
+          this.isUseTax = false
+        }
         console.log('Nama Customer: ', this.dataVehiclesPelanggan[0].customer_nama)
       } catch (error) {
         console.log('error: ', error)

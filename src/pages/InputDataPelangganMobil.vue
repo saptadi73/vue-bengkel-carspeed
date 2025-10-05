@@ -218,8 +218,21 @@ export default {
   },
   created() {
     this.getBrandsAll()
+    this.isiPendaftaran()
   },
   methods: {
+    isiPendaftaran() {
+      const savedData = localStorage.getItem('bookingDataSaveToCustomer')
+      if (savedData) {
+        const bookingData = JSON.parse(savedData)
+        this.formData.nama = bookingData.nama || ''
+        this.formData.hp = bookingData.hp || ''
+        this.formData.no_pol = bookingData.no_pol || ''
+        this.formData.model = bookingData.model || ''
+        this.formData.type = bookingData.type || ''
+        this.formData.warna = bookingData.warna || ''
+      }
+    },
     async handleSubmit() {
       try {
         this.loadingStore.show()
@@ -244,6 +257,33 @@ export default {
           no_pol: '',
         }
         console.log('Form submitted successfully:', this.formData)
+        const savedData = localStorage.getItem('bookingDataSaveToCustomer')
+        if (savedData) {
+          localStorage.removeItem('bookingDataSaveToCustomer')
+          try {
+            this.loadingStore.show()
+            const bookingData = JSON.parse(savedData)
+            const booking_id = bookingData.booking_id
+            const dataForm = {
+              customer_id: bookingData.customer_id,
+              vehicle_id: bookingData.vehicle_id,
+            }
+            if (booking_id) {
+              const response = await api.post(`${BASE_URL}bookings/edit/${booking_id}`, dataForm)
+              this.show_toast = true
+              this.message_toast = response.data.message || 'Booking berhasil diupdate!'
+              console.log('Booking updated successfully:', response.data.data)
+            }
+          } catch (error) {
+            console.log('Error updating booking:', error)
+            this.show_toast = true
+            this.message_toast =
+              (error.response && error.response.data && error.response.data.message) ||
+              'Terjadi kesalahan saat mengupdate booking.'
+          } finally {
+            this.loadingStore.hide()
+          }
+        }
       } catch (error) {
         this.message_toast =
           (error.response && error.response.data && error.response.data.message) ||

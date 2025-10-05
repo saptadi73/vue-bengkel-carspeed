@@ -170,8 +170,8 @@
           </div>
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1 relative">
-              <select v-model="form.karyawan_id" class="modern-select peer">
-                <option value="">-- Pilih Karyawan --</option>
+              <select v-model="form.karyawan_id" class="modern-select peer" required>
+                <option value="" disabled selected>-- Pilih Karyawan --</option>
                 <option
                   v-for="karyawanItem in karyawan"
                   :key="karyawanItem.id"
@@ -1002,6 +1002,11 @@ export default {
         this.show_toast = true
         this.message_toast = response.data.message
         console.log('Response: ', response.data.data)
+        const bookingData = localStorage.getItem('bookingDataSaveToWO')
+        if (bookingData && bookingData.vehicle_id === this.form.vehicle_id) {
+          localStorage.removeItem('bookingDataSaveToWO')
+          await api.get(`${this.BASE_URL}bookings/delete/${bookingData.id}`)
+        }
       } catch (error) {
         console.log('error: ', error)
         this.show_toast = true
