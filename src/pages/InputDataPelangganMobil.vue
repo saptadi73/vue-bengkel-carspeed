@@ -258,15 +258,15 @@ export default {
         }
         console.log('Form submitted successfully:', this.formData)
         const savedData = localStorage.getItem('bookingDataSaveToCustomer')
-        if (savedData) {
+        if (savedData && savedData.customer_id == this.formData.customer_id) {
           localStorage.removeItem('bookingDataSaveToCustomer')
           try {
-            this.loadingStore.show()
+            // this.loadingStore.show()
             const bookingData = JSON.parse(savedData)
             const booking_id = bookingData.booking_id
             const dataForm = {
-              customer_id: bookingData.customer_id,
-              vehicle_id: bookingData.vehicle_id,
+              customer_id: response.data.data.customer.id,
+              vehicle_id: response.data.data.vehicle.id,
             }
             if (booking_id) {
               const response = await api.post(`${BASE_URL}bookings/edit/${booking_id}`, dataForm)
