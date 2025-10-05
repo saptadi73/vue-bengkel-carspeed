@@ -88,9 +88,9 @@ const router = createRouter({
           component: () => import('../components/TableBookingList.vue'),
         },
         {
-          path: 'new',
-          name: 'new work order',
-          component: () => import('../pages/CreateWorkOrder.vue'),
+          path: 'edit/:id',
+          name: 'edit work order',
+          component: () => import('../components/WorkOrderEditForm.vue'),
         },
         {
           path: 'jasa/new',

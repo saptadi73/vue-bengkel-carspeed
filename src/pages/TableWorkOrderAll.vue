@@ -4,7 +4,7 @@
   >
     <!-- Header Section -->
     <div class="text-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-lexend">
+      <h1 class="text-3xl md:text-4xl font-bold text-green-500 mb-2 font-lexend">
         Daftar Work Order
       </h1>
       <p class="text-gray-600 text-lg">
@@ -413,17 +413,6 @@
             </svg>
             Sales Order
           </a>
-          <button @click="showRepairNotes(order)" class="modern-btn-success flex-1">
-            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            Catatan
-          </button>
         </div>
       </div>
     </div>
