@@ -230,17 +230,29 @@
                 <a
                   :href="`${BASE_URL2}pelanggan/history/${order.vehicle_id}`"
                   class="modern-btn-info"
+                  title="Lihat Riwayat"
                 >
-                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  history
-                </a>
+                  <span class="material-symbols-outlined text-purple-600">article_shortcut</span></a
+                >
+                <a :href="`${BASE_URL2}wo/edit/${order.id}`" title="Edit Work Order"
+                  ><span class="material-symbols-outlined text-green-800">edit_document</span></a
+                >
+                <button
+                  @click="openConfirmModal('close', order)"
+                  id="close"
+                  title="Tutup Work Order"
+                  class="cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-blue-700">check_circle_unread</span>
+                </button>
+                &nbsp;&nbsp;
+                <button
+                  @click="openConfirmModal('delete', order)"
+                  title="Hapus Work Order"
+                  class="cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-red-700 font-bold">delete_sweep</span>
+                </button>
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
@@ -416,206 +428,72 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Sales Order Modal -->
-    <div
-      v-if="showSalesOrderModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      @click.self="closeSalesOrderModal"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="gradient-modal-header px-6 py-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 class="text-lg font-bold text-white">
-                Sales Order - {{ selectedOrder?.workOrderNumber }}
-              </h3>
-            </div>
-            <button
-              @click="closeSalesOrderModal"
-              class="text-white hover:text-blue-200 transition-colors duration-200"
-            >
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+  <!-- Confirmation Modal -->
+  <div
+    v-if="showConfirmModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    @click.self="closeConfirmModal"
+  >
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
+      <div class="gradient-modal-header px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+            <h3 class="text-lg font-bold text-white">Konfirmasi</h3>
           </div>
-        </div>
-
-        <div class="px-6 py-6">
-          <!-- Customer Details -->
-          <div class="bg-blue-50 rounded-lg p-4 mb-6">
-            <h3 class="text-lg font-semibold text-blue-800 mb-3">Detail Pelanggan</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p class="text-sm text-blue-600 font-medium">Nama Pelanggan</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.customer_name }}</p>
-              </div>
-              <div>
-                <p class="text-sm text-blue-600 font-medium">No. Polisi</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.vehicle_no_pol }}</p>
-              </div>
-              <div>
-                <p class="text-sm text-blue-600 font-medium">Work Order</p>
-                <p class="text-blue-900 font-semibold">{{ selectedOrder?.no_wo }}</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sales Order Items -->
-          <div class="mb-6">
-            <h3 class="text-lg font-semibold mb-4">Item Sales Order</h3>
-            <div class="overflow-x-auto">
-              <table class="min-w-full bg-white border border-gray-200 rounded-lg">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Item
-                    </th>
-                    <th
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Harga
-                    </th>
-                    <th
-                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                  <tr
-                    v-for="item in selectedOrder?.salesOrder.items"
-                    :key="item.name"
-                    class="hover:bg-gray-50"
-                  >
-                    <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ item.name }}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900">
-                      {{ formatCurrency(item.price) }}
-                    </td>
-                    <td class="px-4 py-3 text-sm font-semibold text-gray-900">
-                      {{ formatCurrency(item.price) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Total Estimation -->
-          <div class="bg-green-50 rounded-lg p-4">
-            <h3 class="text-lg font-semibold text-green-800 mb-4">Estimasi Total</h3>
-            <div class="space-y-2">
-              <div class="flex justify-between">
-                <span class="font-medium text-green-700">Subtotal:</span>
-                <span class="font-semibold text-green-900">{{
-                  formatCurrency(getTotalPrice())
-                }}</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="font-medium text-green-700">Pajak (10%):</span>
-                <span class="font-semibold text-green-900">{{
-                  formatCurrency(getTotalPrice() * 0.1)
-                }}</span>
-              </div>
-              <div class="border-t border-green-200 pt-2">
-                <div class="flex justify-between">
-                  <span class="font-bold text-green-800 text-lg">Total:</span>
-                  <span class="font-bold text-green-900 text-xl">{{
-                    formatCurrency(getTotalPrice() * 1.1)
-                  }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex justify-end mt-6">
-            <button
-              @click="closeSalesOrderModal"
-              class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Tutup
-            </button>
-          </div>
+          <button
+            @click="closeConfirmModal"
+            class="text-white hover:text-blue-200 transition-colors duration-200"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
       </div>
-    </div>
-
-    <!-- Repair Notes Modal -->
-    <div
-      v-if="showRepairNotesModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-      @click.self="closeRepairNotesModal"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="gradient-modal-header px-6 py-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              <h3 class="text-lg font-bold text-white">
-                Catatan Perbaikan - {{ selectedOrder?.no_wo }}
-              </h3>
-            </div>
-            <button
-              @click="closeRepairNotesModal"
-              class="text-white hover:text-blue-200 transition-colors duration-200"
-            >
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="px-6 py-6">
-          <div class="repair-notes-container">
-            <div class="repair-notes-content">
-              <p class="text-gray-800 leading-relaxed">{{ selectedOrder?.repairNotes }}</p>
-            </div>
-          </div>
-          <div class="flex justify-end mt-6">
-            <button
-              @click="closeRepairNotesModal"
-              class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Tutup
-            </button>
-          </div>
+      <div class="px-6 py-6">
+        <p class="text-gray-700 mb-6">
+          Apakah Anda yakin ingin {{ confirmAction === 'close' ? 'menutup' : 'menghapus' }} Work
+          Order <strong>{{ selectedOrder?.no_wo }}</strong
+          >?
+        </p>
+        <div class="flex justify-end gap-4">
+          <button
+            @click="closeConfirmModal"
+            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            @click="executeConfirmAction"
+            :class="
+              confirmAction === 'delete'
+                ? 'bg-red-500 hover:bg-red-600'
+                : 'bg-blue-500 hover:bg-blue-600'
+            "
+            class="px-4 py-2 text-white rounded-lg transition-colors"
+          >
+            {{ confirmAction === 'close' ? 'Tutup' : 'Hapus' }}
+          </button>
         </div>
       </div>
     </div>
   </div>
+
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
@@ -641,8 +519,8 @@ export default {
     return {
       searchQuery: '',
       statusFilter: '',
-      showSalesOrderModal: false,
-      showRepairNotesModal: false,
+      showConfirmModal: false,
+      confirmAction: '',
       selectedOrder: null,
       workOrders: [],
     }
@@ -748,25 +626,56 @@ export default {
       }
       return classes[serviceType] || 'bg-gray-100 text-gray-800'
     },
-    showSalesOrder(order) {
+    openConfirmModal(action, order) {
+      this.confirmAction = action
       this.selectedOrder = order
-      this.showSalesOrderModal = true
+      this.showConfirmModal = true
     },
-    showRepairNotes(order) {
-      this.selectedOrder = order
-      this.showRepairNotesModal = true
+    executeConfirmAction() {
+      if (this.confirmAction === 'close') {
+        this.closeWorkOrder()
+      } else if (this.confirmAction === 'delete') {
+        this.deleteWorkOrder()
+      }
+      this.showConfirmModal = false
     },
-    closeSalesOrderModal() {
-      this.showSalesOrderModal = false
+    closeConfirmModal() {
+      this.showConfirmModal = false
+      this.confirmAction = ''
       this.selectedOrder = null
     },
-    closeRepairNotesModal() {
-      this.showRepairNotesModal = false
-      this.selectedOrder = null
+    async closeWorkOrder() {
+      try {
+        this.loadingStore.show()
+        await axios.put(`${BASE_URL}workorders/${this.selectedOrder.id}/close`)
+        this.message_toast = 'Work Order berhasil ditutup'
+        this.show_toast = true
+        this.fetchWorkOrders()
+      } catch (error) {
+        console.error('Error closing work order:', error)
+        this.message_toast = 'Gagal menutup Work Order'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
     },
-    getTotalPrice() {
-      if (!this.selectedOrder?.salesOrder?.items) return 0
-      return this.selectedOrder.salesOrder.items.reduce((total, item) => total + item.price, 0)
+    async deleteWorkOrder() {
+      try {
+        this.loadingStore.show()
+        await axios.delete(`${BASE_URL}workorders/${this.selectedOrder.id}`)
+        this.message_toast = 'Work Order berhasil dihapus'
+        this.show_toast = true
+        this.fetchWorkOrders()
+      } catch (error) {
+        console.error('Error deleting work order:', error)
+        this.message_toast = 'Gagal menghapus Work Order'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    tutupToast() {
+      this.show_toast = false
     },
   },
 }

@@ -1,21 +1,9 @@
-# TODO: Implement Edit Modal for Work Order Items
+# TODO: Create Chart of Account and Cash Journal Forms
 
-## Completed Tasks
+## Tasks
 
-- [x] Add reactive data properties for edit modal (showEditModal, editingItem, editingIndex, editingType)
-- [x] Add edit modal template in the component
-- [x] Add edit buttons to product and service item cards
-- [x] Add methods: openEditModal, closeEditModal, calculateEditingSubtotal, saveEditModal, handleProductChange, handleServiceChange
-- [x] Fix deprecated $set usage in saveEditModal
-- [x] Fix JavaScript parsing error in @change handlers
-
-## Followup Steps
-
-- [ ] Test the edit modal functionality:
-  - Click edit button on a product item
-  - Verify modal opens with correct data
-  - Change values in modal and check subtotal updates
-  - Save changes and verify item is updated in the list
-  - Repeat for service items
-- [ ] Verify form submission includes updated items
-- [ ] Check for any console errors or linting issues
+- [ ] Create src/pages/ChartOfAccountForm.vue: Form for inputting chart of account details (code, name, type, description)
+- [ ] Create src/pages/CashJournalForm.vue: Specialized journal form for cash in/out transactions
+- [ ] Update src/router/index.js: Add routes for the new forms under /finansial
+- [ ] Test the forms for functionality
+- [ ] Update side menu for navigation if needed

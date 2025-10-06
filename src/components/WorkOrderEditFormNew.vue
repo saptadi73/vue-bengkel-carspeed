@@ -140,9 +140,8 @@
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
                   <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
                 </select>
-                <label class="modern-select-label">Status</label>
+                <label class="modern-select-label">Tahun</label>
               </div>
             </div>
           </div>
@@ -170,8 +169,8 @@
           </div>
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1 relative">
-              <select v-model="form.karyawan_id" class="modern-select peer" required>
-                <option value="" disabled selected>-- Pilih Karyawan --</option>
+              <select v-model="form.karyawan_id" class="modern-select peer">
+                <option value="">-- Pilih Karyawan --</option>
                 <option
                   v-for="karyawanItem in karyawan"
                   :key="karyawanItem.id"
@@ -243,7 +242,7 @@
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
-                <div class="grid grid-cols-9 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-9 gap-4 mb-4">
                   <div class="relative col-span-2">
                     <select
                       v-model="item.product_id"
@@ -274,7 +273,12 @@
                     <label class="modern-label">quantity</label>
                   </div>
                   <div class="relative col-span-1">
-                    <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
+                    <select
+                      id="satuan_id"
+                      v-model="item.satuan_id"
+                      class="modern-select peer"
+                      disabled
+                    >
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
                         {{ value.name }}
@@ -312,6 +316,13 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="modern-btn-info ml-4"
+                    @click="openEditModal('product', idx)"
+                  >
+                    Edit
+                  </button>
                   <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -413,7 +424,7 @@
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
-                <div class="grid grid-cols-8 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-4">
                   <div class="relative col-span-2">
                     <select
                       v-model="item.service_id"
@@ -470,6 +481,13 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
+                  <button
+                    type="button"
+                    class="modern-btn-info ml-4"
+                    @click="openEditModal('service', idx)"
+                  >
+                    Edit
+                  </button>
                   <button type="button" class="delete-btn" @click="removeServiceOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -663,6 +681,185 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Item Modal -->
+  <div
+    v-if="showEditModal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+  >
+    <div
+      class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-blue-200"
+    >
+      <div class="gradient-modal-header px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <h3 class="text-lg font-bold text-white">
+              Edit {{ editingType === 'product' ? 'Product' : 'Service' }} Item
+            </h3>
+          </div>
+          <button
+            @click="closeEditModal"
+            class="text-white hover:text-blue-200 transition-colors duration-200"
+          >
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <form @submit.prevent="saveEditModal" class="px-6 py-6">
+        <div v-if="editingType === 'product'" class="space-y-4">
+          <div class="relative">
+            <select
+              v-model="editingItem.product_id"
+              class="modern-select peer"
+              @change="handleProductChange"
+              required
+            >
+              <option value="" disabled selected>Pilih Product</option>
+              <option v-for="product in products" :key="product.id" :value="product.id">
+                {{ product.name }}
+              </option>
+            </select>
+            <label class="modern-select-label">Nama Sparepart</label>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="relative">
+              <input
+                v-model.number="editingItem.quantity"
+                type="number"
+                min="1"
+                class="modern-input peer"
+                placeholder=" "
+                @change="calculateEditingSubtotal()"
+                required
+              />
+              <label class="modern-label">Quantity</label>
+            </div>
+            <div class="relative">
+              <select v-model="editingItem.satuan_id" class="modern-select peer" required>
+                <option value="" disabled selected>Pilih Satuan</option>
+                <option v-for="satuan in satuans" :key="satuan.id" :value="satuan.id">
+                  {{ satuan.name }}
+                </option>
+              </select>
+              <label class="modern-select-label">Satuan</label>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="relative">
+              <input
+                v-model.number="editingItem.price"
+                type="number"
+                min="0"
+                class="modern-input peer"
+                placeholder=" "
+                @change="calculateEditingSubtotal()"
+                required
+              />
+              <label class="modern-label">Harga</label>
+            </div>
+            <div class="relative">
+              <input
+                v-model.number="editingItem.discount"
+                type="number"
+                min="0"
+                class="modern-input peer"
+                placeholder=" "
+                @change="calculateEditingSubtotal()"
+                required
+              />
+              <label class="modern-label">Discount (%)</label>
+            </div>
+          </div>
+          <div class="relative">
+            <div class="subtotal-display">
+              {{ formatCurrency(calculateEditingSubtotal()) }}
+            </div>
+            <label class="subtotal-label">Subtotal</label>
+          </div>
+        </div>
+        <div v-else class="space-y-4">
+          <div class="relative">
+            <select
+              v-model="editingItem.service_id"
+              class="modern-select peer"
+              @change="handleServiceChange"
+              required
+            >
+              <option value="" disabled selected>Pilih Service/Jasa</option>
+              <option v-for="service in services" :key="service.id" :value="service.id">
+                {{ service.name }}
+              </option>
+            </select>
+            <label class="modern-select-label">Nama Jasa</label>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="relative">
+              <input
+                v-model.number="editingItem.quantity"
+                type="number"
+                min="1"
+                class="modern-input peer"
+                placeholder=" "
+                @change="calculateEditingSubtotal()"
+                required
+              />
+              <label class="modern-label">Quantity</label>
+            </div>
+            <div class="relative">
+              <input
+                v-model.number="editingItem.price"
+                type="number"
+                min="0"
+                class="modern-input peer"
+                placeholder=" "
+                @change="calculateEditingSubtotal()"
+                required
+              />
+              <label class="modern-label">Harga</label>
+            </div>
+          </div>
+          <div class="relative">
+            <input
+              v-model.number="editingItem.discount"
+              type="number"
+              min="0"
+              class="modern-input peer"
+              placeholder=" "
+              @change="calculateEditingSubtotal()"
+              required
+            />
+            <label class="modern-label">Discount (%)</label>
+          </div>
+          <div class="relative">
+            <div class="subtotal-display">
+              {{ formatCurrency(calculateEditingSubtotal()) }}
+            </div>
+            <label class="subtotal-label">Subtotal</label>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 mt-6">
+          <button type="button" @click="closeEditModal" class="modern-btn-cancel">Batal</button>
+          <button type="submit" class="modern-btn-primary">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
@@ -688,6 +885,7 @@ export default {
       packetorders: [],
       satuans: [],
       dataVehiclesPelanggan: [],
+      dataWorkorder: [],
       stockku: 0,
       isitotalProductHarga: 0,
       isitotalServiceHarga: 0,
@@ -698,7 +896,8 @@ export default {
       karyawan: [],
       form: {
         customer_id: '',
-        vehicle_id: this.$route.params.id || '',
+        workorder_id: this.$route.params.id || '',
+        vehicle_id: '',
         nama: '',
         hp: '',
         alamat: '',
@@ -712,7 +911,7 @@ export default {
         service_ordered: [],
         keluhan: '',
         saran: '',
-        status: 'draft',
+        status: 'in_progress',
         pajak: 0,
         karyawan_id: '',
       },
@@ -721,6 +920,10 @@ export default {
       showActivityModal: false,
       activityLog: { tanggal: '', aktivitas: '' },
       isUseTax: false,
+      showEditModal: false,
+      editingItem: {},
+      editingIndex: -1,
+      editingType: '',
     }
   },
   computed: {
@@ -817,7 +1020,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}karyawans/all`)
-        // console.log('Karyawan Data: ', response.data.data)
+        console.log('Karyawan Data: ', response.data.data)
         this.karyawan = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -829,19 +1032,33 @@ export default {
       try {
         this.loadingStore.show()
         const idku = this.$route.params.id
-        const response = await axios.get(`${BASE_URL}customers/with-vehicles/${idku}`)
-        // console.log('Pelanggan Vehicles Data: ', response.data.data)
-        this.dataVehiclesPelanggan = response.data.data
-        this.form.customer_id = this.dataVehiclesPelanggan[0].customer.id
-        this.form.nama = this.dataVehiclesPelanggan[0].customer_nama
-        this.form.alamat = this.dataVehiclesPelanggan[0].customer.alamat
-        this.form.hp = this.dataVehiclesPelanggan[0].customer.hp
-        this.form.email = this.dataVehiclesPelanggan[0].customer.email
-        this.form.brand = this.dataVehiclesPelanggan[0].brand_name
-        this.form.kapasitas = this.dataVehiclesPelanggan[0].kapasitas
-        this.form.model = this.dataVehiclesPelanggan[0].model
-        this.form.no_pol = this.dataVehiclesPelanggan[0].no_pol
-        this.form.type = this.dataVehiclesPelanggan[0].type
+        const response = await axios.get(`${BASE_URL}workorders/${idku}`)
+        console.log('Workorder Data: ', response.data.data)
+        this.dataWorkorder = response.data.data
+        this.form.customer_id = this.dataWorkorder.customer_id
+        this.form.vehicle_id = this.dataWorkorder.vehicle_id
+        this.form.keluhan = this.dataWorkorder.keluhan
+        this.form.saran = this.dataWorkorder.saran
+        this.form.status = this.dataWorkorder.status
+        this.form.karyawan_id = this.dataWorkorder.karyawan_id
+        this.isUseTax = this.dataWorkorder.pajak
+        this.form.nama = this.dataWorkorder.customer_name
+        this.form.alamat = this.dataWorkorder.customer_alamat
+        this.form.hp = this.dataWorkorder.customer_hp
+        this.form.email = this.dataWorkorder.customer_email
+        this.form.brand = this.dataWorkorder.vehicle_brand
+        this.form.kapasitas = this.dataWorkorder.vehicle_kapasitas
+        this.form.model = this.dataWorkorder.vehicle_model
+        this.form.no_pol = this.dataWorkorder.vehicle_no_pol
+        this.form.type = this.dataWorkorder.vehicle_type
+        this.form.product_ordered = this.dataWorkorder.product_ordered || []
+        this.form.service_ordered = this.dataWorkorder.service_ordered || []
+        if (this.dataWorkorder.pajak > 0) {
+          this.isUseTax = true
+        } else {
+          this.isUseTax = false
+        }
+        console.log('Nama Customer: ', this.dataVehiclesPelanggan[0].customer_nama)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -852,7 +1069,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/satuans/all`)
-        // console.log('Satuan Data: ', response.data.data)
+        console.log('Satuan Data: ', response.data.data)
         this.satuans = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -884,29 +1101,6 @@ export default {
         this.loadingStore.hide()
       }
     },
-    async getBookingData() {
-      const bookingData = localStorage.getItem('bookingDataSaveToWO')
-      // console.log('Booking Data from LocalStorage: ', bookingData)
-      const parsedData = bookingData ? JSON.parse(bookingData) : null
-      // console.log('Parsed Booking Data: ', parsedData)
-      // console.log('Vehicle ID from LocalStorage: ', parsedData?.vehicle_id)
-      // console.log('Booking ID from LocalStorage: ', parsedData?.booking_id)
-      // console.log('Current Vehicle ID from Route: ', this.form.vehicle_id)
-
-      if (parsedData && parsedData.vehicle_id === this.form.vehicle_id) {
-        try {
-          this.loadingStore.show()
-          const response = await api.get(`${BASE_URL}bookings/delete/${parsedData.booking_id}`)
-          console.log('Booking Delete Details Data: ', response.data.data)
-          this.show_toast = true
-          this.message_toast = 'Booking berhasil dihapus setelah membuat Work Order.'
-        } catch (error) {
-          console.log('error delete Booking: ', error)
-        } finally {
-          this.loadingStore.hide()
-        }
-      }
-    },
     async getPacketOrders() {
       try {
         this.loadingStore.show()
@@ -924,7 +1118,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/all`)
-        // console.log('Data Products: ', response.data.data)
+        console.log('Data Products: ', response.data.data)
         this.products = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -936,7 +1130,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/service/all`)
-        // console.log('Data Services: ', response.data.data)
+        console.log('Data Services: ', response.data.data)
         this.services = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -1011,6 +1205,51 @@ export default {
         maximumFractionDigits: 0,
       }).format(val)
     },
+    openEditModal(type, index) {
+      this.editingType = type
+      this.editingIndex = index
+      if (type === 'product') {
+        this.editingItem = { ...this.form.product_ordered[index] }
+      } else if (type === 'service') {
+        this.editingItem = { ...this.form.service_ordered[index] }
+      }
+      this.showEditModal = true
+    },
+    closeEditModal() {
+      this.showEditModal = false
+      this.editingItem = {}
+      this.editingIndex = -1
+      this.editingType = ''
+    },
+    calculateEditingSubtotal() {
+      const quantity = Number(this.editingItem.quantity) || 0
+      const price = Number(this.editingItem.price) || 0
+      const discount = Number(this.editingItem.discount) || 0
+      return Math.max(0, quantity * price - quantity * price * (discount / 100))
+    },
+    handleProductChange() {
+      this.getProductsId(this.editingItem)
+      this.calculateEditingSubtotal()
+    },
+    handleServiceChange() {
+      this.getServicesId(this.editingItem)
+      this.calculateEditingSubtotal()
+    },
+    saveEditModal() {
+      if (this.editingIndex < 0) return
+      if (this.editingType === 'product') {
+        this.form.product_ordered[this.editingIndex] = {
+          ...this.editingItem,
+          subtotal: this.calculateEditingSubtotal(),
+        }
+      } else if (this.editingType === 'service') {
+        this.form.service_ordered[this.editingIndex] = {
+          ...this.editingItem,
+          subtotal: this.calculateEditingSubtotal(),
+        }
+      }
+      this.closeEditModal()
+    },
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
@@ -1023,8 +1262,7 @@ export default {
         const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
         this.show_toast = true
         this.message_toast = response.data.message
-        // console.log('Response: ', response.data.data)
-        this.getBookingData()
+        console.log('Response: ', response.data.data)
       } catch (error) {
         console.log('error: ', error)
         this.show_toast = true
@@ -1033,7 +1271,7 @@ export default {
         this.loadingStore.hide()
       }
 
-      // console.log('Form Data:', this.form)
+      console.log('Form Data:', this.form)
     },
     printPDF() {
       const doc = new jsPDF()
@@ -1123,7 +1361,7 @@ export default {
         const data = response.data.data
         item.satuan_id = data.satuan_id
         item.product_name = data.name
-        if (data.price) item.price = data.price
+        item.price = data.price || 0
         await this.getStock(item)
       } catch (error) {
         console.log('error: ', error)
@@ -1138,7 +1376,7 @@ export default {
         const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
         const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
-        if (data.price) item.price = data.price
+        item.price = data.price || 0
       } catch (error) {
         console.log('error: ', error)
       } finally {

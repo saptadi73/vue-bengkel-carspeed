@@ -139,10 +139,9 @@
                 <select v-model="form.status" id="status" class="modern-select peer">
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
+                  <option value="dikerjakan">Dikerjakan</option>
                 </select>
-                <label class="modern-select-label">Tahun</label>
+                <label class="modern-select-label">Status</label>
               </div>
             </div>
           </div>
@@ -274,7 +273,12 @@
                     <label class="modern-label">quantity</label>
                   </div>
                   <div class="relative col-span-1">
-                    <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
+                    <select
+                      id="satuan_id"
+                      v-model="item.satuan_id"
+                      class="modern-select peer"
+                      disabled
+                    >
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
                         {{ value.name }}
@@ -312,13 +316,6 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
-                  <button
-                    type="button"
-                    class="modern-btn-info ml-4"
-                    @click="openEditModal('product', idx)"
-                  >
-                    Edit
-                  </button>
                   <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -477,13 +474,6 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
-                  <button
-                    type="button"
-                    class="modern-btn-info ml-4"
-                    @click="openEditModal('service', idx)"
-                  >
-                    Edit
-                  </button>
                   <button type="button" class="delete-btn" @click="removeServiceOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -678,184 +668,6 @@
     </div>
   </div>
 
-  <!-- Edit Item Modal -->
-  <div
-    v-if="showEditModal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-  >
-    <div
-      class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-blue-200"
-    >
-      <div class="gradient-modal-header px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-              />
-            </svg>
-            <h3 class="text-lg font-bold text-white">
-              Edit {{ editingType === 'product' ? 'Product' : 'Service' }} Item
-            </h3>
-          </div>
-          <button
-            @click="closeEditModal"
-            class="text-white hover:text-blue-200 transition-colors duration-200"
-          >
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-      <form @submit.prevent="saveEditModal" class="px-6 py-6">
-        <div v-if="editingType === 'product'" class="space-y-4">
-          <div class="relative">
-            <select
-              v-model="editingItem.product_id"
-              class="modern-select peer"
-              @change="handleProductChange"
-              required
-            >
-              <option value="" disabled selected>Pilih Product</option>
-              <option v-for="product in products" :key="product.id" :value="product.id">
-                {{ product.name }}
-              </option>
-            </select>
-            <label class="modern-select-label">Nama Sparepart</label>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="relative">
-              <input
-                v-model.number="editingItem.quantity"
-                type="number"
-                min="1"
-                class="modern-input peer"
-                placeholder=" "
-                @change="calculateEditingSubtotal()"
-                required
-              />
-              <label class="modern-label">Quantity</label>
-            </div>
-            <div class="relative">
-              <select v-model="editingItem.satuan_id" class="modern-select peer" required>
-                <option value="" disabled selected>Pilih Satuan</option>
-                <option v-for="satuan in satuans" :key="satuan.id" :value="satuan.id">
-                  {{ satuan.name }}
-                </option>
-              </select>
-              <label class="modern-select-label">Satuan</label>
-            </div>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="relative">
-              <input
-                v-model.number="editingItem.price"
-                type="number"
-                min="0"
-                class="modern-input peer"
-                placeholder=" "
-                @change="calculateEditingSubtotal()"
-                required
-              />
-              <label class="modern-label">Harga</label>
-            </div>
-            <div class="relative">
-              <input
-                v-model.number="editingItem.discount"
-                type="number"
-                min="0"
-                class="modern-input peer"
-                placeholder=" "
-                @change="calculateEditingSubtotal()"
-                required
-              />
-              <label class="modern-label">Discount (%)</label>
-            </div>
-          </div>
-          <div class="relative">
-            <div class="subtotal-display">
-              {{ formatCurrency(calculateEditingSubtotal()) }}
-            </div>
-            <label class="subtotal-label">Subtotal</label>
-          </div>
-        </div>
-        <div v-else class="space-y-4">
-          <div class="relative">
-            <select
-              v-model="editingItem.service_id"
-              class="modern-select peer"
-              @change="handleServiceChange"
-              required
-            >
-              <option value="" disabled selected>Pilih Service/Jasa</option>
-              <option v-for="service in services" :key="service.id" :value="service.id">
-                {{ service.name }}
-              </option>
-            </select>
-            <label class="modern-select-label">Nama Jasa</label>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="relative">
-              <input
-                v-model.number="editingItem.quantity"
-                type="number"
-                min="1"
-                class="modern-input peer"
-                placeholder=" "
-                @change="calculateEditingSubtotal()"
-                required
-              />
-              <label class="modern-label">Quantity</label>
-            </div>
-            <div class="relative">
-              <input
-                v-model.number="editingItem.price"
-                type="number"
-                min="0"
-                class="modern-input peer"
-                placeholder=" "
-                @change="calculateEditingSubtotal()"
-                required
-              />
-              <label class="modern-label">Harga</label>
-            </div>
-          </div>
-          <div class="relative">
-            <input
-              v-model.number="editingItem.discount"
-              type="number"
-              min="0"
-              class="modern-input peer"
-              placeholder=" "
-              @change="calculateEditingSubtotal()"
-              required
-            />
-            <label class="modern-label">Discount (%)</label>
-          </div>
-          <div class="relative">
-            <div class="subtotal-display">
-              {{ formatCurrency(calculateEditingSubtotal()) }}
-            </div>
-            <label class="subtotal-label">Subtotal</label>
-          </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-6">
-          <button type="button" @click="closeEditModal" class="modern-btn-cancel">Batal</button>
-          <button type="submit" class="modern-btn-primary">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
@@ -907,7 +719,7 @@ export default {
         service_ordered: [],
         keluhan: '',
         saran: '',
-        status: 'draft',
+        status: 'dikerjakan',
         pajak: 0,
         karyawan_id: '',
       },
@@ -916,10 +728,6 @@ export default {
       showActivityModal: false,
       activityLog: { tanggal: '', aktivitas: '' },
       isUseTax: false,
-      showEditModal: false,
-      editingItem: {},
-      editingIndex: -1,
-      editingType: '',
     }
   },
   computed: {
@@ -1004,8 +812,30 @@ export default {
     this.getSatuans()
     this.getVehiclesPelanggan()
     this.getKaryawan()
+    this.getBookingData()
   },
   methods: {
+    getBookingData() {
+      const bookingData = localStorage.getItem('bookingDataSaveToWO')
+      const vehicleIdFromRoute = this.form.vehicle_id
+      const booking = JSON.parse(bookingData)
+      console.log(
+        'Booking Data from LocalStorage: ',
+        booking.vehicle_id,
+        'vs dari API:',
+        vehicleIdFromRoute,
+      )
+      if (bookingData) {
+        const booking = JSON.parse(bookingData)
+        if (booking.vehicle_id === this.form.vehicle_id) {
+          // Prefill form dengan data booking
+          this.form.keluhan = booking.keluhan || ''
+          this.form.saran = booking.saran || ''
+          console.log('Prefilled from booking yang sudah confirm: ', booking)
+        }
+      }
+    },
+
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -1047,6 +877,7 @@ export default {
         this.form.model = this.dataWorkorder.vehicle_model
         this.form.no_pol = this.dataWorkorder.vehicle_no_pol
         this.form.type = this.dataWorkorder.vehicle_type
+        this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.product_ordered = this.dataWorkorder.product_ordered || []
         this.form.service_ordered = this.dataWorkorder.service_ordered || []
         if (this.dataWorkorder.pajak > 0) {
@@ -1054,7 +885,6 @@ export default {
         } else {
           this.isUseTax = false
         }
-        console.log('Nama Customer: ', this.dataVehiclesPelanggan[0].customer_nama)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -1247,6 +1077,8 @@ export default {
       this.closeEditModal()
     },
     async submitForm() {
+      const idku = this.$route.params.id
+
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
       this.form.total_biaya = this.isitotalPembayaran
@@ -1255,7 +1087,10 @@ export default {
 
       try {
         this.loadingStore.show()
-        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+        const response = await api.post(
+          `${this.BASE_URL}workorders/update/workorderlengkap/${idku}`,
+          this.form,
+        )
         this.show_toast = true
         this.message_toast = response.data.message
         console.log('Response: ', response.data.data)

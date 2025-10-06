@@ -263,6 +263,11 @@ const router = createRouter({
           name: 'piutang',
           component: () => import('../components/TablePiutang.vue'),
         },
+        {
+          path: 'journal/entry',
+          name: 'journal entry',
+          component: () => import('../pages/JournalEntryForm.vue'),
+        },
       ],
     },
   ],
