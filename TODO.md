@@ -1,9 +1,7 @@
-# TODO: Create Chart of Account and Cash Journal Forms
-
-## Tasks
-
-- [ ] Create src/pages/ChartOfAccountForm.vue: Form for inputting chart of account details (code, name, type, description)
-- [ ] Create src/pages/CashJournalForm.vue: Specialized journal form for cash in/out transactions
-- [ ] Update src/router/index.js: Add routes for the new forms under /finansial
-- [ ] Test the forms for functionality
-- [ ] Update side menu for navigation if needed
+- [x] Add imports for axios and BASE_URL
+- [x] Add data properties: products and units arrays
+- [x] Add mounted() to fetch products and units from API
+- [x] Update form.items initial structure to include productId and unit
+- [x] Update template: change grid to md:grid-cols-5, replace product input with select, add unit select
+- [x] Update addItem method to include productId and unit
+- [x] Update submitForm reset to include productId and unit

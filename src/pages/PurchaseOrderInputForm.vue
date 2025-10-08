@@ -119,16 +119,32 @@
       <div class="border-t pt-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
         <div v-for="(item, index) in form.items" :key="index" class="mb-4 p-4 border rounded-md">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">Product</label>
-              <input
-                v-model="item.product"
-                type="text"
+              <select
+                v-model="item.productId"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Product name"
                 required
-              />
+              >
+                <option value="">Select Product</option>
+                <option v-for="product in products" :key="product.id" :value="product.id">
+                  {{ product.name }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Satuan</label>
+              <select
+                v-model="item.unit"
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select Unit</option>
+                <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                  {{ unit.name }}
+                </option>
+              </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Quantity</label>
@@ -206,9 +222,14 @@
 </template>
 
 <script>
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url.ts'
+
 export default {
   data() {
     return {
+      products: [],
+      units: [],
       form: {
         poNumber: '',
         poDate: '',
@@ -220,7 +241,8 @@ export default {
         paymentTerms: '',
         items: [
           {
-            product: '',
+            productId: '',
+            unit: '',
             quantity: 1,
             unitPrice: 0,
             total: 0,
@@ -228,6 +250,10 @@ export default {
         ],
       },
     }
+  },
+  mounted() {
+    this.fetchProducts()
+    this.fetchUnits()
   },
   computed: {
     subtotal() {
@@ -241,9 +267,26 @@ export default {
     },
   },
   methods: {
+    async fetchProducts() {
+      try {
+        const response = await axios.get(`${BASE_URL}products/inventory/all`)
+        this.products = response.data.data || []
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      }
+    },
+    async fetchUnits() {
+      try {
+        const response = await axios.get(`${BASE_URL}products/satuans/all`)
+        this.units = response.data.data || []
+      } catch (error) {
+        console.error('Error fetching units:', error)
+      }
+    },
     addItem() {
       this.form.items.push({
-        product: '',
+        productId: '',
+        unit: '',
         quantity: 1,
         unitPrice: 0,
         total: 0,
@@ -277,7 +320,8 @@ export default {
         paymentTerms: '',
         items: [
           {
-            product: '',
+            productId: '',
+            unit: '',
             quantity: 1,
             unitPrice: 0,
             total: 0,

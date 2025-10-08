@@ -212,11 +212,6 @@ const router = createRouter({
           component: () => import('../pages/PergerakanBarang.vue'),
         },
         {
-          path: 'purchase',
-          name: 'purchase',
-          component: () => import('../pages/PurchaseOrderSample.vue'),
-        },
-        {
           path: 'pembelian',
           name: 'pembelian',
           component: () => import('../pages/TablePurchasingOrder.vue'),
@@ -244,6 +239,11 @@ const router = createRouter({
           component: () => import('../pages/CashFlowReport.vue'),
         },
         {
+          path: 'purchase',
+          name: 'purchase',
+          component: () => import('../pages/PurchaseOrderInputForm.vue'),
+        },
+        {
           path: 'biaya',
           name: 'biaya',
           component: () => import('../pages/ReportPembiayaan.vue'),
@@ -267,6 +267,11 @@ const router = createRouter({
           path: 'journal/entry',
           name: 'journal entry',
           component: () => import('../pages/JournalEntryForm.vue'),
+        },
+        {
+          path: 'coa',
+          name: 'coa',
+          component: () => import('../pages/TableCoa.vue'),
         },
       ],
     },
