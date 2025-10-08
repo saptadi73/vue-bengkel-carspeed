@@ -1,7 +1,12 @@
 - [x] Add imports for axios and BASE_URL
 - [x] Add data properties: products and units arrays
 - [x] Add mounted() to fetch products and units from API
-- [x] Update form.items initial structure to include productId and unit
-- [x] Update template: change grid to md:grid-cols-5, replace product input with select, add unit select
-- [x] Update addItem method to include productId and unit
-- [x] Update submitForm reset to include productId and unit
+- [x] Update form.items initial structure to use backend field names: product_id, satuan_id, price, subtotal, discount, quantity
+- [x] Update template v-models to match new field names
+- [x] Update addItem method to use new field names
+- [x] Update submitForm reset to use new field names
+- [x] Update calculateItemTotal to set subtotal
+- [x] Add document field to form data
+- [x] Add file input in template for uploading bukti kwitansi/dokumen
+- [x] Add handleFileChange method
+- [x] Update submitForm reset to include document

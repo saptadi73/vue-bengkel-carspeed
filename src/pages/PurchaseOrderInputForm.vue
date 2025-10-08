@@ -119,11 +119,11 @@
       <div class="border-t pt-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
         <div v-for="(item, index) in form.items" :key="index" class="mb-4 p-4 border rounded-md">
-          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">Product</label>
               <select
-                v-model="item.productId"
+                v-model="item.product_id"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -136,7 +136,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">Satuan</label>
               <select
-                v-model="item.unit"
+                v-model="item.satuan_id"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -160,7 +160,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">Unit Price</label>
               <input
-                v-model.number="item.unitPrice"
+                v-model.number="item.price"
                 type="number"
                 min="0"
                 step="0.01"
@@ -170,9 +170,21 @@
               />
             </div>
             <div>
+              <label class="block text-sm font-medium text-gray-700">Discount (%)</label>
+              <input
+                v-model.number="item.discount"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                @input="calculateItemTotal(index)"
+              />
+            </div>
+            <div>
               <label class="block text-sm font-medium text-gray-700">Total</label>
               <input
-                :value="formatCurrency(item.total)"
+                :value="formatCurrency(item.subtotal)"
                 type="text"
                 readonly
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50"
@@ -197,6 +209,19 @@
           >
             Add Item
           </button>
+        </div>
+      </div>
+
+      <!-- Document Upload -->
+      <div class="border-t pt-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Upload Bukti Kwitansi / Dokumen</h3>
+        <div>
+          <input
+            type="file"
+            @change="handleFileChange"
+            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          />
         </div>
       </div>
 
@@ -239,13 +264,15 @@ export default {
         supplierEmail: '',
         deliveryDate: '',
         paymentTerms: '',
+        document: null,
         items: [
           {
-            productId: '',
-            unit: '',
+            product_id: '',
+            satuan_id: '',
             quantity: 1,
-            unitPrice: 0,
-            total: 0,
+            price: 0,
+            discount: 0,
+            subtotal: 0,
           },
         ],
       },
@@ -285,11 +312,12 @@ export default {
     },
     addItem() {
       this.form.items.push({
-        productId: '',
-        unit: '',
+        product_id: '',
+        satuan_id: '',
         quantity: 1,
-        unitPrice: 0,
-        total: 0,
+        price: 0,
+        discount: 0,
+        subtotal: 0,
       })
     },
     removeItem(index) {
@@ -297,7 +325,10 @@ export default {
     },
     calculateItemTotal(index) {
       const item = this.form.items[index]
-      item.total = item.quantity * item.unitPrice
+      item.subtotal = item.quantity * item.price * (1 - item.discount / 100)
+    },
+    handleFileChange(event) {
+      this.form.document = event.target.files[0]
     },
     formatCurrency(amount) {
       return new Intl.NumberFormat('id-ID', {
@@ -318,13 +349,15 @@ export default {
         supplierEmail: '',
         deliveryDate: '',
         paymentTerms: '',
+        document: null,
         items: [
           {
-            productId: '',
-            unit: '',
+            product_id: '',
+            satuan_id: '',
             quantity: 1,
-            unitPrice: 0,
-            total: 0,
+            price: 0,
+            discount: 0,
+            subtotal: 0,
           },
         ],
       }
