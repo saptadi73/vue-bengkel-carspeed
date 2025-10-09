@@ -239,14 +239,44 @@ const router = createRouter({
           component: () => import('../pages/CashFlowReport.vue'),
         },
         {
+          path: 'supplier',
+          name: 'supplier',
+          component: () => import('../pages/DaftarSupplier.vue'),
+        },
+        {
+          path: 'supplier/baru',
+          name: 'supplier baru',
+          component: () => import('../pages/SupplierInputForm.vue'),
+        },
+        {
+          path: 'purchase/list',
+          name: 'daftar purchase order',
+          component: () => import('../pages/TablePurchasingOrder.vue'),
+        },
+        {
+          path: 'purchase/all',
+          name: 'all purchase order',
+          component: () => import('../pages/TablePurchaseOrderAll.vue'),
+        },
+        {
           path: 'purchase',
           name: 'purchase',
           component: () => import('../pages/PurchaseOrderInputForm.vue'),
         },
         {
+          path: 'purchase/:id',
+          name: 'edit purchase',
+          component: () => import('../pages/PurchaseOrderEditForm.vue'),
+        },
+        {
           path: 'biaya',
           name: 'biaya',
           component: () => import('../pages/ReportPembiayaan.vue'),
+        },
+        {
+          path: 'biaya/input',
+          name: 'input biaya',
+          component: () => import('../pages/ExpensesInputForm.vue'),
         },
         {
           path: 'labarugi',

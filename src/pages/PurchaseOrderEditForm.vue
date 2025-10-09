@@ -243,6 +243,16 @@
             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
           />
         </div>
+        <div v-if="form.bukti_transfer" class="mt-4">
+          <h4 class="text-md font-semibold text-gray-800 mb-2">Bukti Transfer Saat Ini</h4>
+          <button
+            type="button"
+            @click="openModal(BASE_URL + form.bukti_transfer)"
+            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Lihat Bukti Transfer
+          </button>
+        </div>
       </div>
 
       <!-- Totals -->
@@ -264,6 +274,30 @@
       </div>
     </form>
   </div>
+
+  <!-- Modal for File Display -->
+  <div
+    v-if="showModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-lg max-w-4xl max-h-4xl w-full h-full relative">
+      <div class="flex justify-between items-center p-4 border-b">
+        <h3 class="text-lg font-semibold">Bukti Transfer</h3>
+        <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">
+          &times;
+        </button>
+      </div>
+      <div class="p-4 h-full overflow-auto">
+        <div v-if="isImage(modalUrl)" class="flex justify-center">
+          <img :src="modalUrl" class="max-w-full max-h-full object-contain" />
+        </div>
+        <div v-else class="w-full h-full">
+          <embed :src="modalUrl" type="application/pdf" class="w-full h-full" />
+        </div>
+      </div>
+    </div>
+  </div>
+
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
@@ -285,8 +319,11 @@ export default {
       products: [],
       units: [],
       satuans: [],
+      showModal: false,
+      modalUrl: '',
       form: {
         supplier_id: '',
+        purchase_order_id: this.$route.params.id,
         poNumber: '',
         poDate: '',
         supplierName: '',
@@ -297,6 +334,7 @@ export default {
         status: '',
         includeTax: false,
         document: null,
+        bukti_transfer: '',
         items: [
           {
             product_id: '',
@@ -316,11 +354,12 @@ export default {
     const message_toast = ref('')
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
-  mounted() {
-    this.fetchSuppliers()
-    this.fetchProducts()
-    this.fetchUnits()
-    this.getSatuans()
+  async mounted() {
+    await this.fetchSuppliers()
+    await this.fetchProducts()
+    await this.fetchUnits()
+    await this.getSatuans()
+    await this.getPurchaseOrder()
   },
   watch: {
     'form.supplier_id'(newVal) {
@@ -367,6 +406,35 @@ export default {
     },
   },
   methods: {
+    async getPurchaseOrder() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}purchase-orders/${this.$route.params.id}`)
+        const poData = response.data.data
+        this.form = {
+          ...this.form,
+          ...poData,
+          items: poData.lines.map((line) => ({
+            product_id: line.product_id,
+            satuan_id: line.satuan_id || '',
+            quantity: line.quantity,
+            price: line.price,
+            discount: line.discount || 0,
+            subtotal: line.subtotal,
+          })),
+        }
+        if (poData.pajak && poData.pajak > 0) {
+          this.form.includeTax = true
+        }
+        console.log('Po Data :', poData)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     async getSatuans() {
       try {
         this.loadingStore.show()
@@ -452,17 +520,22 @@ export default {
         const formData = new FormData()
         formData.append('data', JSON.stringify(payload))
         console.log('Format Payload: ', payload)
+        console.log('Purchase Order ID', this.$route.params.id)
         if (this.form.document) {
           formData.append('bukti_transfer', this.form.document)
         }
 
         // console.log('Data Form: ', payload)
 
-        const response = await api.post(`${BASE_URL}purchase-orders/create`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
+        const response = await api.post(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
           },
-        })
+        )
 
         console.log('Purchase Order created:', response.data.data)
 
@@ -508,6 +581,17 @@ export default {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
+    },
+    openModal(url) {
+      this.modalUrl = url
+      this.showModal = true
+    },
+    closeModal() {
+      this.showModal = false
+      this.modalUrl = ''
+    },
+    isImage(url) {
+      return /\.(jpeg|jpg|png)$/i.test(url)
     },
   },
 }

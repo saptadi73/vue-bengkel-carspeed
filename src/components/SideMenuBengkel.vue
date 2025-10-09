@@ -219,8 +219,32 @@ const navItems = reactive([
         url: '/finansial/cashflow',
       },
       {
-        text: 'Biaya',
-        url: '/finansial/biaya',
+        text: 'Input Biaya',
+        url: '/finansial/biaya/input',
+      },
+      {
+        text: 'Daftar Spplier',
+        url: '/finansial/supplier',
+      },
+      {
+        text: 'Daftar Purchase Order',
+        url: '/finansial/purchase/all',
+      },
+      {
+        text: 'Input Supplier Baru',
+        url: '/finansial/supplier/baru',
+      },
+      {
+        text: 'Purchase Order Baru',
+        url: '/finansial/purchase',
+      },
+      {
+        text: 'Pembayaran Hutang',
+        url: '/finansial/pembayaran-hutang',
+      },
+      {
+        text: 'Penerimaan Piutang',
+        url: '/finansial/penerimaan-piutang',
       },
       {
         text: 'Laba Rugi',
