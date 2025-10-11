@@ -101,10 +101,6 @@ const navItems = reactive([
         url: '/wo/booking',
       },
       {
-        text: 'Buat WO Baru',
-        url: '/wo/new/form',
-      },
-      {
         text: 'Daftar Penjualan',
         url: '/wo/sales/list',
       },
@@ -217,6 +213,10 @@ const navItems = reactive([
       {
         text: 'Cash',
         url: '/finansial/cashflow',
+      },
+      {
+        text: 'Daftar Biaya',
+        url: 'finansial/biaya',
       },
       {
         text: 'Input Biaya',

@@ -144,6 +144,7 @@
               <label class="block text-sm font-medium text-gray-700">Product</label>
               <select
                 v-model="item.product_id"
+                @change="onProductChange(index)"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
@@ -211,13 +212,20 @@
               />
             </div>
           </div>
-          <div class="mt-2 flex justify-end">
+          <div class="mt-2 gap-3 flex justify-end">
             <button
               type="button"
               @click="removeItem(index)"
               class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
               Remove Item
+            </button>
+            <button
+              type="button"
+              @click="updateCost(item.product_id, index)"
+              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+            >
+              Update Cost (HPP)
             </button>
           </div>
         </div>
@@ -341,19 +349,6 @@ export default {
         this.form.toko = ''
       }
     },
-    'form.items': {
-      handler() {
-        this.form.items.forEach((item) => {
-          if (item.product_id) {
-            const product = this.products.find((p) => p.id == item.product_id)
-            if (product && product.satuan_id) {
-              item.satuan_id = product.satuan_id
-            }
-          }
-        })
-      },
-      deep: true,
-    },
   },
   computed: {
     subtotal() {
@@ -367,6 +362,37 @@ export default {
     },
   },
   methods: {
+    onProductChange(index) {
+      const item = this.form.items[index]
+      const product = this.products.find((p) => p.id == item.product_id)
+      if (product) {
+        if (product.satuan_id) {
+          item.satuan_id = product.satuan_id
+        }
+        if (product.cost) {
+          item.price = product.cost
+        } else {
+          item.price = 0
+        }
+      }
+      this.calculateItemTotal(index)
+    },
+    async updateCost(productId, index) {
+      if (!productId) return
+      try {
+        const updateCost = {
+          product_id: productId,
+          cost: this.form.items[index].price,
+        }
+        console.log('isi Update: ', updateCost)
+        const response = await api.put(`${BASE_URL}products/cost`, updateCost)
+        console.log('Update Cost: ', response.data.data)
+        this.form.items[index].price = response.data.data.cost
+        this.calculateItemTotal(index)
+      } catch (error) {
+        console.log('Error', error)
+      }
+    },
     async getSatuans() {
       try {
         this.loadingStore.show()

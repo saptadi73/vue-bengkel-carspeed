@@ -78,7 +78,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3 bg-blue-100 p-3 rounded-md shadow-lg">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-3 bg-blue-100 p-3 rounded-md shadow-lg">
       <!-- Unit Select -->
       <div class="info-card">
         <div class="relative flex items-center gap-3">
@@ -104,6 +104,18 @@
             id="price"
             class="modern-input peer"
             placeholder="Isikan harga"
+          />
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="relative">
+          <label for="cost" class="modern-label-label">HPP (Cost)</label>
+          <input
+            v-model="form.cost"
+            type="number"
+            id="cost"
+            class="modern-input peer"
+            placeholder="Isikan HPP"
           />
         </div>
       </div>
@@ -258,6 +270,7 @@ export default {
         description: '',
         min_stock: '',
         price: '',
+        cost: '',
       },
 
       units: [],

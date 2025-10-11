@@ -1,6 +1,8 @@
 <template>
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">Expenses Input Form</h2>
+    <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">
+      {{ isEdit ? 'Edit Expenses Form' : 'Expenses Input Form' }}
+    </h2>
 
     <form @submit.prevent="submitForm" class="space-y-6">
       <!-- Expense Details -->
@@ -88,15 +90,48 @@
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
         />
+        <div v-if="form.bukti_transfer" class="mt-4">
+          <h4 class="text-md font-semibold text-gray-800 mb-2">Bukti Transfer Saat Ini</h4>
+          <button
+            type="button"
+            @click="openModal(BASE_URL + form.bukti_transfer)"
+            class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Lihat Bukti Transfer
+          </button>
+        </div>
       </div>
 
       <!-- Submit Button -->
       <div class="text-center">
         <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          Submit Expense
+          {{ isEdit ? 'Update Expense' : 'Submit Expense' }}
         </button>
       </div>
     </form>
+
+    <!-- Modal for File Display -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-lg shadow-lg max-w-4xl max-h-4xl w-full h-full relative">
+        <div class="flex justify-between items-center p-4 border-b">
+          <h3 class="text-lg font-semibold">Bukti Transfer</h3>
+          <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">
+            &times;
+          </button>
+        </div>
+        <div class="p-4 h-full overflow-auto">
+          <div v-if="isImage(modalUrl)" class="flex justify-center">
+            <img :src="modalUrl" class="max-w-full max-h-full object-contain" />
+          </div>
+          <div v-else class="w-full h-full">
+            <embed :src="modalUrl" type="application/pdf" class="w-full h-full" />
+          </div>
+        </div>
+      </div>
+    </div>
 
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
@@ -115,14 +150,10 @@ import { BASE_URL } from '../base.utils.url'
 export default {
   name: 'ExpensesInputForm',
   components: { LoadingOverlay, ToastCard },
-  setup() {
-    const loadingStore = useLoadingStore()
-    const show_toast = ref(false)
-    const message_toast = ref('')
-    return { loadingStore, show_toast, message_toast, BASE_URL }
-  },
   data() {
     return {
+      showModal: false,
+      modalUrl: '',
       form: {
         name: '',
         description: '',
@@ -133,7 +164,43 @@ export default {
       },
     }
   },
+  setup() {
+    const loadingStore = useLoadingStore()
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { loadingStore, show_toast, message_toast, BASE_URL }
+  },
+  computed: {
+    isEdit() {
+      return !!this.$route.params.id
+    },
+  },
+  async mounted() {
+    if (this.isEdit) {
+      await this.getExpense()
+    }
+  },
   methods: {
+    async getExpense() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}expenses/${this.$route.params.id}`)
+        const expenseData = response.data.data
+        this.form = {
+          ...this.form,
+          ...expenseData,
+        }
+        console.log('Expense Data:', expenseData)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Error fetching expense'
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     handleFileChange(event) {
       this.form.bukti_transfer = event.target.files[0]
     },
@@ -150,28 +217,36 @@ export default {
           formData.append('bukti_transfer', this.form.bukti_transfer)
         }
 
-        await api.post(`${BASE_URL}expenses/create`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
-
-        this.message_toast = 'Expense berhasil dibuat'
-        this.show_toast = true
-        // Reset form
-        this.form = {
-          name: '',
-          description: '',
-          expense_type: '',
-          amount: 0,
-          date: '',
-          bukti_transfer: null,
+        if (this.isEdit) {
+          await api.put(`${BASE_URL}expenses/${this.$route.params.id}`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          this.message_toast = 'Expense berhasil diupdate'
+        } else {
+          await api.post(`${BASE_URL}expenses/create`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          this.message_toast = 'Expense berhasil dibuat'
+          // Reset form
+          this.form = {
+            name: '',
+            description: '',
+            expense_type: '',
+            amount: 0,
+            date: '',
+            bukti_transfer: null,
+          }
+          // Reset file input
+          document.getElementById('bukti_transfer').value = ''
         }
-        // Reset file input
-        document.getElementById('bukti_transfer').value = ''
+        this.show_toast = true
       } catch (error) {
-        console.error('Error creating expense:', error)
-        this.message_toast = 'Gagal membuat expense'
+        console.error('Error submitting expense:', error)
+        this.message_toast = error.response?.data?.message || 'Gagal submit expense'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()
@@ -179,6 +254,17 @@ export default {
     },
     tutupToast() {
       this.show_toast = false
+    },
+    openModal(url) {
+      this.modalUrl = url
+      this.showModal = true
+    },
+    closeModal() {
+      this.showModal = false
+      this.modalUrl = ''
+    },
+    isImage(url) {
+      return /\.(jpeg|jpg|png)$/i.test(url)
     },
   },
 }

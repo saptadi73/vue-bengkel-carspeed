@@ -271,12 +271,17 @@ const router = createRouter({
         {
           path: 'biaya',
           name: 'biaya',
-          component: () => import('../pages/ReportPembiayaan.vue'),
+          component: () => import('../pages/TableExpenseAll.vue'),
         },
         {
           path: 'biaya/input',
           name: 'input biaya',
           component: () => import('../pages/ExpensesInputForm.vue'),
+        },
+        {
+          path: 'biaya/:id',
+          name: 'edit iaya',
+          component: () => import('../pages/ExpenseEditForm.vue'),
         },
         {
           path: 'labarugi',

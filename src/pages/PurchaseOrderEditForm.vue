@@ -143,6 +143,7 @@
             <div>
               <label class="block text-sm font-medium text-gray-700">Product</label>
               <select
+                @change="getCost(item.product_id, index)"
                 v-model="item.product_id"
                 class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -218,6 +219,13 @@
               class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
               Remove Item
+            </button>
+            <button
+              type="button"
+              @click="updateCost(item.product_id, index)"
+              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+            >
+              Update Cost (HPP)
             </button>
           </div>
         </div>
@@ -406,6 +414,33 @@ export default {
     },
   },
   methods: {
+    async updateCost(productId, index) {
+      if (!productId) return
+      try {
+        const updateCost = {
+          product_id: productId,
+          cost: this.form.items[index].price,
+        }
+        console.log('isi Update: ', updateCost)
+        const response = await api.put(`${BASE_URL}inventory/cost`, updateCost)
+        console.log('Update Cost: ', response.data.data)
+        this.form.items[index].price = response.data.data.cost
+        this.calculateItemTotal(index)
+      } catch (error) {
+        console.log('Error', error)
+      }
+    },
+    async getCost(productId, index) {
+      if (!productId) return
+      try {
+        const response = await axios.get(`${BASE_URL}inventory/${productId}`)
+        console.log('Get Cost: ', response.data.data)
+        this.form.items[index].price = response.data.data.cost
+        this.calculateItemTotal(index)
+      } catch (error) {
+        console.error('Error fetching cost:', error)
+      }
+    },
     async getPurchaseOrder() {
       try {
         this.loadingStore.show()

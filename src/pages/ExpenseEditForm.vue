@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-    <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">Edit Expenses Form</h2>
+    <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">- Edit Expenses Form -</h2>
 
     <form @submit.prevent="submitForm" class="space-y-6">
       <!-- Expense Details -->
@@ -92,7 +92,7 @@
           <h4 class="text-md font-semibold text-gray-800 mb-2">Bukti Transfer Saat Ini</h4>
           <button
             type="button"
-            @click="openModal(BASE_URL + form.bukti_transfer)"
+            @click="openModal(buktiTransferUrl)"
             class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Lihat Bukti Transfer
@@ -162,6 +162,14 @@ export default {
         bukti_transfer_file: null,
       },
     }
+  },
+  computed: {
+    buktiTransferUrl() {
+      if (this.form.bukti_transfer) {
+        return this.BASE_URL + this.form.bukti_transfer
+      }
+      return null
+    },
   },
   setup() {
     const loadingStore = useLoadingStore()

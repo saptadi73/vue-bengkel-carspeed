@@ -1,12 +1,3 @@
-- [x] Add imports for axios and BASE_URL
-- [x] Add data properties: products and units arrays
-- [x] Add mounted() to fetch products and units from API
-- [x] Update form.items initial structure to use backend field names: product_id, satuan_id, price, subtotal, discount, quantity
-- [x] Update template v-models to match new field names
-- [x] Update addItem method to use new field names
-- [x] Update submitForm reset to use new field names
-- [x] Update calculateItemTotal to set subtotal
-- [x] Add document field to form data
-- [x] Add file input in template for uploading bukti kwitansi/dokumen
-- [x] Add handleFileChange method
-- [x] Update submitForm reset to include document
+- [x] Update form data in CreateProduct.vue to include cost: ''
+- [x] Change grid layout from md:grid-cols-2 to md:grid-cols-3 for satuan, price, and cost
+- [x] Add input field for cost in the template
