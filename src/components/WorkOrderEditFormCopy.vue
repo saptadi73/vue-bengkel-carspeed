@@ -139,7 +139,8 @@
                 <select v-model="form.status" id="status" class="modern-select peer">
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
-                  <option value="dikerjakan">Dikerjakan</option>
+                  <option value="in_progress">in_progress</option>
+                  <option value="completed">completed</option>
                 </select>
                 <label class="modern-select-label">Status</label>
               </div>
@@ -169,8 +170,8 @@
           </div>
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1 relative">
-              <select v-model="form.karyawan_id" class="modern-select peer">
-                <option value="">-- Pilih Karyawan --</option>
+              <select v-model="form.karyawan_id" class="modern-select peer" required>
+                <option value="" disabled selected>-- Pilih Karyawan --</option>
                 <option
                   v-for="karyawanItem in karyawan"
                   :key="karyawanItem.id"
@@ -242,7 +243,7 @@
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
-                <div class="grid grid-cols-1 md:grid-cols-9 gap-4 mb-4">
+                <div class="grid grid-cols-9 gap-4 mb-4">
                   <div class="relative col-span-2">
                     <select
                       v-model="item.product_id"
@@ -273,12 +274,7 @@
                     <label class="modern-label">quantity</label>
                   </div>
                   <div class="relative col-span-1">
-                    <select
-                      id="satuan_id"
-                      v-model="item.satuan_id"
-                      class="modern-select peer"
-                      disabled
-                    >
+                    <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
                         {{ value.name }}
@@ -316,22 +312,20 @@
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
-                  <div class="flex gap-2">
+                  <div class="flex gap-2" style="display: none">
                     <label class="text-xs">HPP</label>
                     <input
-                      :value="item.cost"
-                      @input="
-                        this.form.product_ordered[idx].cost = Number($event.target.value) || 0
-                      "
+                      v-model.number="item.cost"
                       type="number"
                       min="0"
                       class="text-xs rounded-md"
+                      placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2">
+                  <div class="flex gap-2" style="display: none">
                     <label class="text-xs">Subtotal HPP</label>
                     <div class="text-xs font-bold">
-                      {{ formatCurrency(itemSubtotalHPP(item)) }}
+                      {{ formatCurrency(productSubtotalHPP(item)) }}
                     </div>
                   </div>
                   <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
@@ -378,12 +372,6 @@
                   <span class="text-gray-600">Total Discount:</span>
                   <span class="font-bold text-red-600">{{
                     formatCurrency(totalProductDiscount)
-                  }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-gray-600">Total HPP:</span>
-                  <span class="font-bold text-blue-600">{{
-                    formatCurrency(totalProductCost)
                   }}</span>
                 </div>
               </div>
@@ -441,7 +429,7 @@
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
-                <div class="grid grid-cols-1 md:grid-cols-8 gap-4 mb-4">
+                <div class="grid grid-cols-8 gap-4 mb-4">
                   <div class="relative col-span-2">
                     <select
                       v-model="item.service_id"
@@ -487,6 +475,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="updateServiceSubtotal(item)"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
@@ -498,22 +487,20 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
-                  <div class="flex gap-2">
+                  <div class="flex gap-2" style="display: none">
                     <label class="text-xs">HPP</label>
                     <input
-                      :value="item.cost"
-                      @input="
-                        this.form.service_ordered[idx].cost = Number($event.target.value) || 0
-                      "
+                      v-model.number="item.cost"
                       type="number"
                       min="0"
                       class="text-xs rounded-md"
+                      placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2">
+                  <div class="flex gap-2" style="display: none">
                     <label class="text-xs">Subtotal HPP</label>
                     <div class="text-xs font-bold">
-                      {{ formatCurrency(itemSubtotalHPP(item)) }}
+                      {{ formatCurrency(serviceSubtotalHPP(item)) }}
                     </div>
                   </div>
                   <button type="button" class="delete-btn" @click="removeServiceOrder(idx)">
@@ -568,12 +555,6 @@
                     formatCurrency(totalServiceDiscount)
                   }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="text-gray-600">Total HPP:</span>
-                  <span class="font-bold text-blue-600">{{
-                    formatCurrency(totalServiceCost)
-                  }}</span>
-                </div>
               </div>
             </div>
           </div>
@@ -604,7 +585,7 @@
               </div>
               <h3 class="text-lg font-bold text-gray-800">Ringkasan Total</h3>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div class="bg-white rounded-lg p-4 border border-green-200">
                 <div class="text-sm text-gray-600 mb-1">Total Harga</div>
                 <div class="text-xl font-bold text-green-600">
@@ -615,18 +596,6 @@
                 <div class="text-sm text-gray-600 mb-1">Total Discount</div>
                 <div class="text-xl font-bold text-red-600">
                   {{ formatCurrency(grandTotalDiscount) }}
-                </div>
-              </div>
-              <div class="bg-white rounded-lg p-4 border border-blue-200">
-                <div class="text-sm text-gray-600 mb-1">Total HPP</div>
-                <div class="text-xl font-bold text-blue-600">
-                  {{ formatCurrency(totalCost) }}
-                </div>
-              </div>
-              <div class="bg-white rounded-lg p-4 border border-purple-200">
-                <div class="text-sm text-gray-600 mb-1">Laba Kotor</div>
-                <div class="text-xl font-bold text-purple-600">
-                  {{ formatCurrency(grossProfit) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-yellow-200">
@@ -641,6 +610,10 @@
                   {{ formatCurrency(totalPembayaran) }}
                 </div>
               </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500 text-center">
+              HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
+              {{ formatCurrency(totalServiceCost) }}
             </div>
           </div>
 
@@ -727,7 +700,6 @@
       </div>
     </div>
   </div>
-
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
 </template>
@@ -753,7 +725,6 @@ export default {
       packetorders: [],
       satuans: [],
       dataVehiclesPelanggan: [],
-      dataWorkorder: [],
       stockku: 0,
       isitotalProductHarga: 0,
       isitotalServiceHarga: 0,
@@ -764,8 +735,7 @@ export default {
       karyawan: [],
       form: {
         customer_id: '',
-        workorder_id: this.$route.params.id || '',
-        vehicle_id: '',
+        vehicle_id: this.$route.params.id || '',
         nama: '',
         hp: '',
         alamat: '',
@@ -779,7 +749,7 @@ export default {
         service_ordered: [],
         keluhan: '',
         saran: '',
-        status: 'dikerjakan',
+        status: 'draft',
         pajak: 0,
         karyawan_id: '',
       },
@@ -792,10 +762,7 @@ export default {
   },
   computed: {
     totalProductHarga() {
-      return this.form.product_ordered.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
-        0,
-      )
+      return this.form.product_ordered.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
     },
     totalProductDiscount() {
       // Discount as percentage, like in productSubtotal
@@ -808,10 +775,7 @@ export default {
       }, 0)
     },
     totalServiceHarga() {
-      return this.form.service_ordered.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.price) || 0),
-        0,
-      )
+      return this.form.service_ordered.reduce((sum, item) => sum + this.serviceSubtotal(item), 0)
     },
     totalServiceDiscount() {
       // Discount as percentage, like in totalProductDiscount
@@ -823,7 +787,12 @@ export default {
         return sum + price * quantity * (discount / 100)
       }, 0)
     },
-
+    totalProductCost() {
+      return this.form.product_ordered.reduce((sum, item) => sum + this.productSubtotalHPP(item), 0)
+    },
+    totalServiceCost() {
+      return this.form.service_ordered.reduce((sum, item) => sum + this.serviceSubtotalHPP(item), 0)
+    },
     grandTotalHarga() {
       return this.totalProductHarga + this.totalServiceHarga
     },
@@ -838,24 +807,6 @@ export default {
     totalPembayaran() {
       const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
       return subtotal + this.pajakAmount
-    },
-    totalProductCost() {
-      return this.form.product_ordered.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.cost) || 0),
-        0,
-      )
-    },
-    totalServiceCost() {
-      return this.form.service_ordered.reduce(
-        (sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.cost) || 0),
-        0,
-      )
-    },
-    totalCost() {
-      return this.totalProductCost + this.totalServiceCost
-    },
-    grossProfit() {
-      return this.grandTotalHarga - this.grandTotalDiscount - this.totalCost
     },
   },
   watch: {
@@ -891,30 +842,8 @@ export default {
     this.getSatuans()
     this.getVehiclesPelanggan()
     this.getKaryawan()
-    this.getBookingData()
   },
   methods: {
-    getBookingData() {
-      const bookingData = localStorage.getItem('bookingDataSaveToWO')
-      const vehicleIdFromRoute = this.form.vehicle_id
-      const booking = JSON.parse(bookingData)
-      console.log(
-        'Booking Data from LocalStorage: ',
-        booking.vehicle_id,
-        'vs dari API:',
-        vehicleIdFromRoute,
-      )
-      if (bookingData) {
-        const booking = JSON.parse(bookingData)
-        if (booking.vehicle_id === this.form.vehicle_id) {
-          // Prefill form dengan data booking
-          this.form.keluhan = booking.keluhan || ''
-          this.form.saran = booking.saran || ''
-          console.log('Prefilled from booking yang sudah confirm: ', booking)
-        }
-      }
-    },
-
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -925,7 +854,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}karyawans/all`)
-        console.log('Karyawan Data: ', response.data.data)
+        // console.log('Karyawan Data: ', response.data.data)
         this.karyawan = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -980,7 +909,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/satuans/all`)
-        console.log('Satuan Data: ', response.data.data)
+        // console.log('Satuan Data: ', response.data.data)
         this.satuans = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -1012,6 +941,29 @@ export default {
         this.loadingStore.hide()
       }
     },
+    async getBookingData() {
+      const bookingData = localStorage.getItem('bookingDataSaveToWO')
+      // console.log('Booking Data from LocalStorage: ', bookingData)
+      const parsedData = bookingData ? JSON.parse(bookingData) : null
+      // console.log('Parsed Booking Data: ', parsedData)
+      // console.log('Vehicle ID from LocalStorage: ', parsedData?.vehicle_id)
+      // console.log('Booking ID from LocalStorage: ', parsedData?.booking_id)
+      // console.log('Current Vehicle ID from Route: ', this.form.vehicle_id)
+
+      if (parsedData && parsedData.vehicle_id === this.form.vehicle_id) {
+        try {
+          this.loadingStore.show()
+          const response = await api.get(`${BASE_URL}bookings/delete/${parsedData.booking_id}`)
+          console.log('Booking Delete Details Data: ', response.data.data)
+          this.show_toast = true
+          this.message_toast = 'Booking berhasil dihapus setelah membuat Work Order.'
+        } catch (error) {
+          console.log('error delete Booking: ', error)
+        } finally {
+          this.loadingStore.hide()
+        }
+      }
+    },
     async getPacketOrders() {
       try {
         this.loadingStore.show()
@@ -1029,7 +981,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/all`)
-        console.log('Data Products: ', response.data.data)
+        // console.log('Data Products: ', response.data.data)
         this.products = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -1041,7 +993,7 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/service/all`)
-        console.log('Data Services: ', response.data.data)
+        // console.log('Data Services: ', response.data.data)
         this.services = response.data.data
       } catch (error) {
         console.log('error: ', error)
@@ -1073,9 +1025,9 @@ export default {
         quantity: 0,
         satuan_id: '',
         price: 0,
-        cost: 0,
         discount: 0,
         subtotal: 0,
+        cost: 0,
       })
     },
     removeProductOrder(idx) {
@@ -1086,9 +1038,9 @@ export default {
         service_id: '',
         quantity: 0,
         price: 0,
-        cost: 0,
         discount: 0,
         subtotal: 0,
+        cost: 0,
       })
     },
     removeServiceOrder(idx) {
@@ -1109,6 +1061,15 @@ export default {
       // Diskon sebagai persentase
       return Math.max(0, price * quantity - price * quantity * (discount / 100))
     },
+    updateServiceSubtotal(item) {
+      // Trigger reactivity for service subtotal when discount changes
+    },
+    productSubtotalHPP(item) {
+      return (item.quantity || 0) * (item.cost || 0)
+    },
+    serviceSubtotalHPP(item) {
+      return (item.quantity || 0) * (item.cost || 0)
+    },
     formatCurrency(val) {
       if (!val || isNaN(val)) return 'Rp 0'
       return new Intl.NumberFormat('id-ID', {
@@ -1118,57 +1079,7 @@ export default {
         maximumFractionDigits: 0,
       }).format(val)
     },
-    itemSubtotalHPP(item) {
-      return (item.quantity || 0) * (item.cost || 0)
-    },
-    openEditModal(type, index) {
-      this.editingType = type
-      this.editingIndex = index
-      if (type === 'product') {
-        this.editingItem = { ...this.form.product_ordered[index] }
-      } else if (type === 'service') {
-        this.editingItem = { ...this.form.service_ordered[index] }
-      }
-      this.showEditModal = true
-    },
-    closeEditModal() {
-      this.showEditModal = false
-      this.editingItem = {}
-      this.editingIndex = -1
-      this.editingType = ''
-    },
-    calculateEditingSubtotal() {
-      const quantity = Number(this.editingItem.quantity) || 0
-      const price = Number(this.editingItem.price) || 0
-      const discount = Number(this.editingItem.discount) || 0
-      return Math.max(0, quantity * price - quantity * price * (discount / 100))
-    },
-    handleProductChange() {
-      this.getProductsId(this.editingItem)
-      this.calculateEditingSubtotal()
-    },
-    handleServiceChange() {
-      this.getServicesId(this.editingItem)
-      this.calculateEditingSubtotal()
-    },
-    saveEditModal() {
-      if (this.editingIndex < 0) return
-      if (this.editingType === 'product') {
-        this.form.product_ordered[this.editingIndex] = {
-          ...this.editingItem,
-          subtotal: this.calculateEditingSubtotal(),
-        }
-      } else if (this.editingType === 'service') {
-        this.form.service_ordered[this.editingIndex] = {
-          ...this.editingItem,
-          subtotal: this.calculateEditingSubtotal(),
-        }
-      }
-      this.closeEditModal()
-    },
     async submitForm() {
-      const idku = this.$route.params.id
-
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
       this.form.total_biaya = this.isitotalPembayaran
@@ -1177,13 +1088,11 @@ export default {
 
       try {
         this.loadingStore.show()
-        const response = await api.post(
-          `${this.BASE_URL}workorders/update/workorderlengkap/${idku}`,
-          this.form,
-        )
+        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
         this.show_toast = true
         this.message_toast = response.data.message
-        console.log('Response: ', response.data.data)
+        // console.log('Response: ', response.data.data)
+        this.getBookingData()
       } catch (error) {
         console.log('error: ', error)
         this.show_toast = true
@@ -1192,7 +1101,7 @@ export default {
         this.loadingStore.hide()
       }
 
-      console.log('Form Data:', this.form)
+      // console.log('Form Data:', this.form)
     },
     printPDF() {
       const doc = new jsPDF()
@@ -1280,10 +1189,11 @@ export default {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/${item.product_id}`)
         const data = response.data.data
+
         item.satuan_id = data.satuan_id
         item.product_name = data.name
-        item.price = data.price || 0
-        item.cost = data.cost || 0
+        item.cost = Number(data.cost) || 0
+        if (data.price) item.price = data.price
         await this.getStock(item)
       } catch (error) {
         console.log('error: ', error)
@@ -1298,8 +1208,8 @@ export default {
         const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
         const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
-        item.price = data.price || 0
-        item.cost = data.cost || 0
+        if (data.price) item.price = data.price
+        if (data.cost) item.cost = Number(data.cost) || 0
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -1319,18 +1229,21 @@ export default {
       }
       const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
       if (paket && paket.product_line && paket.service_line) {
-        this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line)).map((item) => ({
-          ...item,
-          cost: item.cost || 0,
-        }))
-        this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line)).map((item) => ({
-          ...item,
-          cost: item.cost || 0,
-        }))
-        // Jalankan getStock untuk setiap item produk hasil paket, tunggu semua selesai
+        this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
+        this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
+        // Jalankan getProductsId dan getStock untuk setiap item produk hasil paket
         await Promise.all(
           this.form.product_ordered.map(async (item) => {
+            await this.getProductsId(item)
             await this.getStock(item)
+          }),
+        )
+        // Hitung subtotal untuk produk
+        this.form.product_ordered.forEach((item) => this.productSubtotal(item))
+        // Jalankan getServicesId untuk setiap item service hasil paket
+        await Promise.all(
+          this.form.service_ordered.map(async (item) => {
+            await this.getServicesId(item)
           }),
         )
       } else {

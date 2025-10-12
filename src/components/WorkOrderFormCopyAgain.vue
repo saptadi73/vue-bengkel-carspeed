@@ -847,10 +847,15 @@ export default {
   computed: {
     totalProductDiscount() {
       // Discount as percentage
-      return this.calculatetotalProductDiscount()
+      return this.form.product_ordered.reduce((sum, item) => {
+        const quantity = Number(item.quantity) || 0
+        const price = Number(item.price) || 0
+        const discount = Number(item.discount) || 0
+        return sum + price * quantity * (discount / 100)
+      }, 0)
     },
     totalProductHarga() {
-      return this.calculatetotalProductHarga()
+      return this.form.product_ordered.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
     },
     totalServiceHarga() {
       return this.calculatetotalServiceHarga()
@@ -923,20 +928,6 @@ export default {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
-    },
-
-    calculatetotalProductHarga() {
-      return this.form.product_ordered.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
-    },
-
-    calculatetotalProductDiscount() {
-      // Discount as percentage
-      return this.form.product_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
-        const discount = Number(item.discount) || 0
-        return sum + price * quantity * (discount / 100)
-      }, 0)
     },
 
     calculatetotalServiceHarga() {
@@ -1219,24 +1210,23 @@ export default {
       this.form.totalServiceHarga = this.totalServiceHarga
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
-      this.form.hpp = this.totalServiceCost + this.totalProductCost
 
-      // try {
-      //   this.loadingStore.show()
-      //   const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
-      //   this.show_toast = true
-      //   this.message_toast = response.data.message
-      //   // console.log('Response: ', response.data.data)
-      //   this.getBookingData()
-      // } catch (error) {
-      //   console.log('error: ', error)
-      //   this.show_toast = true
-      //   this.message_toast = 'Gagal submit work order!'
-      // } finally {
-      //   this.loadingStore.hide()
-      // }
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+        this.show_toast = true
+        this.message_toast = response.data.message
+        // console.log('Response: ', response.data.data)
+        this.getBookingData()
+      } catch (error) {
+        console.log('error: ', error)
+        this.show_toast = true
+        this.message_toast = 'Gagal submit work order!'
+      } finally {
+        this.loadingStore.hide()
+      }
 
-      console.log('Form Data:', this.form)
+      // console.log('Form Data:', this.form)
     },
     printPDF() {
       const doc = new jsPDF()

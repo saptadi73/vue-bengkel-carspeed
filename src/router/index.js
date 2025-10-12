@@ -88,6 +88,11 @@ const router = createRouter({
           component: () => import('../components/TableBookingList.vue'),
         },
         {
+          path: 'test/baru',
+          name: 'wo baru test',
+          component: () => import('../components/WorkOrderFormCopy.vue'),
+        },
+        {
           path: 'edit/:id',
           name: 'edit work order',
           component: () => import('../components/WorkOrderEditForm.vue'),

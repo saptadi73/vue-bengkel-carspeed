@@ -1,3 +1,4 @@
-- [x] Update form data in CreateProduct.vue to include cost: ''
-- [x] Change grid layout from md:grid-cols-2 to md:grid-cols-3 for satuan, price, and cost
-- [x] Add input field for cost in the template
+- [x] Fix productSubtotalHPP method to return calculation instead of assignment
+- [x] Fix serviceSubtotalHPP method to return calculation instead of assignment
+- [x] Make HPP input fields visible for products by removing style="display: none"
+- [x] Make HPP input fields visible for services by removing style="display: none"

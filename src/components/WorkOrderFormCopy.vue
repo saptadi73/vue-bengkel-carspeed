@@ -305,13 +305,9 @@
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
-                    <input
-                      id="subtotal-product"
-                      type="number"
-                      v-model.number="item.subtotal"
-                      class="naked-input"
-                      :size="Math.max(title?.length || 0, 1)"
-                    />
+                    <div class="subtotal-display">
+                      {{ formatCurrency(item.subtotal) }}
+                    </div>
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
@@ -328,12 +324,6 @@
                   </div>
                   <div class="flex gap-2" style="display: none">
                     <label class="text-xs">Subtotal HPP</label>
-                    <input
-                      type="number"
-                      id="product-subtotal"
-                      v-model.number="item.productSubtotalHPP"
-                      class="naked-input"
-                    />
                     <div class="text-xs font-bold">
                       {{ formatCurrency(productSubtotalHPP(item)) }}
                     </div>
@@ -374,24 +364,12 @@
               <div class="flex flex-wrap gap-6 justify-end text-sm font-semibold">
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Harga:</span>
-                  <input
-                    type="number"
-                    id="total-product-harga"
-                    v-model.number="form.totalProductHarga"
-                    class="naked-input"
-                  />
                   <span class="font-bold text-green-600">{{
                     formatCurrency(totalProductHarga)
                   }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Discount:</span>
-                  <input
-                    type="number"
-                    id="total-product-discount"
-                    v-model.number="form.totalProductDiscount"
-                    class="naked-input"
-                  />
                   <span class="font-bold text-red-600">{{
                     formatCurrency(totalProductDiscount)
                   }}</span>
@@ -502,12 +480,6 @@
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
-                    <input
-                      type="number"
-                      id="service-subtotal"
-                      v-model.number="item.serviceSubtotal"
-                      class="naked-input"
-                    />
                     <div class="subtotal-display">
                       {{ formatCurrency(serviceSubtotal(item)) }}
                     </div>
@@ -527,12 +499,6 @@
                   </div>
                   <div class="flex gap-2" style="display: none">
                     <label class="text-xs">Subtotal HPP</label>
-                    <input
-                      type="number"
-                      id="service-subtotal-hpp"
-                      v-model.number="item.serviceSubtotalHPP"
-                      class="naked-input"
-                    />
                     <div class="text-xs font-bold">
                       {{ formatCurrency(serviceSubtotalHPP(item)) }}
                     </div>
@@ -579,24 +545,12 @@
               <div class="flex flex-wrap gap-6 justify-end text-sm font-semibold">
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Harga:</span>
-                  <input
-                    type="number"
-                    id="total-service-harga"
-                    v-model.number="form.totalServiceHarga"
-                    class="naked-input"
-                  />
                   <span class="font-bold text-purple-600">{{
                     formatCurrency(totalServiceHarga)
                   }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Discount:</span>
-                  <input
-                    type="number"
-                    id="total-service-discount"
-                    v-model.number="form.totalServiceDiscount"
-                    class="naked-input"
-                  />
                   <span class="font-bold text-red-600">{{
                     formatCurrency(totalServiceDiscount)
                   }}</span>
@@ -634,48 +588,24 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div class="bg-white rounded-lg p-4 border border-green-200">
                 <div class="text-sm text-gray-600 mb-1">Total Harga</div>
-                <input
-                  type="number"
-                  id="grand-total-harga"
-                  v-model.number="form.grandTotalHarga"
-                  class="naked-input"
-                />
                 <div class="text-xl font-bold text-green-600">
                   {{ formatCurrency(grandTotalHarga) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-red-200">
                 <div class="text-sm text-gray-600 mb-1">Total Discount</div>
-                <input
-                  type="number"
-                  id="grnad-total-discount"
-                  v-model.number="form.grandTotalDiscount"
-                  class="naked-input"
-                />
                 <div class="text-xl font-bold text-red-600">
                   {{ formatCurrency(grandTotalDiscount) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-yellow-200">
                 <div class="text-sm text-gray-600 mb-1">Pajak (11%)</div>
-                <input
-                  type="number"
-                  id="pajak-amount"
-                  v-model.number="form.pajak"
-                  class="naked-input"
-                />
                 <div class="text-xl font-bold text-yellow-600">
                   {{ formatCurrency(pajakAmount) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-blue-200">
                 <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
-                <input
-                  type="number"
-                  id="total-pembayaran"
-                  v-model.number="form.totalPembayaran"
-                  class="naked-input"
-                />
                 <div class="text-2xl font-bold text-blue-600">
                   {{ formatCurrency(totalPembayaran) }}
                 </div>
@@ -684,21 +614,6 @@
             <div class="mt-2 text-xs text-gray-500 text-center">
               HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
               {{ formatCurrency(totalServiceCost) }}
-            </div>
-
-            <div class="flext gap-3 justify-end">
-              <input
-                type="number"
-                id="total-product-cost"
-                v-model.number="form.totalProductCost"
-                class="naked-input"
-              />
-              <input
-                type="number"
-                id="total-service-cost"
-                v-model.number="form.totalServiceCost"
-                class="naked-input"
-              />
             </div>
           </div>
 
@@ -837,9 +752,6 @@ export default {
         status: 'draft',
         pajak: 0,
         karyawan_id: '',
-        totalPembayaran: 0,
-        totalProductCost: 0,
-        totalProductDiscount: 0,
       },
       selectedPaket: '',
       paketList: [],
@@ -1763,51 +1675,5 @@ h3 {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Bikin input “telanjang” */
-.naked-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-
-  /* Warisan tipografi dari parent supaya benar-benar terlihat seperti teks biasa */
-  font: inherit;
-  color: inherit;
-  line-height: inherit;
-
-  /* Lebar mengikuti panjang teks */
-  width: auto;
-  min-width: 1ch;
-  caret-color: currentColor;
-
-  /* Hilangkan styling default browser tertentu */
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/* Opsional: placeholder lebih samar */
-.naked-input::placeholder {
-  opacity: 0.4;
-}
-
-/* Opsional: garis tipis saat fokus biar aksesibel tapi tetap minimalis */
-.naked-input:focus {
-  box-shadow: inset 0 -1px 0 currentColor;
-}
-
-/* Util kelas untuk aksesibilitas label tersembunyi */
-.sr-only {
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
-  border: 0;
-  padding: 0;
-  margin: -1px;
 }
 </style>

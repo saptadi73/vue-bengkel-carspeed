@@ -305,25 +305,34 @@
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
-                    <div class="subtotal-display">
-                      {{ formatCurrency(item.subtotal) }}
-                    </div>
+                    <input
+                      id="subtotal-product"
+                      type="number"
+                      v-model.number="item.subtotal"
+                      class="naked-input"
+                      :size="Math.max(item.subtotal?.length || 0, 1)"
+                    />
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
                       v-model.number="item.cost"
                       type="number"
                       min="0"
-                      class="text-xs rounded-md"
+                      class="naked-input"
                       placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">Subtotal HPP</label>
+                    <input
+                      type="hidden"
+                      id="product-subtotal"
+                      v-model.number="item.productSubtotalHPP"
+                    />
                     <div class="text-xs font-bold">
                       {{ formatCurrency(productSubtotalHPP(item)) }}
                     </div>
@@ -364,12 +373,25 @@
               <div class="flex flex-wrap gap-6 justify-end text-sm font-semibold">
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Harga:</span>
+                  <input
+                    type="hidden"
+                    id="total-product-harga"
+                    :value="totalProductHarga"
+                    readonly
+                    class="naked-input"
+                  />
                   <span class="font-bold text-green-600">{{
                     formatCurrency(totalProductHarga)
                   }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Discount:</span>
+                  <input
+                    type="hidden"
+                    id="total-product-discount"
+                    :value="totalProductDiscount"
+                    readonly
+                  />
                   <span class="font-bold text-red-600">{{
                     formatCurrency(totalProductDiscount)
                   }}</span>
@@ -454,6 +476,7 @@
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="updateServiceSubtotal(item)"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -465,6 +488,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
+                      @change="updateServiceSubtotal(item)"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -480,6 +504,11 @@
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
+                    <input
+                      type="hidden"
+                      id="service-subtotal"
+                      v-model.number="item.serviceSubtotal"
+                    />
                     <div class="subtotal-display">
                       {{ formatCurrency(serviceSubtotal(item)) }}
                     </div>
@@ -487,18 +516,24 @@
                   </div>
                 </div>
                 <div class="flex justify-end">
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
                       v-model.number="item.cost"
                       type="number"
                       min="0"
-                      class="text-xs rounded-md"
+                      class="naked-input"
                       placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">Subtotal HPP</label>
+                    <input
+                      type="hidden"
+                      id="service-subtotal-hpp"
+                      v-model.number="item.serviceSubtotalHPP"
+                      min="0"
+                    />
                     <div class="text-xs font-bold">
                       {{ formatCurrency(serviceSubtotalHPP(item)) }}
                     </div>
@@ -545,12 +580,24 @@
               <div class="flex flex-wrap gap-6 justify-end text-sm font-semibold">
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Harga:</span>
+                  <input
+                    type="hidden"
+                    id="total-service-harga"
+                    v-model.number="form.totalServiceHarga"
+                    readonly
+                  />
                   <span class="font-bold text-purple-600">{{
                     formatCurrency(totalServiceHarga)
                   }}</span>
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-gray-600">Total Discount:</span>
+                  <input
+                    type="hidden"
+                    id="total-service-discount"
+                    v-model.number="form.totalServiceDiscount"
+                    readonly
+                  />
                   <span class="font-bold text-red-600">{{
                     formatCurrency(totalServiceDiscount)
                   }}</span>
@@ -588,24 +635,43 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div class="bg-white rounded-lg p-4 border border-green-200">
                 <div class="text-sm text-gray-600 mb-1">Total Harga</div>
+                <input
+                  type="hidden"
+                  id="grand-total-harga"
+                  v-model.number="form.grandTotalHarga"
+                  readonly
+                />
                 <div class="text-xl font-bold text-green-600">
                   {{ formatCurrency(grandTotalHarga) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-red-200">
                 <div class="text-sm text-gray-600 mb-1">Total Discount</div>
+                <input
+                  type="hidden"
+                  id="grnad-total-discount"
+                  v-model.number="form.grandTotalDiscount"
+                  readonly
+                />
                 <div class="text-xl font-bold text-red-600">
                   {{ formatCurrency(grandTotalDiscount) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-yellow-200">
                 <div class="text-sm text-gray-600 mb-1">Pajak (11%)</div>
+                <input type="hidden" id="pajak-amount" v-model.number="form.pajak" readonly />
                 <div class="text-xl font-bold text-yellow-600">
                   {{ formatCurrency(pajakAmount) }}
                 </div>
               </div>
               <div class="bg-white rounded-lg p-4 border border-blue-200">
                 <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
+                <input
+                  type="hidden"
+                  id="total-pembayaran"
+                  v-model.number="form.totalPembayaran"
+                  readonly
+                />
                 <div class="text-2xl font-bold text-blue-600">
                   {{ formatCurrency(totalPembayaran) }}
                 </div>
@@ -614,6 +680,21 @@
             <div class="mt-2 text-xs text-gray-500 text-center">
               HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
               {{ formatCurrency(totalServiceCost) }}
+            </div>
+
+            <div class="flext gap-3 justify-end">
+              <input
+                type="hidden"
+                id="total-product-cost"
+                v-model.number="form.totalProductCost"
+                readonly
+              />
+              <input
+                type="hidden"
+                id="total-service-cost"
+                v-model.number="form.totalServiceCost"
+                readonly
+              />
             </div>
           </div>
 
@@ -752,6 +833,9 @@ export default {
         status: 'draft',
         pajak: 0,
         karyawan_id: '',
+        totalPembayaran: 0,
+        totalProductCost: 0,
+        totalProductDiscount: 0,
       },
       selectedPaket: '',
       paketList: [],
@@ -761,52 +845,37 @@ export default {
     }
   },
   computed: {
-    totalProductHarga() {
-      return this.form.product_ordered.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
-    },
     totalProductDiscount() {
-      // Discount as percentage, like in productSubtotal
-      return this.form.product_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
-        const discount = Number(item.discount) || 0
-        // discount is percentage (0-100)
-        return sum + price * quantity * (discount / 100)
-      }, 0)
+      // Discount as percentage
+      return this.calculatetotalProductDiscount()
+    },
+    totalProductHarga() {
+      return this.calculatetotalProductHarga()
     },
     totalServiceHarga() {
-      return this.form.service_ordered.reduce((sum, item) => sum + this.serviceSubtotal(item), 0)
+      return this.calculatetotalServiceHarga()
     },
     totalServiceDiscount() {
       // Discount as percentage, like in totalProductDiscount
-      return this.form.service_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
-        const discount = Number(item.discount) || 0
-        // discount is percentage (0-100)
-        return sum + price * quantity * (discount / 100)
-      }, 0)
+      return this.calculatetotalServiceDiscount()
     },
     totalProductCost() {
-      return this.form.product_ordered.reduce((sum, item) => sum + this.productSubtotalHPP(item), 0)
+      return this.calculatetotalProductCost()
     },
     totalServiceCost() {
-      return this.form.service_ordered.reduce((sum, item) => sum + this.serviceSubtotalHPP(item), 0)
+      return this.calculatetotalServiceCost()
     },
     grandTotalHarga() {
-      return this.totalProductHarga + this.totalServiceHarga
+      return this.calculategrandTotalHarga()
     },
     grandTotalDiscount() {
-      return this.totalProductDiscount + this.totalServiceDiscount
+      return this.calculategrandTotalDiscount()
     },
     pajakAmount() {
-      if (!this.isUseTax) return 0
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
-      return subtotal * 0.11
+      return this.calculatepajakAmount()
     },
     totalPembayaran() {
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
-      return subtotal + this.pajakAmount
+      return this.calculatetotalPembayaran()
     },
   },
   watch: {
@@ -828,6 +897,12 @@ export default {
     pajakAmount(newVal) {
       this.isiPajakAmount = newVal
     },
+    totalProductCost(newVal) {
+      this.form.totalProductCost = newVal
+    },
+    totalServiceCost(newVal) {
+      this.form.totalServiceCost = newVal
+    },
   },
   setup() {
     const loadingStore = useLoadingStore()
@@ -840,7 +915,7 @@ export default {
     this.getService()
     this.getPacketOrders()
     this.getSatuans()
-    this.getVehiclesPelanggan()
+    this.getWorkOrderData()
     this.getKaryawan()
   },
   methods: {
@@ -848,6 +923,70 @@ export default {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
+    },
+
+    calculatetotalProductDiscount() {
+      // Discount as percentage
+      return this.form.product_ordered.reduce((sum, item) => {
+        const quantity = Number(item.quantity) || 0
+        const price = Number(item.price) || 0
+        const discount = Number(item.discount) || 0
+        return sum + price * quantity * (discount / 100)
+      }, 0)
+    },
+
+    calculatetotalProductHarga() {
+      return this.form.product_ordered.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
+    },
+
+    calculatetotalServiceHarga() {
+      return (this.form.totalServiceHarga = this.form.service_ordered.reduce(
+        (sum, item) => sum + this.serviceSubtotal(item),
+        0,
+      ))
+    },
+
+    calculatetotalServiceDiscount() {
+      // Discount as percentage, like in totalProductDiscount
+      return (this.form.totalServiceDiscount = this.form.service_ordered.reduce((sum, item) => {
+        const quantity = Number(item.quantity) || 0
+        const price = Number(item.price) || 0
+        const discount = Number(item.discount) || 0
+        // discount is percentage (0-100)
+        return sum + price * quantity * (discount / 100)
+      }, 0))
+    },
+
+    calculategrandTotalHarga() {
+      return (this.form.grandTotalHarga = this.totalProductHarga + this.totalServiceHarga)
+    },
+
+    calculategrandTotalDiscount() {
+      return (this.form.grandTotalDiscount = this.totalProductDiscount + this.totalServiceDiscount)
+    },
+
+    calculatetotalPembayaran() {
+      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      return (this.form.totalPembayaran = subtotal + this.pajakAmount)
+    },
+
+    calculatepajakAmount() {
+      if (!this.isUseTax) return 0
+      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      return (this.form.pajak = subtotal * 0.11)
+    },
+    calculatetotalServiceCost() {
+      return (this.form.totalServiceCost = this.form.service_ordered.reduce(
+        (sum, item) => sum + this.serviceSubtotalHPP(item),
+        0,
+      ))
+    },
+
+    calculatetotalProductCost() {
+      return (this.form.totalProductCost = this.form.product_ordered.reduce(
+        (sum, item) => sum + this.productSubtotalHPP(item),
+        0,
+      ))
     },
 
     async getKaryawan() {
@@ -862,7 +1001,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    async getVehiclesPelanggan() {
+    async getWorkOrderData() {
       try {
         this.loadingStore.show()
         const idku = this.$route.params.id
@@ -894,6 +1033,21 @@ export default {
           ...item,
           cost: item.cost || 0,
         }))
+        // Update cost from latest product/service data
+        await Promise.all(
+          this.form.product_ordered.map(async (item) => {
+            if (item.product_id) {
+              await this.getProductsId(item)
+            }
+          }),
+        )
+        await Promise.all(
+          this.form.service_ordered.map(async (item) => {
+            if (item.service_id) {
+              await this.getServicesId(item)
+            }
+          }),
+        )
         if (this.dataWorkorder.pajak > 0) {
           this.isUseTax = true
         } else {
@@ -1051,6 +1205,7 @@ export default {
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
       item.subtotal = Math.max(0, quantity * price - quantity * price * (discount / 100))
+      item.productSubtotalHPP = this.productSubtotalHPP(item)
       // Cek stok setiap kali subtotal dihitung
       this.getStock(item)
     },
@@ -1058,11 +1213,16 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      // Diskon sebagai persentase
-      return Math.max(0, price * quantity - price * quantity * (discount / 100))
+      // Diskon sebagai percentage
+      return (item.serviceSubtotal = Math.max(
+        0,
+        quantity * price - quantity * price * (discount / 100),
+      ))
     },
     updateServiceSubtotal(item) {
       // Trigger reactivity for service subtotal when discount changes
+      item.serviceSubtotal = this.serviceSubtotal(item)
+      item.serviceSubtotalHPP = this.serviceSubtotalHPP(item)
     },
     productSubtotalHPP(item) {
       return (item.quantity || 0) * (item.cost || 0)
@@ -1082,26 +1242,36 @@ export default {
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
-      this.form.total_biaya = this.isitotalPembayaran
-      this.form.pajak = this.isiPajakAmount
-      this.form.total_discount = this.isitotalProductDiscount + this.isitotalServiceDiscount
+      this.form.total_biaya = this.totalPembayaran
+      this.form.pajak = this.pajakAmount
+      this.form.total_discount = this.totalProductDiscount + this.totalServiceDiscount
+      this.form.totalProductCost = this.totalProductCost
+      this.form.totalServiceCost = this.totalServiceCost
+      this.form.grandTotalHarga = this.grandTotalHarga
+      this.form.grandTotalDiscount = this.grandTotalDiscount
+      this.form.totalPembayaran = this.totalPembayaran
+      this.form.totalProductHarga = this.totalProductHarga
+      this.form.totalServiceHarga = this.totalServiceHarga
+      this.form.totalProductDiscount = this.totalProductDiscount
+      this.form.totalServiceDiscount = this.totalServiceDiscount
+      this.form.hpp = this.totalServiceCost + this.totalProductCost
 
-      try {
-        this.loadingStore.show()
-        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
-        this.show_toast = true
-        this.message_toast = response.data.message
-        // console.log('Response: ', response.data.data)
-        this.getBookingData()
-      } catch (error) {
-        console.log('error: ', error)
-        this.show_toast = true
-        this.message_toast = 'Gagal submit work order!'
-      } finally {
-        this.loadingStore.hide()
-      }
+      // try {
+      //   this.loadingStore.show()
+      //   const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+      //   this.show_toast = true
+      //   this.message_toast = response.data.message
+      //   // console.log('Response: ', response.data.data)
+      //   this.getBookingData()
+      // } catch (error) {
+      //   console.log('error: ', error)
+      //   this.show_toast = true
+      //   this.message_toast = 'Gagal submit work order!'
+      // } finally {
+      //   this.loadingStore.hide()
+      // }
 
-      // console.log('Form Data:', this.form)
+      console.log('Form Data:', this.form)
     },
     printPDF() {
       const doc = new jsPDF()
@@ -1195,6 +1365,7 @@ export default {
         item.cost = Number(data.cost) || 0
         if (data.price) item.price = data.price
         await this.getStock(item)
+        this.productSubtotal(item)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -1210,6 +1381,7 @@ export default {
         // Update satuan_id dan price pada item yang dipilih
         if (data.price) item.price = data.price
         if (data.cost) item.cost = Number(data.cost) || 0
+        this.updateServiceSubtotal(item)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -1228,6 +1400,7 @@ export default {
         return
       }
       const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
+      console.log('Paket data:', paket)
       if (paket && paket.product_line && paket.service_line) {
         this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
         this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
@@ -1246,6 +1419,8 @@ export default {
             await this.getServicesId(item)
           }),
         )
+        // Hitung subtotal untuk service
+        this.form.service_ordered.forEach((item) => this.updateServiceSubtotal(item))
       } else {
         console.error(
           'Paket tidak ditemukan atau data tidak lengkap:',
@@ -1695,5 +1870,51 @@ h3 {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Bikin input “telanjang” */
+.naked-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+
+  /* Warisan tipografi dari parent supaya benar-benar terlihat seperti teks biasa */
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+
+  /* Lebar mengikuti panjang teks */
+  width: auto;
+  min-width: 1ch;
+  caret-color: currentColor;
+
+  /* Hilangkan styling default browser tertentu */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Opsional: placeholder lebih samar */
+.naked-input::placeholder {
+  opacity: 0.4;
+}
+
+/* Opsional: garis tipis saat fokus biar aksesibel tapi tetap minimalis */
+.naked-input:focus {
+  box-shadow: inset 0 -1px 0 currentColor;
+}
+
+/* Util kelas untuk aksesibilitas label tersembunyi */
+.sr-only {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+  border: 0;
+  padding: 0;
+  margin: -1px;
 }
 </style>
