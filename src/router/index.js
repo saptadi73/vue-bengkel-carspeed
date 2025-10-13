@@ -90,7 +90,7 @@ const router = createRouter({
         {
           path: 'test/baru',
           name: 'wo baru test',
-          component: () => import('../components/WorkOrderFormCopy.vue'),
+          component: () => import('../components/InputBoxSelectedDropDown.vue'),
         },
         {
           path: 'edit/:id',
