@@ -181,6 +181,7 @@
                   </select>
                 </td>
                 <td class="px-4 py-2">
+                  <input type="hidden" v-model="item.id" />
                   <select
                     v-model="item.satuan_id"
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -235,18 +236,27 @@
                 <td class="px-4 py-2">
                   <div class="flex space-x-2">
                     <button
+                      v-if="itemChanges[index]"
                       type="button"
-                      @click="updateCost(item.product_id, index)"
+                      @click="confirmUpdateItem(index)"
                       class="px-2 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
                     >
-                      Update Cost
+                      Update
+                    </button>
+                    <button
+                      v-if="!originalItems[index]"
+                      type="button"
+                      @click="AddPurchaseOrderLine(index)"
+                      class="px-2 py-1 bg-green-500 text-white text-xs rounded-md hover:bg-green-600"
+                    >
+                      Add
                     </button>
                     <button
                       type="button"
-                      @click="removeItem(index)"
+                      @click="confirmDeleteItem(index)"
                       class="px-2 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600"
                     >
-                      Remove
+                      Delete
                     </button>
                   </div>
                 </td>
@@ -257,7 +267,7 @@
         <div class="flex justify-start mt-4">
           <button
             type="button"
-            @click="addItem"
+            @click="confirmAddItem"
             class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
             Add Item
@@ -301,7 +311,11 @@
 
       <!-- Submit Button -->
       <div class="text-center">
-        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+        <button
+          type="submit"
+          :disabled="hasUnsavedChanges"
+          class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
           Create Purchase Order
         </button>
       </div>
@@ -370,6 +384,7 @@ export default {
         bukti_transfer: '',
         items: [
           {
+            id: '',
             product_id: '',
             satuan_id: '',
             quantity: 1,
@@ -379,6 +394,8 @@ export default {
           },
         ],
       },
+      originalItems: [],
+      itemChanges: [],
     }
   },
   setup() {
@@ -415,11 +432,15 @@ export default {
     },
     'form.items': {
       handler() {
-        this.form.items.forEach((item) => {
+        this.form.items.forEach((item, index) => {
           if (item.product_id) {
             const product = this.products.find((p) => p.id == item.product_id)
-            if (product && product.satuan_id) {
-              item.satuan_id = product.satuan_id
+            if (product) {
+              item.satuan_id = product.satuan_id || item.satuan_id
+              if (!item.price || item.price === 0) {
+                item.price = product.cost || 0
+                this.calculateItemTotal(index)
+              }
             }
           }
         })
@@ -437,8 +458,31 @@ export default {
     total() {
       return this.form.includeTax ? this.subtotal + this.tax : this.subtotal
     },
+    hasUnsavedChanges() {
+      return (
+        this.itemChanges.some((changed) => changed) ||
+        this.form.items.some((item, index) => !this.originalItems[index])
+      )
+    },
   },
   methods: {
+    async AddPurchaseOrderLine(index) {
+      const items = this.form.items[index]
+      console.log('data items: ', items)
+      try {
+        this.loadingStore.show()
+        const response = await api.post(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}/lines`,
+          items,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     async updateCost(productId, index) {
       if (!productId) return
       try {
@@ -475,6 +519,7 @@ export default {
           ...this.form,
           ...poData,
           items: poData.lines.map((line) => ({
+            id: line.id,
             product_id: line.product_id,
             satuan_id: line.satuan_id || '',
             quantity: line.quantity,
@@ -483,12 +528,12 @@ export default {
             subtotal: line.subtotal,
           })),
         }
+        this.originalItems = JSON.parse(JSON.stringify(this.form.items))
+        this.itemChanges = new Array(this.form.items.length).fill(false)
         if (poData.pajak && poData.pajak > 0) {
           this.form.includeTax = true
         }
         console.log('Po Data :', poData)
-        this.show_toast = true
-        this.message_toast = response.data.message
       } catch (error) {
         console.log('Error: ', error)
       } finally {
@@ -534,6 +579,7 @@ export default {
     },
     addItem() {
       this.form.items.push({
+        id: '',
         product_id: '',
         satuan_id: '',
         quantity: 1,
@@ -542,12 +588,68 @@ export default {
         subtotal: 0,
       })
     },
-    removeItem(index) {
-      this.form.items.splice(index, 1)
+    confirmAddItem() {
+      this.addItem()
+      this.itemChanges.push(false)
+    },
+    async confirmUpdateItem(index) {
+      const items = this.form.items[index]
+      console.log('data items: ', items)
+      try {
+        this.loadingStore.show()
+        const response = await api.put(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}/lines/${items.id}`,
+          items,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    confirmDeleteItem(index) {
+      if (confirm('Are you sure you want to delete this item?')) {
+        this.removeItem(index)
+      }
+    },
+    async removeItem(index) {
+      // this.form.items.splice(index, 1)
+      // this.itemChanges.splice(index, 1)
+      // this.originalItems.splice(index, 1)
+
+      const items = this.form.items[index]
+      console.log('data items: ', items)
+      try {
+        this.loadingStore.show()
+        const response = await api.delete(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}/lines/${items.id}`,
+          items,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
     },
     calculateItemTotal(index) {
       const item = this.form.items[index]
       item.subtotal = item.quantity * item.price * (1 - item.discount / 100)
+      this.checkItemChanges(index)
+    },
+    checkItemChanges(index) {
+      const current = this.form.items[index]
+      const original = this.originalItems[index]
+      if (original) {
+        const changed =
+          current.product_id !== original.product_id ||
+          current.quantity !== original.quantity ||
+          current.price !== original.price
+        this.itemChanges[index] = changed
+      }
     },
     handleFileChange(event) {
       this.form.document = event.target.files[0]
@@ -569,6 +671,7 @@ export default {
           pembayaran: this.total,
           status: this.form.status,
           lines: this.form.items.map((item) => ({
+            id: item.id,
             product_id: item.product_id,
             quantity: item.quantity,
             price: item.price,
@@ -585,7 +688,7 @@ export default {
           formData.append('bukti_transfer', this.form.document)
         }
 
-        // console.log('Data Form: ', payload)
+        console.log('Data Form: ', payload)
 
         const response = await api.post(
           `${BASE_URL}purchase-orders/${this.$route.params.id}`,
@@ -619,6 +722,7 @@ export default {
           document: null,
           items: [
             {
+              id: '',
               product_id: '',
               satuan_id: '',
               quantity: 1,
@@ -641,6 +745,7 @@ export default {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
+      window.location.reload()
     },
     openModal(url) {
       this.modalUrl = url

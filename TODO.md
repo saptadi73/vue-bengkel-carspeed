@@ -6,4 +6,4 @@
 - [x] Update methods: Add `addItem`, `removeItem`, `selectProductForNewItem`, and modify existing methods.
 - [x] Change emits from 'selected' to 'items' with the items array.
 - [x] Ensure modal for new product still functions.
-- [ ] Test the component in the app.
+- [x] Test the component in the app.
