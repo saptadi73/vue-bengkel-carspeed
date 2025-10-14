@@ -1256,10 +1256,14 @@ export default {
       this.form.total_biaya = this.isitotalPembayaran
       this.form.pajak = this.isiPajakAmount
       this.form.total_discount = this.isitotalProductDiscount + this.isitotalServiceDiscount
+      this.workorder_id = this.$route.params.id
 
       try {
         this.loadingStore.show()
-        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+        const response = await api.post(
+          `${this.BASE_URL}workorders/update/${this.workorder_id}`,
+          this.form,
+        )
         this.show_toast = true
         this.message_toast = response.data.message
         console.log('Response: ', response.data.data)

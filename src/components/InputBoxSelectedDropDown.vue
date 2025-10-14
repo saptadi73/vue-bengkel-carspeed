@@ -1,49 +1,190 @@
 <template>
+  <div class="border-t pt-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
+  </div>
   <div class="space-y-4">
-    <div class="relative">
-      <input
-        v-model="searchTerm"
-        type="text"
-        :placeholder="placeholder"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        @input="onInput"
-      />
-      <div
-        v-if="showDropdown"
-        class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
+    <!-- Add/Remove Buttons -->
+    <div class="flex justify-end space-x-2">
+      <button
+        @click="addItem"
+        class="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600"
       >
-        <div
-          v-for="product in filteredProducts"
-          :key="product.id"
-          class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-          @click="selectProduct(product)"
-        >
-          {{ product.name }}
-        </div>
-        <div
-          v-if="filteredProducts.length === 0 && searchTerm"
-          class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-blue-600"
-          @click="openModal"
-        >
-          + New Product
-        </div>
-      </div>
+        + Add Item
+      </button>
+      <button
+        v-if="items.length > 0"
+        @click="removeLastItem"
+        class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600"
+      >
+        - Remove Last
+      </button>
     </div>
-    <div class="grid grid-cols-2 gap-4">
+
+    <!-- Existing Items -->
+    <div
+      v-for="(item, index) in items"
+      :key="index"
+      class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center"
+    >
       <input
-        v-model="satuan"
+        v-model="item.productName"
+        type="text"
+        placeholder="Product"
+        readonly
+        class="px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+      />
+      <input
+        v-model="item.satuan"
         type="text"
         placeholder="Satuan"
         readonly
         class="px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
       />
       <input
-        v-model.number="cost"
+        v-model.number="item.quantity"
         type="number"
-        placeholder="Cost"
+        placeholder="Quantity"
+        min="1"
+        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        @input="updateSubtotal(index)"
+      />
+      <input
+        v-model.number="item.cost"
+        type="number"
+        placeholder="Harga"
         readonly
         class="px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
       />
+      <input
+        v-model.number="item.discount"
+        type="number"
+        placeholder="Discount"
+        min="0"
+        class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        @input="updateSubtotal(index)"
+      />
+      <span class="px-3 py-2 text-gray-700">{{ formatCurrency(item.subtotal) }}</span>
+      <input v-model.number="item.subtotal" type="hidden" />
+    </div>
+
+    <!-- Add New Item Modal -->
+    <div
+      v-if="showAddModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+      <div class="bg-white rounded-lg shadow-lg w-full max-w-lg mx-4">
+        <div class="px-6 py-4 border-b">
+          <h3 class="text-lg font-semibold">Tambah Item Baru</h3>
+        </div>
+        <div class="px-6 py-4">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Cari Produk</label>
+              <div class="relative">
+                <input
+                  v-model="searchTerm"
+                  type="text"
+                  placeholder="Cari produk..."
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  @input="onInput"
+                />
+                <div
+                  v-if="showDropdown"
+                  class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
+                >
+                  <div
+                    v-for="product in filteredProducts"
+                    :key="product.id"
+                    class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    @click="selectProductForNewItem(product)"
+                  >
+                    {{ product.name }}
+                  </div>
+                  <div
+                    v-if="filteredProducts.length === 0 && searchTerm"
+                    class="px-3 py-2 hover:bg-gray-100 cursor-pointer text-blue-600"
+                    @click="openModal"
+                  >
+                    + New Product
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Satuan</label>
+                <input
+                  v-model="newItem.satuan"
+                  type="text"
+                  readonly
+                  class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                <input
+                  v-model.number="newItem.quantity"
+                  type="number"
+                  min="1"
+                  class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  @input="updateNewSubtotal"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Harga</label>
+                <input
+                  v-model.number="newItem.cost"
+                  type="number"
+                  class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  @input="updateNewSubtotal"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Discount</label>
+                <input
+                  v-model.number="newItem.discount"
+                  type="number"
+                  min="0"
+                  class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  @input="updateNewSubtotal"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Subtotal</label>
+              <span class="mt-1 px-3 py-2 text-gray-700">{{
+                formatCurrency(newItem.subtotal)
+              }}</span>
+              <input v-model.number="newItem.subtotal" type="hidden" />
+            </div>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              @click="updateProductCost(newItem.product.id, newItem.cost)"
+              class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Update Cost
+            </button>
+            <button type="button" @click="closeAddModal" class="px-4 py-2 bg-gray-300 rounded-md">
+              Batal
+            </button>
+            <button
+              type="button"
+              @click="confirmAddItem"
+              class="px-4 py-2 bg-blue-600 text-white rounded-md"
+            >
+              Tambah
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal for New Product -->
@@ -177,18 +318,28 @@ export default {
       default: 'Cari produk...',
     },
   },
-  emits: ['selected'],
+  emits: ['items'],
   data() {
     return {
+      items: [],
       products: [],
       satuans: [],
       brands: [],
       categories: [],
       searchTerm: '',
       showDropdown: false,
-      satuan: '',
-      cost: 0,
       showModal: false,
+      showAddModal: false,
+      newItem: {
+        product: null,
+        productName: '',
+        satuan: '',
+        satuan_id: '',
+        quantity: 1,
+        cost: 0,
+        discount: 0,
+        subtotal: 0,
+      },
       newProduct: {
         name: '',
         satuan_id: '',
@@ -208,6 +359,14 @@ export default {
       return this.products.filter((product) =>
         product.name.toLowerCase().includes(this.searchTerm.toLowerCase()),
       )
+    },
+  },
+  watch: {
+    items: {
+      handler() {
+        this.$emit('items', this.items)
+      },
+      deep: true,
     },
   },
   methods: {
@@ -246,12 +405,88 @@ export default {
     onInput() {
       this.showDropdown = this.searchTerm.length > 0
     },
-    selectProduct(product) {
+    selectProductForNewItem(product) {
       this.searchTerm = product.name
-      this.satuan = product.satuan_name || product.satuan?.name || ''
-      this.cost = product.cost || 0
+      this.newItem.product = product
+      this.newItem.productName = product.name
+      this.newItem.satuan = product.satuan_name || product.satuan?.name || ''
+      this.newItem.satuan_id = product.satuan_id || product.satuan?.id || ''
+      this.newItem.cost = product.cost || 0
+      this.updateNewSubtotal()
       this.showDropdown = false
-      this.$emit('selected', product)
+    },
+    addItem() {
+      this.showAddModal = true
+    },
+    removeLastItem() {
+      if (this.items.length > 0) {
+        this.items.pop()
+      }
+    },
+    confirmAddItem() {
+      if (this.newItem.product) {
+        this.items.push({ ...this.newItem })
+        this.resetNewItem()
+        this.closeAddModal()
+      } else {
+        alert('Pilih produk terlebih dahulu')
+      }
+    },
+    closeAddModal() {
+      this.showAddModal = false
+      this.resetNewItem()
+    },
+    removeItem(index) {
+      this.items.splice(index, 1)
+    },
+    updateSubtotal(index) {
+      const item = this.items[index]
+      item.subtotal = item.quantity * item.cost - item.discount
+    },
+    updateNewSubtotal() {
+      this.newItem.subtotal = this.newItem.quantity * this.newItem.cost - this.newItem.discount
+    },
+    async updateProductCost(productId, newCost) {
+      if (!productId || !newCost) return
+      try {
+        const updateCost = {
+          product_id: productId,
+          cost: newCost,
+        }
+        console.log('Update Cost: ', updateCost)
+        const response = await api.put(`${BASE_URL}products/cost`, updateCost)
+        console.log('Update Cost Response: ', response.data.data)
+        // Refresh products list
+        await this.getProduct()
+        // Update the cost in newItem if it's the same product
+        if (this.newItem.product && this.newItem.product.id === productId) {
+          this.newItem.cost = response.data.data.cost
+          this.updateNewSubtotal()
+        }
+        alert('Cost updated successfully!')
+      } catch (error) {
+        console.log('Error updating cost:', error)
+        alert('Error updating cost')
+      }
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+      }).format(value)
+    },
+    resetNewItem() {
+      this.newItem = {
+        product: null,
+        productName: '',
+        satuan: '',
+        satuan_id: '',
+        quantity: 1,
+        cost: 0,
+        discount: 0,
+        subtotal: 0,
+      }
+      this.searchTerm = ''
     },
     openModal() {
       this.newProduct.name = this.searchTerm
@@ -276,10 +511,10 @@ export default {
         await api.post(`${BASE_URL}products/create/new`, this.newProduct)
         // Refresh products list
         await this.getProduct()
-        // Select the new product
+        // Select the new product for new item
         const newProd = this.products.find((p) => p.name === this.newProduct.name)
         if (newProd) {
-          this.selectProduct(newProd)
+          this.selectProductForNewItem(newProd)
         }
         this.closeModal()
       } catch (error) {

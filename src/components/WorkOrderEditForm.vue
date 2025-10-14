@@ -21,62 +21,11 @@
               <p class="text-blue-100 text-sm">Formulir pemesanan layanan bengkel</p>
             </div>
           </div>
-          <button
-            type="button"
-            class="modern-btn-activity flex items-center gap-2"
-            @click="openActivityModal"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
-              />
-            </svg>
-            Activity Log
-          </button>
         </div>
       </div>
 
       <!-- Form Content -->
       <div class="px-8 py-8">
-        <!-- Paket Selection Section -->
-        <div class="mb-8">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="bg-purple-100 p-2 rounded-lg">
-              <svg
-                class="h-5 w-5 text-purple-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                />
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800">Pilih Paket Servis</h3>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-4">
-            <div class="flex-1 relative">
-              <select v-model="selectedPaket" class="modern-select peer">
-                <option value="">-- Pilih Paket --</option>
-                <option v-for="paket in packetorders" :key="paket.id" :value="paket.id">
-                  {{ paket.name }}
-                </option>
-              </select>
-              <label class="modern-select-label">Paket Servis</label>
-            </div>
-            <button type="button" class="modern-btn-primary" @click="applyPaket">
-              Terapkan Paket
-            </button>
-          </div>
-        </div>
-
         <!-- Customer Information Section -->
         <div class="mb-8">
           <div class="flex items-center gap-2 mb-6">
@@ -139,8 +88,8 @@
                 <select v-model="form.status" id="status" class="modern-select peer">
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
+                  <option value="dikerjakan">dikerjakan</option>
+                  <option value="selesai">selesai</option>
                 </select>
                 <label class="modern-select-label">Status</label>
               </div>
@@ -248,7 +197,7 @@
                     <select
                       v-model="item.product_id"
                       class="modern-select peer"
-                      @change="getProductsId(item)"
+                      @change="(getProductsId(item), markProductModified(item))"
                     >
                       <option value="" disabled selected>Pilih Product</option>
                       <option
@@ -262,6 +211,7 @@
                     <label class="modern-select-label">Nama Sparepart</label>
                   </div>
                   <input type="hidden" v-model="item.product_name" />
+                  <input type="hidden" v-model="item.id" />
                   <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
@@ -269,7 +219,7 @@
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="productSubtotal(item)"
+                      @change="markProductModified(item)"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -289,7 +239,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="productSubtotal(item)"
+                      @change="markProductModified(item)"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -300,19 +250,21 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="productSubtotal(item)"
+                      @change="markProductModified(item)"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
                   <div class="relative col-span-2">
                     <input
                       id="subtotal-product"
-                      type="number"
+                      type="hidden"
                       v-model.number="item.subtotal"
-                      class="naked-input"
                       :size="Math.max(item.subtotal?.length || 0, 1)"
                     />
                     <label class="subtotal-label">Subtotal</label>
+                    <div class="subtotal-display">
+                      {{ formatCurrency(productSubtotal(item)) }}
+                    </div>
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
@@ -337,6 +289,22 @@
                       {{ formatCurrency(productSubtotalHPP(item)) }}
                     </div>
                   </div>
+                  <button
+                    v-if="item.isNew"
+                    type="button"
+                    class="modern-btn-info"
+                    @click="confirmAddProduct(idx)"
+                  >
+                    Confirm Add
+                  </button>
+                  <button
+                    v-if="item.isModified"
+                    type="button"
+                    class="modern-btn-info"
+                    @click="confirmUpdateProduct(idx)"
+                  >
+                    Confirm Update
+                  </button>
                   <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -455,7 +423,7 @@
                   <div class="relative col-span-2">
                     <select
                       v-model="item.service_id"
-                      @change="getServicesId(item)"
+                      @change="(getServicesId(item), markServiceModified(item))"
                       class="modern-select peer"
                     >
                       <option value="" disabled selected>Pilih Service/Jasa</option>
@@ -469,6 +437,8 @@
                     </select>
                     <label class="modern-select-label">Nama Jasa</label>
                   </div>
+                  <input type="hidden" v-model="item.id" />
+                  <input type="hidden" v-model="item.service_name" />
                   <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
@@ -476,7 +446,7 @@
                       min="1"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="updateServiceSubtotal(item)"
+                      @change="markServiceModified(item)"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -488,7 +458,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="updateServiceSubtotal(item)"
+                      @change="markServiceModified(item)"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -499,7 +469,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      @change="updateServiceSubtotal(item)"
+                      @change="markServiceModified(item)"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
@@ -538,6 +508,22 @@
                       {{ formatCurrency(serviceSubtotalHPP(item)) }}
                     </div>
                   </div>
+                  <button
+                    v-if="item.isNew"
+                    type="button"
+                    class="modern-btn-info"
+                    @click="confirmAddService(idx)"
+                  >
+                    Confirm Add
+                  </button>
+                  <button
+                    v-if="item.isModified"
+                    type="button"
+                    class="modern-btn-info"
+                    @click="confirmUpdateService(idx)"
+                  >
+                    Confirm Update
+                  </button>
                   <button type="button" class="delete-btn" @click="removeServiceOrder(idx)">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
@@ -700,7 +686,14 @@
 
           <!-- Submit Button -->
           <div class="flex justify-end">
-            <button type="submit" class="modern-btn-success flex items-center gap-2">
+            <button
+              type="submit"
+              :disabled="hasUnconfirmedChanges"
+              :class="[
+                'modern-btn-success flex items-center gap-2',
+                { 'opacity-50 cursor-not-allowed': hasUnconfirmedChanges },
+              ]"
+            >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -711,71 +704,6 @@
               </svg>
               Submit Work Order
             </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Activity Log Modal -->
-    <div
-      v-if="showActivityModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-blue-200"
-      >
-        <div class="gradient-modal-header px-6 py-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
-                />
-              </svg>
-              <h3 class="text-lg font-bold text-white">Activity Log</h3>
-            </div>
-            <button
-              @click="closeActivityModal"
-              class="text-white hover:text-blue-200 transition-colors duration-200"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <form @submit.prevent="saveActivityLog" class="px-6 py-6">
-          <div class="mb-4">
-            <div class="relative">
-              <input v-model="activityLog.tanggal" type="date" class="modern-input peer" required />
-              <label class="modern-label">Tanggal</label>
-            </div>
-          </div>
-          <div class="mb-6">
-            <div class="relative">
-              <input
-                v-model="activityLog.aktivitas"
-                type="text"
-                class="modern-input peer"
-                placeholder=" "
-                required
-              />
-              <label class="modern-label">Activity</label>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3">
-            <button type="button" @click="closeActivityModal" class="modern-btn-cancel">
-              Batal
-            </button>
-            <button type="submit" class="modern-btn-primary">Simpan</button>
           </div>
         </form>
       </div>
@@ -803,7 +731,6 @@ export default {
     return {
       services: [],
       products: [],
-      packetorders: [],
       satuans: [],
       dataVehiclesPelanggan: [],
       stockku: 0,
@@ -816,7 +743,7 @@ export default {
       karyawan: [],
       form: {
         customer_id: '',
-        vehicle_id: this.$route.params.id || '',
+        vehicle_id: '',
         nama: '',
         hp: '',
         alamat: '',
@@ -839,8 +766,7 @@ export default {
       },
       selectedPaket: '',
       paketList: [],
-      showActivityModal: false,
-      activityLog: { tanggal: '', aktivitas: '' },
+
       isUseTax: false,
     }
   },
@@ -877,6 +803,16 @@ export default {
     totalPembayaran() {
       return this.calculatetotalPembayaran()
     },
+    hasUnconfirmedChanges() {
+      // Check if any product or service item is new or modified but not confirmed
+      const hasUnconfirmedProduct = this.form.product_ordered.some(
+        (item) => item.isNew || item.isModified,
+      )
+      const hasUnconfirmedService = this.form.service_ordered.some(
+        (item) => item.isNew || item.isModified,
+      )
+      return hasUnconfirmedProduct || hasUnconfirmedService
+    },
   },
   watch: {
     totalPembayaran(newVal) {
@@ -908,12 +844,12 @@ export default {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
     const message_toast = ref('')
-    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
+    const username = localStorage.getItem('username')
+    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2, username }
   },
   created() {
     this.getProduct()
     this.getService()
-    this.getPacketOrders()
     this.getSatuans()
     this.getWorkOrderData()
     this.getKaryawan()
@@ -1028,10 +964,14 @@ export default {
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
           ...item,
           cost: item.cost || 0,
+          isNew: false,
+          isModified: false,
         }))
         this.form.service_ordered = (this.dataWorkorder.service_ordered || []).map((item) => ({
           ...item,
           cost: item.cost || 0,
+          isNew: false,
+          isModified: false,
         }))
         // Update cost from latest product/service data
         await Promise.all(
@@ -1118,18 +1058,6 @@ export default {
         }
       }
     },
-    async getPacketOrders() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}packetorders/all`)
-        console.log('Packet Orders: ', response.data.data)
-        this.packetorders = response.data.data
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
 
     async getProduct() {
       try {
@@ -1155,24 +1083,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    openActivityModal() {
-      const now = new Date()
-      const yyyy = now.getFullYear()
-      const mm = String(now.getMonth() + 1).padStart(2, '0')
-      const dd = String(now.getDate()).padStart(2, '0')
-      this.activityLog = {
-        tanggal: `${yyyy}-${mm}-${dd}`,
-        aktivitas: '',
-      }
-      this.showActivityModal = true
-    },
-    closeActivityModal() {
-      this.showActivityModal = false
-      this.activityLog = { tanggal: '', aktivitas: '' }
-    },
-    saveActivityLog() {
-      this.closeActivityModal()
-    },
+
     addProductOrder() {
       this.form.product_ordered.push({
         product_id: '',
@@ -1182,9 +1093,25 @@ export default {
         discount: 0,
         subtotal: 0,
         cost: 0,
+        isNew: true,
+        isModified: false,
       })
     },
-    removeProductOrder(idx) {
+    async removeProductOrder(idx) {
+      const item = this.form.product_ordered[idx]
+      try {
+        this.loadingStore.show()
+        const response = await api.delete(
+          `${BASE_URL}workorders/delete/productorder/${item.id}`,
+          item,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
       this.form.product_ordered.splice(idx, 1)
     },
     addServiceOrder() {
@@ -1195,9 +1122,26 @@ export default {
         discount: 0,
         subtotal: 0,
         cost: 0,
+        isNew: true,
+        isModified: false,
       })
     },
-    removeServiceOrder(idx) {
+    async removeServiceOrder(idx) {
+      const item = this.form.service_ordered[idx]
+      try {
+        this.loadingStore.show()
+        const response = await api.delete(
+          `${BASE_URL}workorders/delete/serviceorder/${item.id}`,
+          item,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+      console.log('iteam data: ', item)
       this.form.service_ordered.splice(idx, 1)
     },
     productSubtotal(item) {
@@ -1208,6 +1152,100 @@ export default {
       item.productSubtotalHPP = this.productSubtotalHPP(item)
       // Cek stok setiap kali subtotal dihitung
       this.getStock(item)
+      return item.subtotal
+    },
+    markProductModified(item) {
+      if (!item.isNew) {
+        item.isModified = true
+      }
+    },
+    markServiceModified(item) {
+      if (!item.isNew) {
+        item.isModified = true
+      }
+    },
+    async confirmAddProduct(idx) {
+      const item = this.form.product_ordered[idx]
+      if (!item.product_id || item.quantity <= 0) {
+        this.message_toast = 'Please select a product and set quantity.'
+        this.show_toast = true
+        return
+      }
+      item.isNew = false
+      item.isModified = false
+      this.productSubtotal(item)
+      const workorder_id = this.$route.params.id
+      item.workorder_id = workorder_id
+      console.log('Data item', item, 'workorder: ', workorder_id)
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}workorders/add/productorder`, item)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async confirmUpdateProduct(idx) {
+      const item = this.form.product_ordered[idx]
+      item.isModified = false
+      this.productSubtotal(item)
+      const workorder_id = this.$route.params.id
+
+      console.log('data item: ', item, 'workorder_id: ', workorder_id)
+      try {
+        this.loadingStore.show()
+        const response = await api.put(`${BASE_URL}workorders/update/productorder/${item.id}`, item)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async confirmAddService(idx) {
+      const item = this.form.service_ordered[idx]
+      if (!item.service_id || item.quantity <= 0) {
+        this.message_toast = 'Please select a service and set quantity.'
+        this.show_toast = true
+        return
+      }
+      item.isNew = false
+      item.isModified = false
+      this.updateServiceSubtotal(item)
+      const workorder_id = this.$route.params.id
+      console.log('data item: ', item, 'workorder_id: ', workorder_id)
+      item.workorder_id = workorder_id
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}workorders/add/serviceorder`, item)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async confirmUpdateService(idx) {
+      const item = this.form.service_ordered[idx]
+      item.isModified = false
+      this.updateServiceSubtotal(item)
+      const workorder_id = this.$route.params.id
+      console.log('data item: ', item, 'workorder_id: ', workorder_id)
+      try {
+        this.loadingStore.show()
+        const response = await api.put(`${BASE_URL}workorders/update/serviceorder/${item.id}`, item)
+        this.show_toast = true
+        this.message_toast = response.data.message
+      } catch (error) {
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
     },
     serviceSubtotal(item) {
       const quantity = Number(item.quantity) || 0
@@ -1255,21 +1293,25 @@ export default {
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
+      this.form.workorder_id = this.$route.params.id
 
-      // try {
-      //   this.loadingStore.show()
-      //   const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
-      //   this.show_toast = true
-      //   this.message_toast = response.data.message
-      //   // console.log('Response: ', response.data.data)
-      //   this.getBookingData()
-      // } catch (error) {
-      //   console.log('error: ', error)
-      //   this.show_toast = true
-      //   this.message_toast = 'Gagal submit work order!'
-      // } finally {
-      //   this.loadingStore.hide()
-      // }
+      try {
+        this.loadingStore.show()
+        const response = await api.post(
+          `${this.BASE_URL}workorders/update/workorderlengkap/${this.form.workorder_id}`,
+          this.form,
+        )
+        this.show_toast = true
+        this.message_toast = response.data.message
+        console.log('Workorder id: ', this.form.workorder_id)
+        this.getBookingData()
+      } catch (error) {
+        console.log('error: ', error)
+        this.show_toast = true
+        this.message_toast = 'Gagal submit work order!'
+      } finally {
+        this.loadingStore.hide()
+      }
 
       console.log('Form Data:', this.form)
     },
@@ -1380,55 +1422,13 @@ export default {
         const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
         if (data.price) item.price = data.price
+        if (data.service_name) item.service_name = data.service_name
         if (data.cost) item.cost = Number(data.cost) || 0
         this.updateServiceSubtotal(item)
       } catch (error) {
         console.log('error: ', error)
       } finally {
         this.loadingStore.hide()
-      }
-    },
-    async applyPaket() {
-      if (!this.selectedPaket) {
-        this.message_toast = 'Silakan pilih paket terlebih dahulu.'
-        this.show_toast = true
-        return
-      }
-      if (!Array.isArray(this.packetorders) || this.packetorders.length === 0) {
-        this.message_toast = 'Data paket belum dimuat. Silakan coba lagi.'
-        this.show_toast = true
-        return
-      }
-      const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
-      console.log('Paket data:', paket)
-      if (paket && paket.product_line && paket.service_line) {
-        this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
-        this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
-        // Jalankan getProductsId dan getStock untuk setiap item produk hasil paket
-        await Promise.all(
-          this.form.product_ordered.map(async (item) => {
-            await this.getProductsId(item)
-            await this.getStock(item)
-          }),
-        )
-        // Hitung subtotal untuk produk
-        this.form.product_ordered.forEach((item) => this.productSubtotal(item))
-        // Jalankan getServicesId untuk setiap item service hasil paket
-        await Promise.all(
-          this.form.service_ordered.map(async (item) => {
-            await this.getServicesId(item)
-          }),
-        )
-        // Hitung subtotal untuk service
-        this.form.service_ordered.forEach((item) => this.updateServiceSubtotal(item))
-      } else {
-        console.error(
-          'Paket tidak ditemukan atau data tidak lengkap:',
-          this.selectedPaket,
-          this.packetorders,
-        )
-        this.message_toast = 'Paket tidak ditemukan atau data tidak lengkap.'
-        this.show_toast = true
       }
     },
   },

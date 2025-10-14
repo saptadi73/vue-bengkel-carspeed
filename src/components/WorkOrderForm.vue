@@ -21,21 +21,6 @@
               <p class="text-blue-100 text-sm">Formulir pemesanan layanan bengkel</p>
             </div>
           </div>
-          <button
-            type="button"
-            class="modern-btn-activity flex items-center gap-2"
-            @click="openActivityModal"
-          >
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
-              />
-            </svg>
-            Activity Log
-          </button>
         </div>
       </div>
 
@@ -307,12 +292,15 @@
                   <div class="relative col-span-2">
                     <input
                       id="subtotal-product"
-                      type="number"
+                      type="hidden"
                       v-model.number="item.subtotal"
-                      class="naked-input"
                       :size="Math.max(item.subtotal?.length || 0, 1)"
                     />
+
                     <label class="subtotal-label">Subtotal</label>
+                    <div class="subtotal-display">
+                      {{ formatCurrency(productSubtotal(item)) }}
+                    </div>
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
@@ -715,71 +703,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Activity Log Modal -->
-    <div
-      v-if="showActivityModal"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden border border-blue-200"
-      >
-        <div class="gradient-modal-header px-6 py-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 17v-2a4 4 0 014-4h4M7 7h.01M7 11h.01M7 15h.01M17 7h.01M17 11h.01M17 15h.01"
-                />
-              </svg>
-              <h3 class="text-lg font-bold text-white">Activity Log</h3>
-            </div>
-            <button
-              @click="closeActivityModal"
-              class="text-white hover:text-blue-200 transition-colors duration-200"
-            >
-              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-        <form @submit.prevent="saveActivityLog" class="px-6 py-6">
-          <div class="mb-4">
-            <div class="relative">
-              <input v-model="activityLog.tanggal" type="date" class="modern-input peer" required />
-              <label class="modern-label">Tanggal</label>
-            </div>
-          </div>
-          <div class="mb-6">
-            <div class="relative">
-              <input
-                v-model="activityLog.aktivitas"
-                type="text"
-                class="modern-input peer"
-                placeholder=" "
-                required
-              />
-              <label class="modern-label">Activity</label>
-            </div>
-          </div>
-          <div class="flex justify-end gap-3">
-            <button type="button" @click="closeActivityModal" class="modern-btn-cancel">
-              Batal
-            </button>
-            <button type="submit" class="modern-btn-primary">Simpan</button>
-          </div>
-        </form>
-      </div>
-    </div>
   </div>
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
@@ -839,8 +762,7 @@ export default {
       },
       selectedPaket: '',
       paketList: [],
-      showActivityModal: false,
-      activityLog: { tanggal: '', aktivitas: '' },
+
       isUseTax: false,
     }
   },
@@ -1120,24 +1042,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    openActivityModal() {
-      const now = new Date()
-      const yyyy = now.getFullYear()
-      const mm = String(now.getMonth() + 1).padStart(2, '0')
-      const dd = String(now.getDate()).padStart(2, '0')
-      this.activityLog = {
-        tanggal: `${yyyy}-${mm}-${dd}`,
-        aktivitas: '',
-      }
-      this.showActivityModal = true
-    },
-    closeActivityModal() {
-      this.showActivityModal = false
-      this.activityLog = { tanggal: '', aktivitas: '' }
-    },
-    saveActivityLog() {
-      this.closeActivityModal()
-    },
+
     addProductOrder() {
       this.form.product_ordered.push({
         product_id: '',
@@ -1173,6 +1078,7 @@ export default {
       item.productSubtotalHPP = this.productSubtotalHPP(item)
       // Cek stok setiap kali subtotal dihitung
       this.getStock(item)
+      return item.subtotal
     },
     serviceSubtotal(item) {
       const quantity = Number(item.quantity) || 0
@@ -1221,20 +1127,20 @@ export default {
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
 
-      // try {
-      //   this.loadingStore.show()
-      //   const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
-      //   this.show_toast = true
-      //   this.message_toast = response.data.message
-      //   // console.log('Response: ', response.data.data)
-      //   this.getBookingData()
-      // } catch (error) {
-      //   console.log('error: ', error)
-      //   this.show_toast = true
-      //   this.message_toast = 'Gagal submit work order!'
-      // } finally {
-      //   this.loadingStore.hide()
-      // }
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${this.BASE_URL}workorders/create/new`, this.form)
+        this.show_toast = true
+        this.message_toast = response.data.message
+        // console.log('Response: ', response.data.data)
+        this.getBookingData()
+      } catch (error) {
+        console.log('error: ', error)
+        this.show_toast = true
+        this.message_toast = 'Gagal submit work order!'
+      } finally {
+        this.loadingStore.hide()
+      }
 
       console.log('Form Data:', this.form)
     },

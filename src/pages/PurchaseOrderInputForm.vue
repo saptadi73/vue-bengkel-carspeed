@@ -135,109 +135,9 @@
         </div>
       </div>
 
-      <!-- Order Lines -->
+      <!-- Order Items -->
       <div class="border-t pt-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
-        <div v-for="(item, index) in form.items" :key="index" class="mb-4 p-4 border rounded-md">
-          <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Product</label>
-              <select
-                v-model="item.product_id"
-                @change="onProductChange(index)"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Product</option>
-                <option v-for="product in products" :key="product.id" :value="product.id">
-                  {{ product.name }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Satuan</label>
-              <select
-                v-model="item.satuan_id"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Unit</option>
-                <option v-for="unit in satuans" :key="unit.id" :value="unit.id">
-                  {{ unit.name }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Quantity</label>
-              <input
-                v-model.number="item.quantity"
-                type="number"
-                min="1"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Unit Price</label>
-              <input
-                v-model.number="item.price"
-                type="number"
-                min="0"
-                step="0.01"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Discount (%)</label>
-              <input
-                v-model.number="item.discount"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Total</label>
-              <input
-                :value="formatCurrency(item.subtotal)"
-                type="text"
-                readonly
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50"
-              />
-            </div>
-          </div>
-          <div class="mt-2 gap-3 flex justify-end">
-            <button
-              type="button"
-              @click="removeItem(index)"
-              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Remove Item
-            </button>
-            <button
-              type="button"
-              @click="updateCost(item.product_id, index)"
-              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Update Cost (HPP)
-            </button>
-          </div>
-        </div>
-        <div class="flex justify-start">
-          <button
-            type="button"
-            @click="addItem"
-            class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          >
-            Add Item
-          </button>
-        </div>
+        <InputBoxSelectedDropDown @items="updateItems" />
       </div>
 
       <!-- Document Upload -->
@@ -281,12 +181,13 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import InputBoxSelectedDropDown from '@/components/InputBoxSelectedDropDown.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, InputBoxSelectedDropDown },
   data() {
     return {
       suppliers: [],
@@ -362,6 +263,16 @@ export default {
     },
   },
   methods: {
+    updateItems(items) {
+      this.form.items = items.map((item) => ({
+        product_id: item.product?.id || '',
+        satuan_id: item.satuan_id || item.product?.satuan_id || '',
+        quantity: item.quantity || 1,
+        price: item.cost || 0,
+        discount: item.discount || 0,
+        subtotal: item.subtotal || 0,
+      }))
+    },
     onProductChange(index) {
       const item = this.form.items[index]
       const product = this.products.find((p) => p.id == item.product_id)
@@ -468,9 +379,10 @@ export default {
           status: this.form.status,
           lines: this.form.items.map((item) => ({
             product_id: item.product_id,
+            satuan_id: item.satuan_id,
             quantity: item.quantity,
             price: item.price,
-            discount: item.discount || 0,
+            discount: item.discount,
             subtotal: item.subtotal,
           })),
         }

@@ -138,98 +138,123 @@
       <!-- Order Lines -->
       <div class="border-t pt-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h3>
-        <div v-for="(item, index) in form.items" :key="index" class="mb-4 p-4 border rounded-md">
-          <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Product</label>
-              <select
-                @change="getCost(item.product_id, index)"
-                v-model="item.product_id"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Product</option>
-                <option v-for="product in products" :key="product.id" :value="product.id">
-                  {{ product.name }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Satuan</label>
-              <select
-                v-model="item.satuan_id"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select Unit</option>
-                <option v-for="unit in satuans" :key="unit.id" :value="unit.id">
-                  {{ unit.name }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Quantity</label>
-              <input
-                v-model.number="item.quantity"
-                type="number"
-                min="1"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Unit Price</label>
-              <input
-                v-model.number="item.price"
-                type="number"
-                min="0"
-                step="0.01"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Discount (%)</label>
-              <input
-                v-model.number="item.discount"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                @input="calculateItemTotal(index)"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Total</label>
-              <input
-                :value="formatCurrency(item.subtotal)"
-                type="text"
-                readonly
-                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50"
-              />
-            </div>
-          </div>
-          <div class="mt-2 flex justify-end">
-            <button
-              type="button"
-              @click="removeItem(index)"
-              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Remove Item
-            </button>
-            <button
-              type="button"
-              @click="updateCost(item.product_id, index)"
-              class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Update Cost (HPP)
-            </button>
-          </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white border border-gray-300">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Product
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Satuan
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Quantity
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Unit Price
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Discount (%)
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Total
+                </th>
+                <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in form.items" :key="index" class="border-b">
+                <td class="px-4 py-2">
+                  <select
+                    @change="getCost(item.product_id, index)"
+                    v-model="item.product_id"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Product</option>
+                    <option v-for="product in products" :key="product.id" :value="product.id">
+                      {{ product.name }}
+                    </option>
+                  </select>
+                </td>
+                <td class="px-4 py-2">
+                  <select
+                    v-model="item.satuan_id"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="">Select Unit</option>
+                    <option v-for="unit in satuans" :key="unit.id" :value="unit.id">
+                      {{ unit.name }}
+                    </option>
+                  </select>
+                </td>
+                <td class="px-4 py-2">
+                  <input
+                    v-model.number="item.quantity"
+                    type="number"
+                    min="1"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    @input="calculateItemTotal(index)"
+                    required
+                  />
+                </td>
+                <td class="px-4 py-2">
+                  <input
+                    v-model.number="item.price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    @input="calculateItemTotal(index)"
+                    required
+                  />
+                </td>
+                <td class="px-4 py-2">
+                  <input
+                    v-model.number="item.discount"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    @input="calculateItemTotal(index)"
+                  />
+                </td>
+                <td class="px-4 py-2">
+                  <input
+                    :value="formatCurrency(item.subtotal)"
+                    type="text"
+                    readonly
+                    class="w-full px-2 py-1 border border-gray-300 rounded-md bg-gray-50"
+                  />
+                </td>
+                <td class="px-4 py-2">
+                  <div class="flex space-x-2">
+                    <button
+                      type="button"
+                      @click="updateCost(item.product_id, index)"
+                      class="px-2 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+                    >
+                      Update Cost
+                    </button>
+                    <button
+                      type="button"
+                      @click="removeItem(index)"
+                      class="px-2 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="flex justify-start">
+        <div class="flex justify-start mt-4">
           <button
             type="button"
             @click="addItem"
