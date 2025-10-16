@@ -18,6 +18,7 @@
               id="supplier_id"
               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
+              :disabled="isCompleted"
             >
               <option value="">Select Supplier</option>
               <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
@@ -103,6 +104,7 @@
             type="date"
             id="deliveryDate"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :disabled="isCompleted"
           />
         </div>
         <div>
@@ -112,6 +114,7 @@
             id="status"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
+            :disabled="isCompleted"
           >
             <option value="">Select Status</option>
             <option value="draft">Draft</option>
@@ -130,6 +133,7 @@
             type="checkbox"
             id="includeTax"
             class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            :disabled="isCompleted"
           />
           <label for="includeTax" class="ml-2 block text-sm text-gray-900">
             Include Tax (11%)
@@ -175,6 +179,7 @@
                     v-model="item.product_id"
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    :disabled="isCompleted"
                   >
                     <option value="">Select Product</option>
                     <option v-for="product in products" :key="product.id" :value="product.id">
@@ -188,6 +193,7 @@
                     v-model="item.satuan_id"
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
+                    :disabled="isCompleted"
                   >
                     <option value="">Select Unit</option>
                     <option v-for="unit in satuans" :key="unit.id" :value="unit.id">
@@ -203,6 +209,7 @@
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @input="calculateItemTotal(index)"
                     required
+                    :disabled="isCompleted"
                   />
                 </td>
                 <td class="px-4 py-2">
@@ -214,6 +221,7 @@
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @input="calculateItemTotal(index)"
                     required
+                    :disabled="isCompleted"
                   />
                 </td>
                 <td class="px-4 py-2">
@@ -225,6 +233,7 @@
                     step="0.01"
                     class="w-full px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     @input="calculateItemTotal(index)"
+                    :disabled="isCompleted"
                   />
                 </td>
                 <td class="px-4 py-2">
@@ -242,6 +251,7 @@
                       type="button"
                       @click="confirmUpdateItem(index)"
                       class="px-2 py-1 bg-blue-500 text-white text-xs rounded-md hover:bg-blue-600"
+                      :disabled="isCompleted"
                     >
                       Update
                     </button>
@@ -250,6 +260,7 @@
                       type="button"
                       @click="AddPurchaseOrderLine(index)"
                       class="px-2 py-1 bg-green-500 text-white text-xs rounded-md hover:bg-green-600"
+                      :disabled="isCompleted"
                     >
                       Add
                     </button>
@@ -257,6 +268,7 @@
                       type="button"
                       @click="confirmDeleteItem(index)"
                       class="px-2 py-1 bg-red-500 text-white text-xs rounded-md hover:bg-red-600"
+                      :disabled="isCompleted"
                     >
                       Delete
                     </button>
@@ -271,6 +283,7 @@
             type="button"
             @click="confirmAddItem"
             class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            :disabled="isCompleted"
           >
             Add Item
           </button>
@@ -286,6 +299,7 @@
             @change="handleFileChange"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            :disabled="isCompleted"
           />
         </div>
         <div v-if="form.bukti_transfer" class="mt-4">
@@ -315,7 +329,7 @@
       <div class="text-center">
         <button
           type="submit"
-          :disabled="hasUnsavedChanges"
+          :disabled="hasUnsavedChanges || isCompleted"
           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           Create Purchase Order
@@ -465,6 +479,9 @@ export default {
         this.itemChanges.some((changed) => changed) ||
         this.form.items.some((item, index) => !this.originalItems[index])
       )
+    },
+    isCompleted() {
+      return this.form.status === 'diterima' || this.form.status === 'dibayar'
     },
   },
   methods: {

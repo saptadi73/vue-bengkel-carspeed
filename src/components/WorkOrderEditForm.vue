@@ -85,7 +85,12 @@
             </div>
             <div class="info-card">
               <div class="relative">
-                <select v-model="form.status" id="status" class="modern-select peer">
+                <select
+                  v-model="form.status"
+                  id="status"
+                  class="modern-select peer"
+                  :disabled="isCompleted"
+                >
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
                   <option value="dikerjakan">dikerjakan</option>
@@ -120,7 +125,12 @@
           </div>
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1 relative">
-              <select v-model="form.karyawan_id" class="modern-select peer" required>
+              <select
+                v-model="form.karyawan_id"
+                class="modern-select peer"
+                required
+                :disabled="isCompleted"
+              >
                 <option value="" disabled selected>-- Pilih Karyawan --</option>
                 <option
                   v-for="karyawanItem in karyawan"
@@ -139,11 +149,23 @@
           <!-- Input Keluhan dan Saran -->
           <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="relative">
-              <input v-model="form.keluhan" type="text" class="modern-input peer" placeholder=" " />
+              <input
+                v-model="form.keluhan"
+                type="text"
+                class="modern-input peer"
+                placeholder=" "
+                :disabled="isCompleted"
+              />
               <label class="modern-label">Keluhan</label>
             </div>
             <div class="relative">
-              <input v-model="form.saran" type="text" class="modern-input peer" placeholder=" " />
+              <input
+                v-model="form.saran"
+                type="text"
+                class="modern-input peer"
+                placeholder=" "
+                :disabled="isCompleted"
+              />
               <label class="modern-label">Saran</label>
             </div>
           </div>
@@ -156,6 +178,7 @@
                 class="modern-textarea peer"
                 placeholder=" "
                 rows="4"
+                :disabled="isCompleted"
               ></textarea>
               <label class="modern-textarea-label">Keterangan</label>
             </div>
@@ -186,6 +209,7 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="addProductOrder"
+                :disabled="isCompleted"
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -212,6 +236,7 @@
                       v-model="item.product_id"
                       class="modern-select peer"
                       @change="(getProductsId(item), markProductModified(item))"
+                      :disabled="isCompleted"
                     >
                       <option value="" disabled selected>Pilih Product</option>
                       <option
@@ -234,11 +259,17 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
                   <div class="relative col-span-1">
-                    <select id="satuan_id" v-model="item.satuan_id" class="modern-select peer">
+                    <select
+                      id="satuan_id"
+                      v-model="item.satuan_id"
+                      class="modern-select peer"
+                      :disabled="isCompleted"
+                    >
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
                         {{ value.name }}
@@ -254,6 +285,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -265,6 +297,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
@@ -290,6 +323,7 @@
                       min="0"
                       class="naked-input"
                       placeholder=" "
+                      :disabled="isCompleted"
                     />
                   </div>
                   <div class="flex gap-2">
@@ -308,6 +342,7 @@
                     type="button"
                     class="modern-btn-info"
                     @click="confirmAddProduct(idx)"
+                    :disabled="isCompleted"
                   >
                     Confirm Add
                   </button>
@@ -316,10 +351,16 @@
                     type="button"
                     class="modern-btn-info"
                     @click="confirmUpdateProduct(idx)"
+                    :disabled="isCompleted"
                   >
                     Confirm Update
                   </button>
-                  <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
+                  <button
+                    type="button"
+                    class="delete-btn"
+                    @click="removeProductOrder(idx)"
+                    :disabled="isCompleted"
+                  >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         stroke-linecap="round"
@@ -413,6 +454,7 @@
                 type="button"
                 class="modern-btn-secondary flex items-center gap-2"
                 @click="addServiceOrder"
+                :disabled="isCompleted"
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -439,6 +481,7 @@
                       v-model="item.service_id"
                       @change="(getServicesId(item), markServiceModified(item))"
                       class="modern-select peer"
+                      :disabled="isCompleted"
                     >
                       <option value="" disabled selected>Pilih Service/Jasa</option>
                       <option
@@ -461,6 +504,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -473,6 +517,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">Harga</label>
                   </div>
@@ -484,6 +529,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
+                      :disabled="isCompleted"
                     />
                     <label class="modern-label">Discount</label>
                   </div>
@@ -508,6 +554,7 @@
                       min="0"
                       class="naked-input"
                       placeholder=" "
+                      :disabled="isCompleted"
                     />
                   </div>
                   <div class="flex gap-2">
@@ -527,6 +574,7 @@
                     type="button"
                     class="modern-btn-info"
                     @click="confirmAddService(idx)"
+                    :disabled="isCompleted"
                   >
                     Confirm Add
                   </button>
@@ -535,10 +583,16 @@
                     type="button"
                     class="modern-btn-info"
                     @click="confirmUpdateService(idx)"
+                    :disabled="isCompleted"
                   >
                     Confirm Update
                   </button>
-                  <button type="button" class="delete-btn" @click="removeServiceOrder(idx)">
+                  <button
+                    type="button"
+                    class="delete-btn"
+                    @click="removeServiceOrder(idx)"
+                    :disabled="isCompleted"
+                  >
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         stroke-linecap="round"
@@ -608,7 +662,13 @@
 
           <!-- Pajak Section -->
           <div class="mb-6 flex items-center gap-3">
-            <input type="checkbox" id="useTax" v-model="isUseTax" class="mr-2" />
+            <input
+              type="checkbox"
+              id="useTax"
+              v-model="isUseTax"
+              class="mr-2"
+              :disabled="isCompleted"
+            />
             <label for="useTax" class="text-sm font-semibold">Gunakan Pajak 11%</label>
           </div>
 
@@ -702,10 +762,10 @@
           <div class="flex justify-end">
             <button
               type="submit"
-              :disabled="hasUnconfirmedChanges"
+              :disabled="hasUnconfirmedChanges || isCompleted"
               :class="[
                 'modern-btn-success flex items-center gap-2',
-                { 'opacity-50 cursor-not-allowed': hasUnconfirmedChanges },
+                { 'opacity-50 cursor-not-allowed': hasUnconfirmedChanges || isCompleted },
               ]"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -827,6 +887,9 @@ export default {
         (item) => item.isNew || item.isModified,
       )
       return hasUnconfirmedProduct || hasUnconfirmedService
+    },
+    isCompleted() {
+      return this.form.status === 'selesai' || this.form.status === 'dibayar'
     },
   },
   watch: {
