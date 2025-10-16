@@ -116,6 +116,8 @@
             <option value="">Select Status</option>
             <option value="draft">Draft</option>
             <option value="dijalankan">Dijalankan</option>
+            <option value="diterima">Diterima</option>
+            <option value="dibayar">Dibayar</option>
           </select>
         </div>
       </div>

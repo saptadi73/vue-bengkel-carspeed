@@ -183,6 +183,19 @@
             </div>
           </div>
 
+          <!-- Keterangan Section -->
+          <div class="mb-6">
+            <div class="relative">
+              <textarea
+                v-model="form.keterangan"
+                class="modern-textarea peer"
+                placeholder=" "
+                rows="4"
+              ></textarea>
+              <label class="modern-textarea-label">Keterangan</label>
+            </div>
+          </div>
+
           <!-- Product Order Section -->
           <div class="mb-8">
             <div class="flex items-center justify-between mb-6">
@@ -753,6 +766,7 @@ export default {
         service_ordered: [],
         keluhan: '',
         saran: '',
+        keterangan: '',
         status: 'draft',
         pajak: 0,
         karyawan_id: '',
@@ -1273,6 +1287,7 @@ export default {
       const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
       console.log('Paket data:', paket)
       if (paket && paket.product_line && paket.service_line) {
+        this.form.keterangan = paket.name
         this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
         this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
         // Jalankan getProductsId dan getStock untuk setiap item produk hasil paket
@@ -1347,6 +1362,35 @@ export default {
   border-color: #d1d5db;
 }
 
+/* Modern Textarea Styles */
+.modern-textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background-color: white;
+  color: #111827;
+  font-family: 'Lexend', sans-serif;
+  transition: all 0.3s ease-in-out;
+  resize: vertical;
+  min-height: 6rem;
+}
+
+.modern-textarea::placeholder {
+  color: transparent;
+}
+
+.modern-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.3);
+  background-color: rgba(239, 246, 255, 0.3);
+}
+
+.modern-textarea:hover {
+  border-color: #d1d5db;
+}
+
 /* Modern Select Styles */
 .modern-select {
   width: 100%;
@@ -1392,6 +1436,26 @@ export default {
 
 .modern-input:focus ~ .modern-label,
 .modern-input:not(:placeholder-shown) ~ .modern-label {
+  color: #2563eb;
+  font-size: 0.75rem;
+  transform: translateY(-1.75rem) scale(0.9);
+}
+
+/* Floating Labels for Textarea */
+.modern-textarea-label {
+  position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-family: 'Lexend', sans-serif;
+  transition: all 0.3s ease-in-out;
+  pointer-events: none;
+  transform-origin: left top;
+}
+
+.modern-textarea:focus ~ .modern-textarea-label,
+.modern-textarea:not(:placeholder-shown) ~ .modern-textarea-label {
   color: #2563eb;
   font-size: 0.75rem;
   transform: translateY(-1.75rem) scale(0.9);
