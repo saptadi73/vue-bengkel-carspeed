@@ -223,7 +223,7 @@ export default {
           },
         })
 
-        this.message_toast = 'Expense berhasil diupdate'
+        this.message_toast = response.data.message || 'Expense berhasil diupdate'
         this.show_toast = true
       } catch (error) {
         console.error('Error updating expense:', error)

@@ -37,7 +37,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
       <div class="flex items-center gap-2">
         <label class="text-sm text-gray-600">Urut</label>
         <select v-model="sortDir" class="border rounded-xl px-3 py-2">
@@ -51,6 +51,13 @@
           <option value="all">Semua</option>
           <option value="in">Cash-In</option>
           <option value="out">Cash-Out</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-sm text-gray-600">Filter Account</label>
+        <select v-model="accountFilter" class="border rounded-xl px-3 py-2">
+          <option value="all">Semua</option>
+          <option v-for="acc in accounts" :key="acc" :value="acc">{{ acc }}</option>
         </select>
       </div>
       <div class="flex items-center gap-2">
@@ -82,6 +89,7 @@
           <tr>
             <th class="px-4 py-3 text-left">Tanggal & Jam</th>
             <th class="px-4 py-3 text-left">Kategori</th>
+            <th class="px-4 py-3 text-left">Account</th>
             <th class="px-4 py-3 text-right">Nominal</th>
             <th class="px-4 py-3 text-left">Penanggung Jawab</th>
             <th class="px-4 py-3 text-left">Keterangan</th>
@@ -94,6 +102,7 @@
           <tr class="border-t bg-gray-50">
             <td class="px-4 py-3 text-gray-600">—</td>
             <td class="px-4 py-3 text-gray-600">Saldo Awal</td>
+            <td class="px-4 py-3 text-gray-600">—</td>
             <td class="px-4 py-3 text-right text-gray-600">—</td>
             <td class="px-4 py-3 text-gray-600">—</td>
             <td class="px-4 py-3 text-gray-600">Saldo awal periode</td>
@@ -102,7 +111,7 @@
           </tr>
 
           <tr v-if="!displayRows.length">
-            <td colspan="7" class="px-4 py-6 text-center text-gray-500">
+            <td colspan="8" class="px-4 py-6 text-center text-gray-500">
               Belum ada transaksi pada filter saat ini.
             </td>
           </tr>
@@ -121,6 +130,7 @@
                 {{ r.category === 'in' ? 'Cash-In' : 'Cash-Out' }}
               </span>
             </td>
+            <td class="px-4 py-3">{{ r.account }}</td>
             <td
               class="px-4 py-3 text-right font-medium"
               :class="r.category === 'in' ? 'text-emerald-700' : 'text-rose-700'"
@@ -178,6 +188,28 @@
             </select>
           </div>
           <div>
+            <label class="block text-xs text-gray-600 mb-1">Account</label>
+            <select v-model="form.account" class="w-full border rounded-xl px-3 py-2">
+              <option v-for="acc in accounts" :key="acc" :value="acc">{{ acc }}</option>
+            </select>
+          </div>
+          <div v-if="form.category === 'in'">
+            <label class="block text-xs text-gray-600 mb-1">Credit Account</label>
+            <input
+              v-model="form.creditAccount"
+              class="w-full border rounded-xl px-3 py-2"
+              placeholder="e.g., Sales Revenue"
+            />
+          </div>
+          <div v-else>
+            <label class="block text-xs text-gray-600 mb-1">Debit Account</label>
+            <input
+              v-model="form.debitAccount"
+              class="w-full border rounded-xl px-3 py-2"
+              placeholder="e.g., Office Supplies"
+            />
+          </div>
+          <div>
             <label class="block text-xs text-gray-600 mb-1">Nominal (Rp)</label>
             <input
               type="number"
@@ -211,9 +243,14 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
+import axios from 'axios'
+import { BASE_URL } from '@/base.utils.url'
 
 // ===== Saldo Awal =====
 const openingBalance = ref(3000000)
+
+// ===== Master data =====
+const accounts = ['Kas Kecil', 'Bank BCA', 'Bank Mandiri', 'Petty Cash']
 
 // ===== Data contoh (format rekening) =====
 const rows = reactive([
@@ -224,6 +261,7 @@ const rows = reactive([
     amount: 1250000,
     pic: 'Andi',
     note: 'Pendapatan servis harian',
+    account: 'Kas Kecil',
   },
   {
     id: 2,
@@ -232,6 +270,7 @@ const rows = reactive([
     amount: 250000,
     pic: 'Andi',
     note: 'Pembelian oli',
+    account: 'Bank BCA',
   },
   {
     id: 3,
@@ -240,6 +279,7 @@ const rows = reactive([
     amount: 600000,
     pic: 'Budi',
     note: 'Gaji mekanik (harian)',
+    account: 'Petty Cash',
   },
   {
     id: 4,
@@ -248,6 +288,7 @@ const rows = reactive([
     amount: 950000,
     pic: 'Citra',
     note: 'Penjualan sparepart',
+    account: 'Bank Mandiri',
   },
   {
     id: 5,
@@ -256,12 +297,14 @@ const rows = reactive([
     amount: 180000,
     pic: 'Budi',
     note: 'Listrik & air',
+    account: 'Kas Kecil',
   },
 ])
 
 // ===== Filter & urutan =====
 const sortDir = ref('asc') // asc|desc
 const typeFilter = ref('all') // all|in|out
+const accountFilter = ref('all') // all|account
 const dateFrom = ref('')
 const dateTo = ref('')
 
@@ -270,6 +313,7 @@ const ledgerRowsAsc = computed(() => {
   // 1) sort ascending by datetime
   const asc = [...rows]
     .filter((r) => (typeFilter.value === 'all' ? true : r.category === typeFilter.value))
+    .filter((r) => (accountFilter.value === 'all' ? true : r.account === accountFilter.value))
     .filter((r) => (dateFrom.value ? r.datetime >= dateFrom.value : true))
     .filter((r) => (dateTo.value ? r.datetime <= dateTo.value : true))
     .sort((a, b) => a.datetime.localeCompare(b.datetime))
@@ -307,7 +351,17 @@ const closingBalance = computed(() =>
 const showModal = ref(false)
 const modalTitle = ref('')
 const editId = ref(null)
-const form = reactive({ id: null, datetime: '', category: 'in', amount: 0, pic: '', note: '' })
+const form = reactive({
+  id: null,
+  datetime: '',
+  category: 'in',
+  account: accounts[0],
+  creditAccount: '',
+  debitAccount: '',
+  amount: 0,
+  pic: '',
+  note: '',
+})
 
 function openModal(type = 'in') {
   modalTitle.value = 'Tambah Transaksi'
@@ -316,6 +370,9 @@ function openModal(type = 'in') {
     id: null,
     datetime: new Date().toISOString().slice(0, 16),
     category: type,
+    account: accounts[0],
+    creditAccount: '',
+    debitAccount: '',
     amount: 0,
     pic: '',
     note: '',
@@ -325,17 +382,50 @@ function openModal(type = 'in') {
 function closeModal() {
   showModal.value = false
 }
-function saveRow() {
-  if (!form.datetime || !form.amount || !form.pic)
-    return alert('Tanggal, nominal, dan penanggung jawab wajib diisi.')
-  if (editId.value) {
-    const idx = rows.findIndex((r) => r.id === editId.value)
-    rows[idx] = { ...form, id: editId.value }
-  } else {
-    form.id = Date.now()
-    rows.push({ ...form })
+async function saveRow() {
+  if (!form.datetime || !form.amount || !form.pic || !form.account)
+    return alert('Tanggal, nominal, penanggung jawab, dan account wajib diisi.')
+
+  if (form.category === 'in' && !form.creditAccount)
+    return alert('Credit account wajib diisi untuk Cash-In.')
+  if (form.category === 'out' && !form.debitAccount)
+    return alert('Debit account wajib diisi untuk Cash-Out.')
+
+  const payload = {
+    tanggal: new Date(form.datetime).toISOString().split('T')[0], // date only
+    kas_bank_code: form.account, // assuming account is kas_bank_code
+    amount: form.amount,
+    memo: form.note,
+    created_by: form.pic,
   }
-  showModal.value = false
+
+  if (form.category === 'in') {
+    payload.credit_account_code = form.creditAccount
+  } else {
+    payload.debit_account_code = form.debitAccount
+  }
+
+  try {
+    const endpoint = form.category === 'in' ? '/accounting/cash-in' : '/accounting/cash-out'
+    const response = await axios.post(`${BASE_URL}${endpoint}`, payload)
+    if (response.data.status === 'success') {
+      alert('Transaksi berhasil disimpan!')
+      // Optionally refresh data or add to local rows
+      if (editId.value) {
+        const idx = rows.findIndex((r) => r.id === editId.value)
+        rows[idx] = { ...form, id: editId.value }
+      } else {
+        form.id = Date.now()
+        rows.push({ ...form })
+      }
+      showModal.value = false
+    } else {
+      alert('Gagal menyimpan transaksi: ' + response.data.message)
+    }
+  } catch (error) {
+    console.error('Error saving transaction:', error)
+    alert('Terjadi kesalahan saat menyimpan transaksi.')
+  }
 }
 function editRow(r) {
   modalTitle.value = 'Edit Transaksi'
@@ -376,6 +466,7 @@ function exportCSV() {
   const header = [
     'Tanggal & Jam',
     'Kategori',
+    'Account',
     'Nominal',
     'Penanggung Jawab',
     'Keterangan',
@@ -384,6 +475,7 @@ function exportCSV() {
   const data = displayRows.value.map((r) => [
     formatDateTime(r.datetime),
     r.category === 'in' ? 'Cash-In' : 'Cash-Out',
+    r.account,
     r.category === 'in' ? `+${formatIDRPlain(r.amount)}` : `-${formatIDRPlain(r.amount)}`,
     r.pic,
     r.note,

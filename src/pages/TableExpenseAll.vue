@@ -127,6 +127,11 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
+                Bayar
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
                 Aksi
               </th>
             </tr>
@@ -162,6 +167,15 @@
                   {{ expense.status }}
                 </span>
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button
+                  @click="openPaymentModal(expense)"
+                  title="Bayar Expense"
+                  class="cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-blue-700">payment</span>
+                </button>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <a :href="`/finansial/biaya/${expense.id}`" title="Edit Biaya"
                   ><span class="material-symbols-outlined text-green-800">edit_document</span></a
@@ -176,7 +190,7 @@
               </td>
             </tr>
             <tr v-if="filteredExpenses.length === 0">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
                     class="h-12 w-12 text-gray-400 mb-4"
@@ -359,6 +373,12 @@
 
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+  <payment-modal
+    :is-open="showPaymentModal"
+    :initial-amount="selectedExpense ? selectedExpense.amount : 0"
+    @close="closePaymentModal"
+    @submit="handlePaymentSubmit"
+  />
 </template>
 
 <script>
@@ -366,13 +386,14 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL } from '../base.utils.url'
 
 export default {
   name: 'TableExpenseAll',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, PaymentModal },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -386,6 +407,8 @@ export default {
       showConfirmModal: false,
       selectedExpense: null,
       expenses: [],
+      showPaymentModal: false,
+      selectedExpenseForPayment: null,
     }
   },
   computed: {
@@ -464,7 +487,7 @@ export default {
       this.selectedExpense = expense
       this.showConfirmModal = true
     },
-    async executeConfirmAction(id) {
+    async executeConfirmAction() {
       if (this.confirmAction === 'delete') {
         this.deleteExpense()
       }
@@ -485,6 +508,33 @@ export default {
       } catch (error) {
         console.error('Error deleting expense:', error)
         this.message_toast = 'Gagal menghapus biaya'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    openPaymentModal(expense) {
+      this.selectedExpenseForPayment = expense
+      this.showPaymentModal = true
+    },
+    closePaymentModal() {
+      this.showPaymentModal = false
+      this.selectedExpenseForPayment = null
+    },
+    async handlePaymentSubmit(paymentData) {
+      try {
+        this.loadingStore.show()
+        await axios.post(`${BASE_URL}expenses/${this.selectedExpenseForPayment.id}/payment`, {
+          amount: paymentData.amount,
+          bank_code: paymentData.bankCode,
+          description: paymentData.description,
+        })
+        this.message_toast = 'Pembayaran Expense berhasil!'
+        this.show_toast = true
+        this.fetchExpenses() // Refresh data
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        this.message_toast = 'Gagal memproses pembayaran'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()

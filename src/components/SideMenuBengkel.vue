@@ -216,7 +216,7 @@ const navItems = reactive([
       },
       {
         text: 'Daftar Biaya',
-        url: 'finansial/biaya',
+        url: '/finansial/biaya',
       },
       {
         text: 'Input Biaya',

@@ -815,6 +815,7 @@ export default {
       isitotalPembayaran: 0,
       isiPajakAmount: 0,
       karyawan: [],
+      initialStatus: '', // Menyimpan status awal dari database
       form: {
         customer_id: '',
         vehicle_id: '',
@@ -889,7 +890,7 @@ export default {
       return hasUnconfirmedProduct || hasUnconfirmedService
     },
     isCompleted() {
-      return this.form.status === 'selesai' || this.form.status === 'dibayar'
+      return this.initialStatus === 'selesai' || this.initialStatus === 'dibayar'
     },
   },
   watch: {
@@ -1028,6 +1029,7 @@ export default {
         this.form.saran = this.dataWorkorder.saran
         this.form.keterangan = this.dataWorkorder.keterangan || ''
         this.form.status = this.dataWorkorder.status
+        this.initialStatus = this.dataWorkorder.status // Simpan status awal
         this.form.karyawan_id = this.dataWorkorder.karyawan_id
         this.isUseTax = this.dataWorkorder.pajak
         this.form.nama = this.dataWorkorder.customer_name
@@ -1383,6 +1385,7 @@ export default {
         this.show_toast = true
         this.message_toast = response.data.message
         console.log('Workorder id: ', this.form.workorder_id)
+        this.initialStatus = this.form.status // Update initialStatus setelah submit berhasil
         this.getBookingData()
       } catch (error) {
         console.log('error: ', error)

@@ -329,7 +329,7 @@
       <div class="text-center">
         <button
           type="submit"
-          :disabled="hasUnsavedChanges || isCompleted"
+          :disabled="statusUpdated == 'diterima'"
           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           Create Purchase Order
@@ -378,6 +378,7 @@ export default {
   components: { LoadingOverlay, ToastCard },
   data() {
     return {
+      statusUpdated: '',
       suppliers: [],
       products: [],
       units: [],
@@ -534,6 +535,8 @@ export default {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}purchase-orders/${this.$route.params.id}`)
         const poData = response.data.data
+        this.statusUpdated = response.data.data.status
+        console.log('statusUpdated: ', this.statusUpdated)
         this.form = {
           ...this.form,
           ...poData,
@@ -753,6 +756,7 @@ export default {
         }
         this.show_toast = true
         this.message_toast = response.data.message
+        this.statusUpdated = true
       } catch (error) {
         console.error('Error creating purchase order:', error)
         this.show_toast = true

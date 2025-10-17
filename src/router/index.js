@@ -244,6 +244,11 @@ const router = createRouter({
           component: () => import('../pages/CashFlowReport.vue'),
         },
         {
+          path: 'cash/journal',
+          name: 'cash journal',
+          component: () => import('../pages/CashJournalForm.vue'),
+        },
+        {
           path: 'supplier',
           name: 'supplier',
           component: () => import('../pages/DaftarSupplier.vue'),

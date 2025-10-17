@@ -134,6 +134,11 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
+                Bayar
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
                 Aksi
               </th>
             </tr>
@@ -226,6 +231,15 @@
                   {{ order.status }}
                 </span>
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button
+                  @click="openPaymentModal(order)"
+                  title="Bayar Work Order"
+                  class="cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-blue-700">payment</span>
+                </button>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <a
                   :href="`${BASE_URL2}pelanggan/history/${order.vehicle_id}`"
@@ -256,7 +270,7 @@
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
                     class="h-12 w-12 text-gray-400 mb-4"
@@ -496,6 +510,12 @@
 
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+  <payment-modal
+    :is-open="showPaymentModal"
+    :initial-amount="selectedOrder ? selectedOrder.hpp : 0"
+    @close="closePaymentModal"
+    @submit="handlePaymentSubmit"
+  />
 </template>
 
 <script>
@@ -503,12 +523,13 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
   name: 'TableWorkOrderAll',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, PaymentModal },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -523,6 +544,8 @@ export default {
       confirmAction: '',
       selectedOrder: null,
       workOrders: [],
+      showPaymentModal: false,
+      selectedOrderForPayment: null,
     }
   },
   computed: {
@@ -669,6 +692,34 @@ export default {
       } catch (error) {
         console.error('Error deleting work order:', error)
         this.message_toast = 'Gagal menghapus Work Order'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    openPaymentModal(order) {
+      this.selectedOrderForPayment = order
+      this.showPaymentModal = true
+    },
+    closePaymentModal() {
+      this.showPaymentModal = false
+      this.selectedOrderForPayment = null
+    },
+    async handlePaymentSubmit(paymentData) {
+      try {
+        this.loadingStore.show()
+        // Assuming API endpoint for workorder payment
+        await axios.post(`${BASE_URL}workorders/${this.selectedOrderForPayment.id}/payment`, {
+          amount: paymentData.amount,
+          bank_code: paymentData.bankCode,
+          description: paymentData.description,
+        })
+        this.message_toast = 'Pembayaran Work Order berhasil!'
+        this.show_toast = true
+        this.fetchWorkOrders() // Refresh data
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        this.message_toast = 'Gagal memproses pembayaran'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()
