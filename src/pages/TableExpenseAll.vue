@@ -375,7 +375,10 @@
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   <payment-modal
     :is-open="showPaymentModal"
-    :initial-amount="selectedExpense ? selectedExpense.amount : 0"
+    :initial-amount="selectedExpenseForPayment ? selectedExpenseForPayment.amount : 0"
+    :expense-id="selectedExpenseForPayment ? selectedExpenseForPayment.id : null"
+    :expense-name="selectedExpenseForPayment ? selectedExpenseForPayment.name : ''"
+    :expense-type="selectedExpenseForPayment ? selectedExpenseForPayment.expense_type : ''"
     @close="closePaymentModal"
     @submit="handlePaymentSubmit"
   />
@@ -522,14 +525,19 @@ export default {
       this.selectedExpenseForPayment = null
     },
     async handlePaymentSubmit(paymentData) {
+      console.log('PaymentData :', paymentData)
+      const form = {
+        date: paymentData.date,
+        memo: paymentData.description,
+        kas_bank_code: paymentData.bankCode,
+        amount: paymentData.amount,
+        expense_id: paymentData.expenseId,
+      }
+      console.log('Form :', form)
       try {
         this.loadingStore.show()
-        await axios.post(`${BASE_URL}expenses/${this.selectedExpenseForPayment.id}/payment`, {
-          amount: paymentData.amount,
-          bank_code: paymentData.bankCode,
-          description: paymentData.description,
-        })
-        this.message_toast = 'Pembayaran Expense berhasil!'
+        const response = await api.post(`${BASE_URL}accounting/expense-payment-journal`, form)
+        this.message_toast = response.data.message || 'Pembayaran Expense berhasil!'
         this.show_toast = true
         this.fetchExpenses() // Refresh data
       } catch (error) {

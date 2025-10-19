@@ -129,6 +129,11 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
+                Total
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
                 Status
               </th>
               <th
@@ -224,6 +229,9 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
+                {{ formatCurrency(order.total_biaya) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
                 <span
                   class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                   :class="getStatusClass(order.status)"
@@ -233,6 +241,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <button
+                  v-if="order.status === 'selesai'"
                   @click="openPaymentModal(order)"
                   title="Bayar Work Order"
                   class="cursor-pointer"
@@ -425,6 +434,25 @@
               ><strong>Estimasi Selesai:</strong> {{ formatDateTime(order.tanggal_keluar) }}</span
             >
           </div>
+
+          <div class="flex items-center">
+            <svg
+              class="h-4 w-4 text-gray-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+              />
+            </svg>
+            <span class="text-sm"
+              ><strong>Total Biaya:</strong> {{ formatCurrency(order.total_biaya) }}</span
+            >
+          </div>
         </div>
 
         <div class="flex gap-2 mt-4">
@@ -512,7 +540,11 @@
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   <payment-modal
     :is-open="showPaymentModal"
-    :initial-amount="selectedOrder ? selectedOrder.hpp : 0"
+    :initial-amount="selectedOrderForPayment ? selectedOrderForPayment.total_biaya : 0"
+    :expense-name="selectedOrderForPayment ? `WO ${selectedOrderForPayment.no_wo}` : ''"
+    :expense-type="selectedOrderForPayment ? selectedOrderForPayment.customer_name : ''"
+    :expense-workorder="selectedOrderForPayment ? selectedOrderForPayment.id : ''"
+    :expense-customer="selectedOrderForPayment ? selectedOrderForPayment.customer_id : ''"
     @close="closePaymentModal"
     @submit="handlePaymentSubmit"
   />
@@ -526,6 +558,7 @@ import ToastCard from '@/components/ToastCard.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import api from '@/user/axios'
 
 export default {
   name: 'TableWorkOrderAll',
@@ -706,21 +739,28 @@ export default {
       this.selectedOrderForPayment = null
     },
     async handlePaymentSubmit(paymentData) {
+      const form = {
+        date: paymentData.date,
+        amount: paymentData.amount,
+        kas_bank_code: paymentData.bankCode,
+        memo: paymentData.description,
+        workorder_id: this.selectedOrderForPayment.id,
+        customer_id: this.selectedOrderForPayment.customer_id,
+        piutang_code: '2001',
+      }
+      console.log('Formnya: ', form)
       try {
         this.loadingStore.show()
         // Assuming API endpoint for workorder payment
-        await axios.post(`${BASE_URL}workorders/${this.selectedOrderForPayment.id}/payment`, {
-          amount: paymentData.amount,
-          bank_code: paymentData.bankCode,
-          description: paymentData.description,
-        })
-        this.message_toast = 'Pembayaran Work Order berhasil!'
+        const response = await api.post(`${BASE_URL}workorders/update-only-status`, form)
+        this.message_toast = response.data.message || 'Pembayaran Work Order berhasil!'
         this.show_toast = true
         this.fetchWorkOrders() // Refresh data
       } catch (error) {
         console.error('Error processing payment:', error)
         this.message_toast = 'Gagal memproses pembayaran'
         this.show_toast = true
+        console.log('Error: ', error)
       } finally {
         this.loadingStore.hide()
       }

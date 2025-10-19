@@ -38,9 +38,8 @@
           <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Total Amount (Rp)</label>
             <input
-              v-model="displayAmount"
-              @input="onAmountInput"
-              type="text"
+              v-model.number="form.amount"
+              type="number"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="Masukkan jumlah pembayaran"
               required
@@ -55,6 +54,9 @@
               required
             />
           </div>
+          <input type="hidden" v-model="form.customer_id" />
+          <input type="hidden" v-model="form.workorder_id" />
+
           <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Bank Code</label>
             <select
@@ -139,14 +141,11 @@ const form = reactive({
   date: '',
 })
 
-const displayAmount = ref('')
-
 watch(
   () => props.isOpen,
   (newVal) => {
     if (newVal) {
       form.amount = props.initialAmount
-      displayAmount.value = formatNumber(props.initialAmount)
       form.expenseId = props.expenseId
       form.bankCode = ''
       form.description = `${props.expenseName} - ${props.expenseType}`
@@ -154,21 +153,6 @@ watch(
     }
   },
 )
-
-const formatNumber = (value) => {
-  if (!value) return ''
-  return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-}
-
-const parseNumber = (value) => {
-  return parseFloat(value.replace(/,/g, '')) || 0
-}
-
-const onAmountInput = (event) => {
-  const input = event.target.value.replace(/[^0-9,]/g, '')
-  displayAmount.value = input
-  form.amount = parseNumber(input)
-}
 
 const closeModal = () => {
   emit('close')

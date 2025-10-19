@@ -97,6 +97,16 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
+                PO
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
+                Nama Supplier
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
                 Tanggal
               </th>
               <th
@@ -140,6 +150,12 @@
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ index + 1 }}
               </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ order.po_no }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {{ order.supplier_name }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ formatDate(order.date) }}</div>
               </td>
@@ -168,6 +184,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <button
+                  v-if="order.status === 'diterima'"
                   @click="openPaymentModal(order)"
                   title="Bayar Purchase Order"
                   class="cursor-pointer"
@@ -379,7 +396,9 @@
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   <payment-modal
     :is-open="showPaymentModal"
-    :initial-amount="selectedOrder ? (selectedOrder.total || 0) + (selectedOrder.pajak || 0) : 0"
+    :initial-amount="selectedOrderForPayment ? selectedOrderForPayment.pembayaran : 0"
+    :expense-name="selectedOrderForPayment ? `PO ${selectedOrderForPayment.po_no}` : ''"
+    :expense-type="selectedOrderForPayment ? selectedOrderForPayment.supplier_name : ''"
     @close="closePaymentModal"
     @submit="handlePaymentSubmit"
   />
@@ -393,6 +412,7 @@ import ToastCard from '@/components/ToastCard.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL } from '../base.utils.url'
+import api from '@/user/axios'
 
 export default {
   name: 'TablePurchaseOrderAll',
@@ -526,26 +546,43 @@ export default {
       this.selectedOrderForPayment = null
     },
     async handlePaymentSubmit(paymentData) {
+      const form = {
+        amount: paymentData.amount,
+        date: paymentData.date,
+        kas_bank_code: paymentData.bankCode,
+        purchase_id: this.selectedOrderForPayment.id,
+        hutang_code: '3001',
+        supplier_id: this.selectedOrderForPayment.supplier_id,
+        memo: paymentData.description,
+      }
+
+      console.log('Formdata: ', form)
       try {
         this.loadingStore.show()
-        await axios.post(`${BASE_URL}purchase-orders/${this.selectedOrderForPayment.id}/payment`, {
-          amount: paymentData.amount,
-          bank_code: paymentData.bankCode,
-          description: paymentData.description,
-        })
-        this.message_toast = 'Pembayaran Purchase Order berhasil!'
-        this.show_toast = true
-        this.fetchPurchaseOrders() // Refresh data
+        const response = await api.post(`${BASE_URL}accounting/purchase-payment-journal`, form)
+        console.log('Response Payment: ', response.data.message)
+
+        if (response.data.message == 'Jurnal pembayaran pembelian berhasil dibuat') {
+          try {
+            const responku = await api.post(`${BASE_URL}purchase-orders/pay/${form.purchase_id}`)
+            this.show_toast = true
+            this.message_toast = responku.data.message + ' purchase_id: ' + form.purchase_id
+          } catch (error) {
+            console.log('Error purchase: ', error)
+          }
+        }
       } catch (error) {
         console.error('Error processing payment:', error)
         this.message_toast = 'Gagal memproses pembayaran'
         this.show_toast = true
+        console.log('Error: ', error)
       } finally {
         this.loadingStore.hide()
       }
     },
     tutupToast() {
       this.show_toast = false
+      window.location.reload()
     },
   },
 }

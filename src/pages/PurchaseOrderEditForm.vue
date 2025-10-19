@@ -120,7 +120,7 @@
             <option value="draft">Draft</option>
             <option value="dijalankan">Dijalankan</option>
             <option value="diterima">Diterima</option>
-            <option value="dibayar">Dibayar</option>
+            <option value="dibayarkan">Dibayarkan</option>
           </select>
         </div>
       </div>
@@ -482,7 +482,7 @@ export default {
       )
     },
     isCompleted() {
-      return this.form.status === 'diterima' || this.form.status === 'dibayar'
+      return this.form.status === 'diterima' || this.form.status === 'dibayarkan'
     },
   },
   methods: {
