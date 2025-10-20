@@ -14,6 +14,11 @@ const router = createRouter({
       component: () => import('../user/loginUser.vue'),
     },
     {
+      path: '/register',
+      name: 'register',
+      component: () => import('../user/RegisterUser.vue'),
+    },
+    {
       path: '/main',
       name: 'main',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
@@ -162,12 +167,17 @@ const router = createRouter({
         {
           path: 'list',
           name: 'daftar karyawan',
-          component: () => import('../pages/KaryawanListCard.vue'),
+          component: () => import('../pages/KaryawanList.vue'),
         },
         {
           path: 'absen',
           name: 'absen',
           component: () => import('../pages/TableAbsenKaryawan.vue'),
+        },
+        {
+          path: 'rekap-absen',
+          name: 'rekap absen',
+          component: () => import('../pages/RekapAbsenKaryawan.vue'),
         },
         {
           path: 'kehadiran',

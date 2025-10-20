@@ -13,7 +13,7 @@
             </button>
             <img
               class="ml-3 md:ml-4 h-8 w-auto lg:hidden"
-              src="../assets/images/icon_bengkel_tnp.png"
+              src="../assets/images/logo_carspeed.png"
               alt=""
             />
           </div>

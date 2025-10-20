@@ -5,12 +5,8 @@
         href="#"
         class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white"
       >
-        <img
-          class="w-8 h-8 mr-2"
-          src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/logo.svg"
-          alt="logo"
-        />
-        Flowbite
+        <img class="w-25 h-auto mr-2" src="../assets/images/logo_carspeed.png" alt="logo" />
+        Car Speed
       </a>
       <div
         class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700"
@@ -19,9 +15,25 @@
           <h1
             class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white"
           >
-            Sign in to your account
+            Create an account
           </h1>
-          <form class="space-y-4 md:space-y-6" action="#">
+          <form class="space-y-4 md:space-y-6" @submit.prevent="registerUser">
+            <div>
+              <label
+                for="username"
+                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                >Username</label
+              >
+              <input
+                type="text"
+                name="username"
+                v-model="user.username"
+                id="username"
+                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="username"
+                required=""
+              />
+            </div>
             <div>
               <label
                 for="email"
@@ -40,65 +52,32 @@
             </div>
             <div>
               <label
-                for="password1"
+                for="password"
                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
                 >Password</label
               >
               <input
                 type="password"
-                name="password1"
+                name="password"
                 v-model="user.password"
-                id="password1"
+                id="password"
                 placeholder="••••••••"
                 class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 required=""
               />
             </div>
-            <div>
-              <label
-                for="password2"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                >Confirm Password</label
-              >
-              <input
-                type="password"
-                name="password2"
-                id="password2"
-                v-model="password2"
-                placeholder="••••••••"
-                class="bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                required=""
-              />
-            </div>
-            <div>
-              <div class="relative">
-                <select
-                  id="level"
-                  v-model="user.id_level"
-                  class="peer p-4 pe-9 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-700 disabled:opacity-50 disabled:pointer-events-none focus:pt-6 focus:pb-2 [&:not(:placeholder-shown)]:pt-6 [&:not(:placeholder-shown)]:pb-2 autofill:pt-6 autofill:pb-2"
-                >
-                  <option selected="">Pilih Level User</option>
-                  <option value="1">Admin</option>
-                  <option value="2">Officer</option>
-                </select>
-                <label
-                  class="absolute top-0 start-0 p-4 h-full truncate pointer-events-none transition ease-in-out duration-100 border border-transparent peer-disabled:opacity-50 peer-disabled:pointer-events-none peer-focus:text-xs peer-focus:-translate-y-1.5 peer-focus:text-gray-500 dark:peer-focus:text-neutral-500 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:-translate-y-1.5 peer-[:not(:placeholder-shown)]:text-gray-500 dark:peer-[:not(:placeholder-shown)]:text-neutral-500"
-                  >Level User</label
-                >
-              </div>
-            </div>
-
-            <div></div>
             <button
-              :onclick="RegisterUser"
+              type="submit"
               class="w-full text-white bg-blue-700 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
             >
-              Sign Up sini
+              Sign Up
             </button>
             <p class="text-sm font-light text-gray-500 dark:text-gray-400">
-              Don’t have an account yet?
-              <a href="#" class="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >Sign up</a
+              Already have an account?
+              <router-link
+                to="/login"
+                class="font-medium text-primary-600 hover:underline dark:text-primary-500"
+                >Sign in</router-link
               >
             </p>
           </form>
@@ -108,31 +87,31 @@
   </section>
 </template>
 
-<script>
-import authService from './auth.service'
-import router from '../router'
+<script setup>
 import { ref } from 'vue'
-import { BASE_URL } from '../base.url.utils'
+import api from './axios'
+import router from '../router'
+import { BASE_URL } from '../base.utils.url'
 
-export default {
-  data() {
-    return {
-      user: {
-        email: '',
-        password: '',
-      },
-      password2: '',
+const user = ref({
+  username: '',
+  email: '',
+  password: '',
+})
+
+async function registerUser() {
+  try {
+    const response = await api.post(`${BASE_URL}auth/register`, user.value)
+    if (response.data.status === 'success') {
+      alert('User registered successfully')
+      router.push('/login')
+    } else {
+      alert('Registration failed: ' + response.data.message)
     }
-  },
-  methods: {
-    RegisterUser() {
-      if (this.user.password == this.password2) {
-        return authService.register(this.user)
-      } else {
-        return alert(this.password2)
-      }
-    },
-  },
+  } catch (error) {
+    console.error('Registration error:', error)
+    alert('An error occurred during registration')
+  }
 }
 </script>
 

@@ -101,10 +101,6 @@ const navItems = reactive([
         url: '/wo/booking',
       },
       {
-        text: 'Daftar Penjualan',
-        url: '/wo/sales/list',
-      },
-      {
         text: 'Registrasi Jasa Bengkel',
         url: '/wo/jasa/new',
       },
@@ -136,23 +132,11 @@ const navItems = reactive([
       },
       {
         text: 'Daftar Absen',
-        url: '/karyawan/absen',
+        url: '/karyawan/rekap-absen',
         badge: {
           text: 10,
           style: '',
         },
-      },
-      {
-        text: 'Rekap Kehadiran',
-        url: '/karyawan/kehadiran',
-        badge: {
-          text: 10,
-          style: '',
-        },
-      },
-      {
-        text: 'Rekap Lembur',
-        url: '/karyawan/lemburku',
       },
     ],
   },
@@ -179,10 +163,6 @@ const navItems = reactive([
       {
         text: 'Registrasi Produk Paket',
         url: '/inventory/product/packet/new',
-      },
-      {
-        text: 'Laporan Pengeluaran',
-        url: '/inventory/keluar',
       },
       {
         text: 'Daftar Spplier',
@@ -231,16 +211,8 @@ const navItems = reactive([
         url: '/finansial/biaya/input',
       },
       {
-        text: 'Pembayaran Hutang',
-        url: '/finansial/pembayaran-hutang',
-      },
-      {
-        text: 'Penerimaan Piutang',
-        url: '/finansial/penerimaan-piutang',
-      },
-      {
         text: 'Laba Rugi',
-        url: '/finansial/labarugi',
+        url: '/finansial/profit-loss',
       },
       {
         text: 'Table Hutang-Piutang Mitra',
