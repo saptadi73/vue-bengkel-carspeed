@@ -606,6 +606,18 @@
               </div>
             </div>
           </div>
+          <div class="bg-white rounded-lg p-2 border border-red-200 w-50 mb-5">
+            <div class="text-sm text-gray-600 mb-1">Total Discount</div>
+            <input
+              type="hidden"
+              id="grnad-total-discount"
+              v-model.number="form.grandTotalDiscount"
+              readonly
+            />
+            <div class="text-normal font-bold text-red-600">
+              {{ formatCurrency(grandTotalDiscount) }}
+            </div>
+          </div>
 
           <!-- Pajak Section -->
           <div class="mb-6 flex items-center gap-3">
@@ -646,18 +658,7 @@
                   {{ formatCurrency(grandTotalHarga) }}
                 </div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-red-200">
-                <div class="text-sm text-gray-600 mb-1">Total Discount</div>
-                <input
-                  type="hidden"
-                  id="grnad-total-discount"
-                  v-model.number="form.grandTotalDiscount"
-                  readonly
-                />
-                <div class="text-xl font-bold text-red-600">
-                  {{ formatCurrency(grandTotalDiscount) }}
-                </div>
-              </div>
+
               <div class="bg-white rounded-lg p-4 border border-yellow-200">
                 <div class="text-sm text-gray-600 mb-1">Pajak (11%)</div>
                 <input type="hidden" id="pajak-amount" v-model.number="form.pajak" readonly />
@@ -902,13 +903,13 @@ export default {
     },
 
     calculatetotalPembayaran() {
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      const subtotal = Math.max(0, this.grandTotalHarga)
       return (this.form.totalPembayaran = subtotal + this.pajakAmount)
     },
 
     calculatepajakAmount() {
       if (!this.isUseTax) return 0
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      const subtotal = Math.max(0, this.grandTotalHarga)
       return (this.form.pajak = subtotal * 0.11)
     },
     calculatetotalServiceCost() {

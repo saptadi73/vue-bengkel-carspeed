@@ -217,6 +217,11 @@ const router = createRouter({
           component: () => import('../pages/PergerakanBarang.vue'),
         },
         {
+          path: 'product-movement-report',
+          name: 'product movement report',
+          component: () => import('../pages/ProductMovementReport.vue'),
+        },
+        {
           path: 'pembelian',
           name: 'pembelian',
           component: () => import('../pages/TablePurchasingOrder.vue'),
@@ -249,6 +254,11 @@ const router = createRouter({
           component: () => import('../pages/CashJournalForm.vue'),
         },
         {
+          path: 'cashbook',
+          name: 'cashbook',
+          component: () => import('../pages/CashBookReport.vue'),
+        },
+        {
           path: 'supplier',
           name: 'supplier',
           component: () => import('../pages/DaftarSupplier.vue'),
@@ -274,11 +284,6 @@ const router = createRouter({
           component: () => import('../pages/PurchaseOrderInputForm.vue'),
         },
         {
-          path: 'purchase/:id',
-          name: 'edit purchase',
-          component: () => import('../pages/PurchaseOrderEditForm.vue'),
-        },
-        {
           path: 'biaya',
           name: 'biaya',
           component: () => import('../pages/TableExpenseAll.vue'),
@@ -294,24 +299,14 @@ const router = createRouter({
           component: () => import('../pages/ExpenseEditForm.vue'),
         },
         {
-          path: 'labarugi',
-          name: 'labarugi',
-          component: () => import('../pages/LaporanLabaRugi.vue'),
+          path: 'profit-loss',
+          name: 'profit loss',
+          component: () => import('../pages/ProfitLossReport.vue'),
         },
         {
-          path: 'hutang',
-          name: 'hutang',
-          component: () => import('../components/TableHutang.vue'),
-        },
-        {
-          path: 'piutang',
-          name: 'piutang',
-          component: () => import('../components/TablePiutang.vue'),
-        },
-        {
-          path: 'journal/entry',
-          name: 'journal entry',
-          component: () => import('../pages/JournalEntryForm.vue'),
+          path: 'hutang-piutang',
+          name: 'hutang-piutang',
+          component: () => import('../pages/ReceivablePayableReport.vue'),
         },
         {
           path: 'coa',

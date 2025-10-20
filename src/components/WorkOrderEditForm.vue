@@ -20,6 +20,21 @@
               <h2 class="text-2xl font-bold text-white">Work Order Form</h2>
               <p class="text-blue-100 text-sm">Formulir pemesanan layanan bengkel</p>
             </div>
+            <button
+              type="button"
+              class="modern-btn-activity flex items-center gap-2"
+              @click="printPDF"
+            >
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              Print PDF
+            </button>
           </div>
         </div>
       </div>
@@ -659,6 +674,18 @@
               </div>
             </div>
           </div>
+          <div class="bg-white rounded-lg p-2 border border-red-200 w-50 mb-5">
+            <div class="text-sm text-gray-600 mb-1">Total Discount</div>
+            <input
+              type="hidden"
+              id="grnad-total-discount"
+              v-model.number="form.grandTotalDiscount"
+              readonly
+            />
+            <div class="text-normal font-bold text-red-600">
+              {{ formatCurrency(grandTotalDiscount) }}
+            </div>
+          </div>
 
           <!-- Pajak Section -->
           <div class="mb-6 flex items-center gap-3">
@@ -705,18 +732,7 @@
                   {{ formatCurrency(grandTotalHarga) }}
                 </div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-red-200">
-                <div class="text-sm text-gray-600 mb-1">Total Discount</div>
-                <input
-                  type="hidden"
-                  id="grnad-total-discount"
-                  v-model.number="form.grandTotalDiscount"
-                  readonly
-                />
-                <div class="text-xl font-bold text-red-600">
-                  {{ formatCurrency(grandTotalDiscount) }}
-                </div>
-              </div>
+
               <div class="bg-white rounded-lg p-4 border border-yellow-200">
                 <div class="text-sm text-gray-600 mb-1">Pajak (11%)</div>
                 <input type="hidden" id="pajak-amount" v-model.number="form.pajak" readonly />
@@ -797,6 +813,7 @@ import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 import jsPDF from 'jspdf'
+import logoImage from '@/assets/images/logo_carspeed.png'
 
 export default {
   name: 'WorkOrderForm',
@@ -981,13 +998,13 @@ export default {
     },
 
     calculatetotalPembayaran() {
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      const subtotal = Math.max(0, this.grandTotalHarga)
       return (this.form.totalPembayaran = subtotal + this.pajakAmount)
     },
 
     calculatepajakAmount() {
       if (!this.isUseTax) return 0
-      const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
+      const subtotal = Math.max(0, this.grandTotalHarga)
       return (this.form.pajak = subtotal * 0.11)
     },
     calculatetotalServiceCost() {
@@ -1042,6 +1059,7 @@ export default {
         this.form.no_pol = this.dataWorkorder.vehicle_no_pol
         this.form.type = this.dataWorkorder.vehicle_type
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
+        this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
           ...item,
           cost: item.cost || 0,
@@ -1358,6 +1376,15 @@ export default {
         maximumFractionDigits: 0,
       }).format(val)
     },
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    },
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
@@ -1399,82 +1426,199 @@ export default {
     },
     printPDF() {
       const doc = new jsPDF()
-      const logoUrl = 'https://dummyimage.com/100x40/2563eb/fff&text=LOGO'
-      doc.addImage(logoUrl, 'PNG', 10, 10, 40, 16)
+      // Draw rounded border for logo
+      doc.setLineWidth(0.1)
+      doc.setDrawColor(0, 0, 0)
+      doc.roundedRect(10, 10, 60, 16, 1, 1)
+      doc.addImage(logoImage, 'PNG', 10, 10, 60, 16)
       doc.setFontSize(14)
-      doc.text('PT. Bengkel CarSpeed', 55, 18)
+      doc.text('Bengkel Car Speed', 75, 13)
+      if (this.form.status === 'draft') {
+        doc.setFontSize(9)
+        doc.text('ESTIMASI WORK ORDER', 156, 13)
+        doc.setLineWidth(0.1)
+        doc.rect(155, 10, 40, 5)
+      }
       doc.setFontSize(10)
-      doc.text('Jl. Contoh Alamat No. 123, Jakarta', 55, 25)
-      doc.setLineWidth(0.5)
-      doc.line(10, 30, 200, 30)
+      doc.text('Jl. Suryopranoto No. 10, Gunung Ketur', 75, 20)
+      doc.setFontSize(10)
+      doc.text('Pakualaman, Yogyakarta. Telp 0274-5021953', 75, 25)
+      doc.setLineWidth(0.7)
+      doc.line(10, 33, 200, 33)
+      doc.setFont('Helvetica', 'bold')
       doc.setFontSize(12)
-      doc.text('Work Order', 105, 38, { align: 'center' })
-      let y = 46
+      doc.text('Work Order', 105, 45, { align: 'center' })
+      let y = 55
 
+      doc.setFont('Helvetica', 'normal')
       doc.setFontSize(10)
-      doc.text(`Nama: ${this.form.nama}`, 10, y)
-      doc.text(`HP: ${this.form.hp}`, 110, y)
+      doc.text('Nama', 10, y)
+      doc.text(`: ${this.form.nama}`, 30, y)
+      doc.text('HP', 120, y)
+      doc.text(`: ${this.form.hp}`, 140, y)
       y += 6
-      doc.text(`Alamat: ${this.form.alamat}`, 10, y)
-      doc.text(`Email: ${this.form.email}`, 110, y)
+      doc.text('Alamat', 10, y)
+      doc.text(`: ${this.form.alamat}`, 30, y)
+      doc.text('Email', 120, y)
+      doc.text(`: ${this.form.email}`, 140, y)
+      y += 10
+      doc.text(`No. Polisi`, 10, y)
+      doc.text(`: ${this.form.no_pol}`, 30, y)
+      doc.text(`Brand`, 120, y)
+      doc.text(`: ${this.form.brand}`, 140, y)
       y += 6
-      doc.text(`No. Polisi: ${this.form.no_pol}`, 10, y)
-      doc.text(`Brand: ${this.form.brand}`, 60, y)
-      doc.text(`Type: ${this.form.type}`, 110, y)
-      doc.text(`Model: ${this.form.model}`, 150, y)
+      doc.text(`Type`, 10, y)
+      doc.text(`: ${this.form.type}`, 30, y)
+      doc.text(`Model`, 120, y)
+      doc.text(`: ${this.form.model}`, 140, y)
       y += 6
-      doc.text(`Kapasitas: ${this.form.kapasitas}`, 10, y)
-      y += 8
+      doc.text(`Kapasitas`, 10, y)
+      doc.text(`: ${this.form.kapasitas}`, 30, y)
+      doc.text(`Tanggal`, 120, y)
+      doc.text(`: ${this.formatDate(this.form.tanggal_masuk)}`, 140, y)
+      y += 10
 
       doc.setFontSize(11)
-      doc.text('Product Order (Sparepart):', 10, y)
-      y += 5
+      doc.text('Product Order (Sparepart)', 10, y)
+      y += 6
       doc.setFontSize(9)
+      doc.setFillColor(240, 240, 240)
+      doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
-      doc.text('quantity', 60, y)
-      doc.text('Satuan', 75, y)
-      doc.text('price', 95, y)
-      doc.text('Disc', 120, y)
-      doc.text('Subtotal', 140, y)
-      y += 4
+      doc.text('quantity', 70, y)
+      doc.text('Satuan', 85, y)
+      doc.text('Harga', 115, y)
+      doc.text('Disc', 140, y)
+      doc.text('Subtotal', 170, y)
+      y += 6
       this.form.product_ordered.forEach((item) => {
-        doc.text(String(item.nama), 10, y)
-        doc.text(String(item.quantity), 60, y)
-        doc.text(String(item.satuan), 75, y)
-        doc.text(this.formatCurrency(item.price), 95, y)
-        doc.text(this.formatCurrency(item.discount), 120, y)
-        doc.text(this.formatCurrency(this.item.subtotal), 140, y)
-        y += 4
+        doc.text(String(item.product_name), 10, y)
+        doc.text(String(item.quantity), 73, y)
+        doc.text(String(item.satuan_name), 87, y)
+        doc.text(this.formatCurrency(item.price), 130, y, { align: 'right', maxWidth: 25 })
+        doc.text(item.discount + ' %', 150, y, { align: 'right', maxWidth: 20 })
+        doc.text(this.formatCurrency(item.subtotal), 190, y, { align: 'right', maxWidth: 40 })
+        doc.setLineWidth(0.1)
+        doc.line(10, y + 2, 190, y + 2)
+        y += 6
       })
-      y += 2
+      y += 4
 
       doc.setFontSize(11)
       doc.text('Service Order (Jasa):', 10, y)
-      y += 5
+      y += 6
       doc.setFontSize(9)
+      doc.setFillColor(240, 240, 240)
+      doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
-      doc.text('quantity', 60, y)
-      doc.text('Satuan', 75, y)
-      doc.text('price', 95, y)
-      doc.text('Disc', 120, y)
-      doc.text('Subtotal', 140, y)
+      doc.text('Quantity', 70, y)
+      doc.text('Harga', 95, y)
+      doc.text('Disc', 115, y)
+      doc.text('Subtotal', 145, y)
       y += 4
       this.form.service_ordered.forEach((item) => {
-        doc.text(String(item.nama), 10, y)
-        doc.text(String(item.quantity), 60, y)
-        doc.text(String(item.satuan), 75, y)
-        doc.text(this.formatCurrency(item.price), 95, y)
-        doc.text(this.formatCurrency(item.discount), 120, y)
-        doc.text(this.formatCurrency(this.serviceSubtotal(item)), 140, y)
-        y += 4
+        doc.text(String(item.service_name), 10, y)
+        doc.text(String(item.quantity), 73, y)
+        doc.text(this.formatCurrency(item.price), 105, y, { align: 'right', maxWidth: 25 })
+        doc.text(item.discount + ' %', 125, y, { align: 'right', maxWidth: 20 })
+        doc.text(this.formatCurrency(item.serviceSubtotal), 160, y, {
+          align: 'right',
+          maxWidth: 40,
+        })
+        doc.setLineWidth(0.1)
+        doc.line(10, y + 2, 190, y + 2)
+        y += 6
       })
       y += 4
 
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`Keluhan : ${this.form.keluhan}`, 10, y)
+      doc.text(`Saran : ${this.form.saran}`, 100, y)
+
+      y += 6
+
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.text(`Total Discount :`, 10, y)
+      doc.text(`${this.formatCurrency(this.form.grandTotalDiscount)}`, 70, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 10
+
       doc.setFontSize(11)
-      doc.text(`Total Harga: ${this.formatCurrency(this.grandTotalHarga)}`, 10, y)
-      doc.text(`Total Discount: ${this.formatCurrency(this.grandTotalDiscount)}`, 70, y)
-      doc.text(`Pajak (11%): ${this.formatCurrency(this.pajakAmount)}`, 120, y)
-      doc.text(`Total Bayar: ${this.formatCurrency(this.totalPembayaran)}`, 140, y)
+      doc.text(`Total Harga Spare Part`, 115, y)
+      doc.text(`${this.formatCurrency(this.totalProductHarga)}`, 190, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 6
+      doc.setFontSize(11)
+      doc.text(`Total Harga Jasa`, 115, y)
+      doc.text(`${this.formatCurrency(this.form.totalServiceHarga)}`, 190, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 6
+      doc.setFontSize(11)
+      doc.text(`Total Harga`, 115, y)
+      doc.text(`${this.formatCurrency(this.form.grandTotalHarga)}`, 190, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 6
+
+      doc.setFontSize(11)
+      doc.text(`Pajak (11%)`, 115, y)
+      doc.text(`${this.formatCurrency(this.form.pajak)}`, 190, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 6
+      doc.setFontSize(11)
+      doc.text(`Total Pembayaran`, 115, y)
+      doc.text(`${this.formatCurrency(this.form.totalPembayaran)}`, 190, y, {
+        align: 'right',
+        maxWidth: 30,
+      })
+      y += 20
+
+      doc.setFontSize(11)
+      doc.text(`dibuat oleh`, 40, y, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.text(`admin`, 40, y + 20, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.setLineWidth(0.1)
+      doc.roundedRect(20, y - 6, 40, 30, 1, 1)
+
+      doc.setFontSize(11)
+      doc.text(`Nama Pelanggan`, 100, y, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.text(`${this.form.nama}`, 100, y + 20, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.setLineWidth(0.1)
+      doc.roundedRect(80, y - 6, 40, 30, 1, 1)
+
+      doc.setFontSize(11)
+      doc.text(`Car Speed`, 160, y, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.text(`____________`, 160, y + 20, {
+        align: 'center',
+        maxWidth: 30,
+      })
+      doc.setLineWidth(0.1)
+      doc.roundedRect(140, y - 6, 40, 30, 1, 1)
+
       doc.save('workorder.pdf')
     },
     async getProductsId(item) {

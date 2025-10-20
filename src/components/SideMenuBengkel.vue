@@ -185,16 +185,24 @@ const navItems = reactive([
         url: '/inventory/keluar',
       },
       {
-        text: 'Laporan Pemasukan',
-        url: '/inventory/masuk',
+        text: 'Daftar Spplier',
+        url: '/finansial/supplier',
       },
       {
-        text: 'Laporan Pembelian',
-        url: '/inventory/pembelian',
+        text: 'Daftar Purchase Order',
+        url: '/finansial/purchase/all',
+      },
+      {
+        text: 'Input Supplier Baru',
+        url: '/finansial/supplier/baru',
+      },
+      {
+        text: 'Purchase Order Baru',
+        url: '/finansial/purchase',
       },
       {
         text: 'Laporan Pergerakan',
-        url: '/inventory/gerak',
+        url: '/inventory/product-movement-report',
       },
       {
         text: 'Adjustment',
@@ -212,7 +220,7 @@ const navItems = reactive([
     children: [
       {
         text: 'Cash',
-        url: '/finansial/cashflow',
+        url: '/finansial/cashbook',
       },
       {
         text: 'Daftar Biaya',
@@ -221,22 +229,6 @@ const navItems = reactive([
       {
         text: 'Input Biaya',
         url: '/finansial/biaya/input',
-      },
-      {
-        text: 'Daftar Spplier',
-        url: '/finansial/supplier',
-      },
-      {
-        text: 'Daftar Purchase Order',
-        url: '/finansial/purchase/all',
-      },
-      {
-        text: 'Input Supplier Baru',
-        url: '/finansial/supplier/baru',
-      },
-      {
-        text: 'Purchase Order Baru',
-        url: '/finansial/purchase',
       },
       {
         text: 'Pembayaran Hutang',
@@ -251,12 +243,8 @@ const navItems = reactive([
         url: '/finansial/labarugi',
       },
       {
-        text: 'Table Hutang Mitra',
-        url: '/finansial/hutang',
-      },
-      {
-        text: 'Table Piutang Mitra',
-        url: '/finansial/piutang',
+        text: 'Table Hutang-Piutang Mitra',
+        url: '/finansial/hutang-piutang',
       },
     ],
   },
