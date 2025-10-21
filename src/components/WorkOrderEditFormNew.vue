@@ -1306,13 +1306,13 @@ export default {
       doc.text(`Kapasitas: ${this.form.kapasitas}`, 10, y)
       y += 8
 
-      doc.setFontSize(11)
+      doc.setFontSize(12)
       doc.text('Product Order (Sparepart):', 10, y)
       y += 5
       doc.setFontSize(9)
       doc.text('Nama', 10, y)
       doc.text('quantity', 60, y)
-      doc.text('Satuan', 75, y)
+      // doc.text('Satuan', 75, y)
       doc.text('price', 95, y)
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
@@ -1328,7 +1328,7 @@ export default {
       })
       y += 2
 
-      doc.setFontSize(11)
+      doc.setFontSize(12)
       doc.text('Service Order (Jasa):', 10, y)
       y += 5
       doc.setFontSize(9)
@@ -1350,7 +1350,7 @@ export default {
       })
       y += 4
 
-      doc.setFontSize(11)
+      doc.setFontSize(12)
       doc.text(`Total Harga: ${this.formatCurrency(this.grandTotalHarga)}`, 10, y)
       doc.text(`Total Discount: ${this.formatCurrency(this.grandTotalDiscount)}`, 70, y)
       doc.text(`Pajak (11%): ${this.formatCurrency(this.pajakAmount)}`, 120, y)

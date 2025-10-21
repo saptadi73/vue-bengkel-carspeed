@@ -241,6 +241,16 @@ const router = createRouter({
           name: 'adjusment',
           component: () => import('../pages/InventoryAdjustemnt.vue'),
         },
+        {
+          path: 'adjust/loss',
+          name: 'loss adjusment',
+          component: () => import('../pages/InventoryLossAdjustment.vue'),
+        },
+        {
+          path: 'adjust/consignment',
+          name: 'consignment adjusment',
+          component: () => import('../pages/InventoryConsignmentAdjustment.vue'),
+        },
       ],
     },
     {

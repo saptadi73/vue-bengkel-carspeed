@@ -161,7 +161,7 @@ const navItems = reactive([
         url: '/inventory/product/new',
       },
       {
-        text: 'Daftar Spplier',
+        text: 'Daftar Supplier',
         url: '/finansial/supplier',
       },
       {
@@ -183,6 +183,14 @@ const navItems = reactive([
       {
         text: 'Adjustment',
         url: '/inventory/adjust',
+      },
+      {
+        url: '/inventory/adjust/loss',
+        text: 'Kehilangan Barang',
+      },
+      {
+        url: '/inventory/adjust/consignment',
+        text: 'Konsinyasi',
       },
     ],
   },
