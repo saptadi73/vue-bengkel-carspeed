@@ -56,6 +56,22 @@
             />
           </div>
           <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Metode Pembayaran</label>
+            <select
+              v-model="form.paymentMethod"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              required
+            >
+              <option value="">Pilih Metode Pembayaran</option>
+              <option value="tunai">Tunai</option>
+              <option value="transfer">Transfer</option>
+              <option value="qris">QRIS</option>
+              <option value="debit">Debit</option>
+              <option value="credit">Credit</option>
+              <option value="lainnya">Channel Pembayaran Lain</option>
+            </select>
+          </div>
+          <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Bank Code</label>
             <select
               v-model="form.bankCode"
@@ -137,7 +153,17 @@ const form = reactive({
   description: '',
   expenseId: '',
   date: '',
+  paymentMethod: '',
 })
+
+const paymentMethodLabels = {
+  tunai: 'Tunai',
+  transfer: 'Transfer',
+  qris: 'QRIS',
+  debit: 'Debit',
+  credit: 'Credit',
+  lainnya: 'Channel Pembayaran Lain',
+}
 
 const displayAmount = ref('')
 
@@ -149,8 +175,19 @@ watch(
       displayAmount.value = formatNumber(props.initialAmount)
       form.expenseId = props.expenseId
       form.bankCode = ''
+      form.paymentMethod = ''
       form.description = `${props.expenseName} - ${props.expenseType}`
       form.date = new Date().toISOString().split('T')[0]
+    }
+  },
+)
+
+watch(
+  () => form.paymentMethod,
+  (newVal) => {
+    if (newVal) {
+      const methodLabel = paymentMethodLabels[newVal] || newVal
+      form.description = `${props.expenseName} - ${props.expenseType} - ${methodLabel}`
     }
   },
 )
@@ -175,8 +212,8 @@ const closeModal = () => {
 }
 
 const handleSubmit = () => {
-  if (!form.amount || !form.bankCode || !form.date) {
-    alert('Amount, Bank Code, dan Tanggal wajib diisi!')
+  if (!form.amount || !form.paymentMethod || !form.bankCode || !form.date) {
+    alert('Amount, Metode Pembayaran, Bank Code, dan Tanggal wajib diisi!')
     return
   }
   emit('submit', { ...form, expenseId: form.expenseId })

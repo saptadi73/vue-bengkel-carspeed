@@ -356,7 +356,7 @@ export default {
     },
     calculateItemTotal(index) {
       const item = this.form.items[index]
-      item.subtotal = item.quantity * item.price * (1 - item.discount / 100)
+      item.subtotal = item.quantity * item.price - item.discount
     },
     handleFileChange(event) {
       this.form.document = event.target.files[0]

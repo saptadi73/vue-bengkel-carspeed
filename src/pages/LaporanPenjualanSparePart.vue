@@ -7,8 +7,8 @@
 
     <!-- Filter -->
     <div class="bg-white rounded-2xl shadow p-6">
-      <h2 class="text-lg font-semibold mb-4">Filter Tanggal</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <h2 class="text-lg font-semibold mb-4">Filter & Pencarian</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Tanggal Mulai</label>
           <input
@@ -27,6 +27,15 @@
             required
           />
         </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Cari Workorder No</label>
+          <input
+            type="text"
+            v-model="searchWorkorderNo"
+            class="w-full border rounded-xl px-3 py-2"
+            placeholder="Masukkan nomor workorder"
+          />
+        </div>
         <div class="flex items-end">
           <button
             @click="fetchReport"
@@ -37,27 +46,47 @@
           </button>
         </div>
       </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Cari Customer Name</label>
+          <input
+            type="text"
+            v-model="searchCustomerName"
+            class="w-full border rounded-xl px-3 py-2"
+            placeholder="Masukkan nama customer"
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Cari Product Name</label>
+          <input
+            type="text"
+            v-model="searchProductName"
+            class="w-full border rounded-xl px-3 py-2"
+            placeholder="Masukkan nama produk"
+          />
+        </div>
+      </div>
     </div>
 
     <!-- Summary -->
-    <div v-if="reportData.total_quantity" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div v-if="filteredItems && filteredItems.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Total Quantity</h3>
-        <p class="text-2xl font-bold text-blue-600">{{ reportData.total_quantity }}</p>
+        <p class="text-2xl font-bold text-blue-600">{{ filteredTotalQuantity }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Total Sales</h3>
-        <p class="text-2xl font-bold text-green-600">{{ formatIDR(reportData.total_sales) }}</p>
+        <p class="text-2xl font-bold text-green-600">{{ formatIDR(filteredTotalSales) }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Total Items</h3>
-        <p class="text-2xl font-bold text-purple-600">{{ reportData.items.length }}</p>
+        <p class="text-2xl font-bold text-purple-600">{{ filteredItems.length }}</p>
       </div>
     </div>
 
     <!-- Table -->
     <div
-      v-if="reportData.items && reportData.items.length"
+      v-if="filteredItems && filteredItems.length"
       class="bg-white rounded-2xl shadow overflow-x-auto"
     >
       <table class="min-w-full text-sm">
@@ -75,7 +104,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="item in reportData.items"
+            v-for="item in filteredItems"
             :key="item.workorder_no + item.product_name"
             class="border-t"
           >
@@ -98,14 +127,52 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '@/user/axios'
 import { BASE_URL } from '@/base.utils.url'
 
 const startDate = ref('')
 const endDate = ref('')
+const searchWorkorderNo = ref('')
+const searchCustomerName = ref('')
+const searchProductName = ref('')
 const reportData = ref({})
 const hasFetched = ref(false)
+
+// Computed properties for filtering and calculations
+const filteredItems = computed(() => {
+  if (!reportData.value.items) return []
+
+  let items = reportData.value.items
+
+  if (searchWorkorderNo.value) {
+    items = items.filter((item) =>
+      item.workorder_no.toLowerCase().includes(searchWorkorderNo.value.toLowerCase()),
+    )
+  }
+
+  if (searchCustomerName.value) {
+    items = items.filter((item) =>
+      item.customer_name.toLowerCase().includes(searchCustomerName.value.toLowerCase()),
+    )
+  }
+
+  if (searchProductName.value) {
+    items = items.filter((item) =>
+      item.product_name.toLowerCase().includes(searchProductName.value.toLowerCase()),
+    )
+  }
+
+  return items
+})
+
+const filteredTotalQuantity = computed(() => {
+  return filteredItems.value.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+})
+
+const filteredTotalSales = computed(() => {
+  return filteredItems.value.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
+})
 
 onMounted(() => {
   // Set default dates to current month

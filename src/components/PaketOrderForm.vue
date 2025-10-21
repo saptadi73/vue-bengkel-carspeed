@@ -28,6 +28,15 @@
               {{ productku.name }}
             </option>
           </select>
+          <div class="flex flex-col">
+            <label class="text-xs">Stock</label>
+            <input
+              v-model.number="item.stockku"
+              type="number"
+              class="w-14 text-xs border border-red-400 rounded-lg px-2 py-1 text-blue-600"
+              readonly
+            />
+          </div>
 
           <!-- Quantity -->
           <input
@@ -37,7 +46,6 @@
             class="modern-input peer"
             @input="calculateSubtotal(item)"
           />
-          <input v-model.number="item.stock" type="hidden" placeholder="Stock" />
 
           <!-- Select Product -->
           <select v-model="item.satuan_id" class="modern-select peer">
@@ -231,9 +239,9 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
-        const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
-        if (data.total_stock) this.stockku = data.total_stock
+        item.stockku = response.data.data.total_stock
+        console.log('hasil getStock: ', response.data.data.total_stock)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -276,25 +284,17 @@ export default {
     calculateSubtotal(item) {
       this.getStock(item)
       console.log('Stocknya: ', this.stockku)
-      if (item.quantity > this.stockku) {
-        item.subtotal = 0
-        item.quantity = 0
-        item.price = 0
-        this.show_toast = true
-        this.message_toast = 'Quantity melebihi stock yang ada!'
-      } else {
-        const qty = item.quantity || 0
-        const price = item.price || 0
-        const discount = item.discount || 0
-        item.subtotal = price * qty - price * qty * (discount / 100)
-      }
+      const qty = item.quantity || 0
+      const price = item.price || 0
+      const discount = item.discount || 0
+      item.subtotal = price * qty - discount
     },
 
     calculateSubtotalService(item) {
       const qty = item.quantity || 0
       const price = item.price || 0
       const discount = item.discount || 0
-      item.subtotal = price * qty - price * qty * (discount / 100)
+      item.subtotal = price * qty - discount
     },
 
     async getProduct() {
@@ -802,5 +802,38 @@ h3 {
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Bikin input “telanjang” */
+.naked-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+
+  /* Warisan tipografi dari parent supaya benar-benar terlihat seperti teks biasa */
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+
+  /* Lebar mengikuti panjang teks */
+  width: auto;
+  min-width: 1ch;
+  caret-color: currentColor;
+
+  /* Hilangkan styling default browser tertentu */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Opsional: placeholder lebih samar */
+.naked-input::placeholder {
+  opacity: 0.4;
+}
+
+/* Opsional: garis tipis saat fokus biar aksesibel tapi tetap minimalis */
+.naked-input:focus {
+  box-shadow: inset 0 -1px 0 currentColor;
 }
 </style>

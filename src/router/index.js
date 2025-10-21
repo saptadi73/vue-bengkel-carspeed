@@ -241,11 +241,6 @@ const router = createRouter({
           name: 'adjusment',
           component: () => import('../pages/InventoryAdjustemnt.vue'),
         },
-        {
-          path: 'create/po',
-          name: 'create PO',
-          component: () => import('../pages/PurchaseOrderSampleForm.vue'),
-        },
       ],
     },
     {
@@ -292,6 +287,11 @@ const router = createRouter({
           path: 'purchase',
           name: 'purchase',
           component: () => import('../pages/PurchaseOrderInputForm.vue'),
+        },
+        {
+          path: 'purchase/:id',
+          name: 'edit purchase order',
+          component: () => import('../pages/PurchaseOrderEditForm.vue'),
         },
         {
           path: 'biaya',

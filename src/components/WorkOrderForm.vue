@@ -120,12 +120,44 @@
               <div class="info-value">{{ form.kapasitas }}</div>
             </div>
             <div class="info-card">
+              <label class="info-label">Tahun</label>
+              <div class="info-value">{{ form.tahun }}</div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model.number="form.kilometer"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                />
+                <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <select
+                  v-model="form.status_pembayaran"
+                  id="status_pembayaran"
+                  class="modern-select peer"
+                >
+                  <option value="" disabled selected>Pilih Status Pembayaran</option>
+                  <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
+                  <option value="belum_lunas">Belum Lunas</option>
+                  <option value="lunas">Lunas</option>
+                </select>
+                <label class="modern-select-label">Status Pembayaran</label>
+              </div>
+            </div>
+            <div class="info-card">
               <div class="relative">
                 <select v-model="form.status" id="status" class="modern-select peer">
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
-                  <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
+                  <option value="dikerjakan">dikerjakan</option>
+                  <option value="selesai">selesai</option>
+                  <option value="dibayar">dibayar</option>
                 </select>
                 <label class="modern-select-label">Status</label>
               </div>
@@ -265,9 +297,11 @@
                       v-model.number="item.quantity"
                       type="number"
                       min="1"
+                      :max="item.stockku"
                       class="modern-input peer"
                       placeholder=" "
                       @change="productSubtotal(item)"
+                      @input="validateQuantity(item)"
                     />
                     <label class="modern-label">quantity</label>
                   </div>
@@ -317,6 +351,16 @@
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
+                  <div class="flex gap-2">
+                    <label class="text-xs">Stok</label>
+                    <input
+                      v-model.number="item.stockku"
+                      type="number"
+                      min="0"
+                      class="naked-input"
+                      placeholder=" "
+                    />
+                  </div>
                   <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
@@ -428,6 +472,22 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800">Service Order (Jasa)</h3>
               </div>
+
+              <button
+                type="button"
+                class="modern-btn-primary flex items-center gap-2"
+                @click="openAddServiceModal"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Tambah Service Baru
+              </button>
               <button
                 type="button"
                 class="modern-btn-secondary flex items-center gap-2"
@@ -516,7 +576,7 @@
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
-                <div class="flex justify-end">
+                <div class="flex gap-2 justify-end">
                   <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
@@ -720,6 +780,83 @@
   </div>
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+
+  <!-- Add Service Modal -->
+  <div
+    v-if="showAddServiceModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Service Baru</h3>
+        <button @click="closeAddServiceModal" class="text-gray-500 hover:text-gray-700">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <form @submit.prevent="submitNewService" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Service</label>
+          <input
+            v-model="newService.name"
+            type="text"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <textarea
+            v-model="newService.description"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Harga</label>
+          <input
+            v-model.number="newService.price"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+          <input
+            v-model.number="newService.cost"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button
+            type="button"
+            @click="closeAddServiceModal"
+            class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Tambah Service
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -763,6 +900,9 @@ export default {
         type: '',
         model: '',
         kapasitas: '',
+        tahun: '',
+        kilometer: 0,
+        status_pembayaran: '',
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -779,6 +919,13 @@ export default {
       paketList: [],
 
       isUseTax: false,
+      showAddServiceModal: false,
+      newService: {
+        name: '',
+        description: '',
+        price: 0,
+        cost: 0,
+      },
     }
   },
   computed: {
@@ -867,12 +1014,10 @@ export default {
     },
 
     calculatetotalProductDiscount() {
-      // Discount as percentage
+      // Discount as direct amount
       return this.form.product_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
         const discount = Number(item.discount) || 0
-        return sum + price * quantity * (discount / 100)
+        return sum + discount
       }, 0)
     },
 
@@ -884,13 +1029,10 @@ export default {
     },
 
     calculatetotalServiceDiscount() {
-      // Discount as percentage, like in totalProductDiscount
+      // Discount as direct amount
       return (this.form.totalServiceDiscount = this.form.service_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
         const discount = Number(item.discount) || 0
-        // discount is percentage (0-100)
-        return sum + price * quantity * (discount / 100)
+        return sum + discount
       }, 0))
     },
 
@@ -955,6 +1097,7 @@ export default {
         this.form.model = this.dataVehiclesPelanggan[0].model
         this.form.no_pol = this.dataVehiclesPelanggan[0].no_pol
         this.form.type = this.dataVehiclesPelanggan[0].type
+        this.form.tahun = this.dataVehiclesPelanggan[0].tahun
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -983,13 +1126,7 @@ export default {
         item.stockku = data.total_stock || 0
 
         // Validasi: jika quantity melebihi stok, reset dan beri warning
-        if (item.quantity > item.stockku) {
-          this.message_toast = `Stok untuk produk "${item.product_name || item.product_id}" tidak mencukupi (tersedia: ${item.stockku}, diminta: ${item.quantity}). Quantity, harga, dan subtotal direset ke 0.`
-          this.show_toast = true
-          item.quantity = 0
-          item.price = 0
-          item.subtotal = 0
-        }
+        this.validateQuantity(item)
       } catch (error) {
         console.log('error: ', error)
         item.stockku = 0
@@ -1089,7 +1226,7 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      item.subtotal = Math.max(0, quantity * price - quantity * price * (discount / 100))
+      item.subtotal = Math.max(0, quantity * price - discount)
       item.productSubtotalHPP = this.productSubtotalHPP(item)
       // Cek stok setiap kali subtotal dihitung
       this.getStock(item)
@@ -1099,11 +1236,8 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      // Diskon sebagai percentage
-      return (item.serviceSubtotal = Math.max(
-        0,
-        quantity * price - quantity * price * (discount / 100),
-      ))
+      // Diskon sebagai amount langsung
+      return (item.serviceSubtotal = Math.max(0, quantity * price - discount))
     },
     updateServiceSubtotal(item) {
       // Trigger reactivity for service subtotal when discount changes
@@ -1186,6 +1320,7 @@ export default {
       doc.text(`Model: ${this.form.model}`, 150, y)
       y += 6
       doc.text(`Kapasitas: ${this.form.kapasitas}`, 10, y)
+      doc.text(`Tahun: ${this.form.tahun}`, 110, y)
       y += 8
 
       doc.setFontSize(11)
@@ -1270,6 +1405,46 @@ export default {
         this.updateServiceSubtotal(item)
       } catch (error) {
         console.log('error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    validateQuantity(item) {
+      if (item.quantity > item.stockku) {
+        item.quantity = item.stockku
+        this.show_toast = true
+        this.message_toast = `Quantity untuk ${item.product_name} tidak boleh melebihi stok (${item.stockku}).`
+      }
+    },
+    openAddServiceModal() {
+      this.showAddServiceModal = true
+    },
+    closeAddServiceModal() {
+      this.showAddServiceModal = false
+      this.newService = {
+        name: '',
+        description: '',
+        price: 0,
+        cost: 0,
+      }
+    },
+    async submitNewService() {
+      try {
+        this.loadingStore.show()
+        const response = await api.post(
+          `${this.BASE_URL}products/service/create/new`,
+          this.newService,
+        )
+        console.log('New service created:', response.data.data)
+        // Add the new service to the services array
+        this.services.push(response.data.data)
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Service berhasil ditambahkan!'
+        this.closeAddServiceModal()
+      } catch (error) {
+        console.error('Error creating service:', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Gagal menambahkan service!'
       } finally {
         this.loadingStore.hide()
       }

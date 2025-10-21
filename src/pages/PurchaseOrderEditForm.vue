@@ -161,7 +161,7 @@
                   Unit Price
                 </th>
                 <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
-                  Discount (%)
+                  Discount (Amount)
                 </th>
                 <th class="px-4 py-2 border-b text-left text-sm font-medium text-gray-700">
                   Total
@@ -659,7 +659,7 @@ export default {
     },
     calculateItemTotal(index) {
       const item = this.form.items[index]
-      item.subtotal = item.quantity * item.price * (1 - item.discount / 100)
+      item.subtotal = item.quantity * item.price - item.discount
       this.checkItemChanges(index)
     },
     checkItemChanges(index) {

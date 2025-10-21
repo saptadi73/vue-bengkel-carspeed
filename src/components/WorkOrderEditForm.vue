@@ -99,6 +99,39 @@
               <div class="info-value">{{ form.kapasitas }}</div>
             </div>
             <div class="info-card">
+              <label class="info-label">Tahun</label>
+              <div class="info-value">{{ form.tahun }}</div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model.number="form.kilometer"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  :disabled="isCompleted"
+                />
+                <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <select
+                  v-model="form.status_pembayaran"
+                  id="status_pembayaran"
+                  class="modern-select peer"
+                  :disabled="isCompleted"
+                >
+                  <option value="" disabled selected>Pilih Status Pembayaran</option>
+                  <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
+                  <option value="belum_lunas">Belum Lunas</option>
+                  <option value="lunas">Lunas</option>
+                </select>
+                <label class="modern-select-label">Status Pembayaran</label>
+              </div>
+            </div>
+            <div class="info-card">
               <div class="relative">
                 <select
                   v-model="form.status"
@@ -271,9 +304,11 @@
                       v-model.number="item.quantity"
                       type="number"
                       min="1"
+                      :max="item.stockku"
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
+                      @input="validateQuantity(item)"
                       :disabled="isCompleted"
                     />
                     <label class="modern-label">quantity</label>
@@ -330,6 +365,17 @@
                   </div>
                 </div>
                 <div class="gap-3 flex justify-end">
+                  <div class="flex gap-2">
+                    <label class="text-xs">Stock</label>
+                    <input
+                      v-model.number="item.stockku"
+                      type="number"
+                      min="0"
+                      class="naked-input"
+                      placeholder=" "
+                      :disabled="isCompleted"
+                    />
+                  </div>
                   <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
@@ -465,6 +511,23 @@
                 </div>
                 <h3 class="text-xl font-bold text-gray-800">Service Order (Jasa)</h3>
               </div>
+
+              <button
+                type="button"
+                class="modern-btn-primary flex items-center gap-2"
+                @click="openAddServiceModal"
+                :disabled="isCompleted"
+              >
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                Tambah Service Baru
+              </button>
               <button
                 type="button"
                 class="modern-btn-secondary flex items-center gap-2"
@@ -801,6 +864,83 @@
   </div>
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+
+  <!-- Add Service Modal -->
+  <div
+    v-if="showAddServiceModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Tambah Service Baru</h3>
+        <button @click="closeAddServiceModal" class="text-gray-500 hover:text-gray-700">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <form @submit.prevent="submitNewService" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Service</label>
+          <input
+            v-model="newService.name"
+            type="text"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <textarea
+            v-model="newService.description"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Harga</label>
+          <input
+            v-model.number="newService.price"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+          <input
+            v-model.number="newService.cost"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button
+            type="button"
+            @click="closeAddServiceModal"
+            class="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            Tambah Service
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -845,6 +985,9 @@ export default {
         type: '',
         model: '',
         kapasitas: '',
+        tahun: '',
+        kilometer: 0,
+        status_pembayaran: 'belum_ada_pembayaran',
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -861,6 +1004,13 @@ export default {
       paketList: [],
 
       isUseTax: false,
+      showAddServiceModal: false,
+      newService: {
+        name: '',
+        description: '',
+        price: 0,
+        cost: 0,
+      },
     }
   },
   computed: {
@@ -958,12 +1108,10 @@ export default {
     },
 
     calculatetotalProductDiscount() {
-      // Discount as percentage
+      // Discount as direct amount
       return this.form.product_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
         const discount = Number(item.discount) || 0
-        return sum + price * quantity * (discount / 100)
+        return sum + discount
       }, 0)
     },
 
@@ -979,13 +1127,10 @@ export default {
     },
 
     calculatetotalServiceDiscount() {
-      // Discount as percentage, like in totalProductDiscount
+      // Discount as direct amount
       return (this.form.totalServiceDiscount = this.form.service_ordered.reduce((sum, item) => {
-        const quantity = Number(item.quantity) || 0
-        const price = Number(item.price) || 0
         const discount = Number(item.discount) || 0
-        // discount is percentage (0-100)
-        return sum + price * quantity * (discount / 100)
+        return sum + discount
       }, 0))
     },
 
@@ -1058,6 +1203,9 @@ export default {
         this.form.model = this.dataWorkorder.vehicle_model
         this.form.no_pol = this.dataWorkorder.vehicle_no_pol
         this.form.type = this.dataWorkorder.vehicle_type
+        this.form.tahun = this.dataWorkorder.vehicle_tahun || ''
+        this.form.kilometer = this.dataWorkorder.kilometer || 0
+        this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -1120,13 +1268,7 @@ export default {
         item.stockku = data.total_stock || 0
 
         // Validasi: jika quantity melebihi stok, reset dan beri warning
-        if (item.quantity > item.stockku) {
-          this.message_toast = `Stok untuk produk "${item.product_name || item.product_id}" tidak mencukupi (tersedia: ${item.stockku}, diminta: ${item.quantity}). Quantity, harga, dan subtotal direset ke 0.`
-          this.show_toast = true
-          item.quantity = 0
-          item.price = 0
-          item.subtotal = 0
-        }
+        this.validateQuantity(item)
       } catch (error) {
         console.log('error: ', error)
         item.stockku = 0
@@ -1247,7 +1389,7 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      item.subtotal = Math.max(0, quantity * price - quantity * price * (discount / 100))
+      item.subtotal = Math.max(0, quantity * price - discount)
       item.productSubtotalHPP = this.productSubtotalHPP(item)
       // Cek stok setiap kali subtotal dihitung
       this.getStock(item)
@@ -1350,11 +1492,8 @@ export default {
       const quantity = Number(item.quantity) || 0
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
-      // Diskon sebagai percentage
-      return (item.serviceSubtotal = Math.max(
-        0,
-        quantity * price - quantity * price * (discount / 100),
-      ))
+      // Diskon sebagai amount langsung
+      return (item.serviceSubtotal = Math.max(0, quantity * price - discount))
     },
     updateServiceSubtotal(item) {
       // Trigger reactivity for service subtotal when discount changes
@@ -1451,52 +1590,52 @@ export default {
       let y = 55
 
       doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(10)
+      doc.setFontSize(8)
       doc.text('Nama', 10, y)
       doc.text(`: ${this.form.nama}`, 30, y)
       doc.text('HP', 120, y)
       doc.text(`: ${this.form.hp}`, 140, y)
-      y += 6
+      y += 4
       doc.text('Alamat', 10, y)
       doc.text(`: ${this.form.alamat}`, 30, y)
       doc.text('Email', 120, y)
       doc.text(`: ${this.form.email}`, 140, y)
-      y += 10
+      y += 4
       doc.text(`No. Polisi`, 10, y)
       doc.text(`: ${this.form.no_pol}`, 30, y)
       doc.text(`Brand`, 120, y)
       doc.text(`: ${this.form.brand}`, 140, y)
-      y += 6
+      y += 4
       doc.text(`Type`, 10, y)
       doc.text(`: ${this.form.type}`, 30, y)
       doc.text(`Model`, 120, y)
       doc.text(`: ${this.form.model}`, 140, y)
-      y += 6
-      doc.text(`Kapasitas`, 10, y)
-      doc.text(`: ${this.form.kapasitas}`, 30, y)
+      y += 4
+      doc.text(`Kilometer`, 10, y)
+      doc.text(`: ${this.form.kilometer}`, 30, y)
       doc.text(`Tanggal`, 120, y)
       doc.text(`: ${this.formatDate(this.form.tanggal_masuk)}`, 140, y)
-      y += 10
+      y += 8
 
       doc.setFontSize(11)
       doc.text('Product Order (Sparepart)', 10, y)
       y += 6
-      doc.setFontSize(9)
-      doc.setFillColor(240, 240, 240)
+      doc.setFontSize(10)
+      doc.setFillColor(200, 200, 200)
       doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
-      doc.text('quantity', 70, y)
+      doc.text('Quantity', 70, y)
       doc.text('Satuan', 85, y)
       doc.text('Harga', 115, y)
-      doc.text('Disc', 140, y)
+      doc.text('Disc', 150, y)
       doc.text('Subtotal', 170, y)
       y += 6
       this.form.product_ordered.forEach((item) => {
         doc.text(String(item.product_name), 10, y)
         doc.text(String(item.quantity), 73, y)
         doc.text(String(item.satuan_name), 87, y)
-        doc.text(this.formatCurrency(item.price), 130, y, { align: 'right', maxWidth: 25 })
-        doc.text(item.discount + ' %', 150, y, { align: 'right', maxWidth: 20 })
+        doc.text(this.formatCurrency(item.price), 125, y, { align: 'right', maxWidth: 25 })
+        doc.text(this.formatCurrency(item.discount), 155, y, { align: 'right', maxWidth: 20 })
         doc.text(this.formatCurrency(item.subtotal), 190, y, { align: 'right', maxWidth: 40 })
         doc.setLineWidth(0.1)
         doc.line(10, y + 2, 190, y + 2)
@@ -1507,21 +1646,21 @@ export default {
       doc.setFontSize(11)
       doc.text('Service Order (Jasa):', 10, y)
       y += 6
-      doc.setFontSize(9)
-      doc.setFillColor(240, 240, 240)
+      doc.setFontSize(10)
+      doc.setFillColor(200, 200, 200)
       doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
-      doc.text('Quantity', 70, y)
-      doc.text('Harga', 95, y)
-      doc.text('Disc', 115, y)
-      doc.text('Subtotal', 145, y)
-      y += 4
+      doc.text('Quantity', 62, y)
+      doc.text('Harga', 105, y)
+      doc.text('Disc', 135, y)
+      doc.text('Subtotal', 160, y)
+      y += 6
       this.form.service_ordered.forEach((item) => {
         doc.text(String(item.service_name), 10, y)
-        doc.text(String(item.quantity), 73, y)
-        doc.text(this.formatCurrency(item.price), 105, y, { align: 'right', maxWidth: 25 })
-        doc.text(item.discount + ' %', 125, y, { align: 'right', maxWidth: 20 })
-        doc.text(this.formatCurrency(item.serviceSubtotal), 160, y, {
+        doc.text(String(item.quantity), 70, y)
+        doc.text(this.formatCurrency(item.price), 115, y, { align: 'right', maxWidth: 25 })
+        doc.text(this.formatCurrency(item.discount), 140, y, { align: 'right', maxWidth: 20 })
+        doc.text(this.formatCurrency(item.serviceSubtotal), 175, y, {
           align: 'right',
           maxWidth: 40,
         })
@@ -1584,28 +1723,16 @@ export default {
       y += 20
 
       doc.setFontSize(11)
-      doc.text(`dibuat oleh`, 40, y, {
+      doc.text(`Nama Pelanggan`, 40, y, {
         align: 'center',
         maxWidth: 30,
       })
-      doc.text(`admin`, 40, y + 20, {
+      doc.text(`${this.form.nama}`, 40, y + 20, {
         align: 'center',
         maxWidth: 30,
       })
       doc.setLineWidth(0.1)
       doc.roundedRect(20, y - 6, 40, 30, 1, 1)
-
-      doc.setFontSize(11)
-      doc.text(`Nama Pelanggan`, 100, y, {
-        align: 'center',
-        maxWidth: 30,
-      })
-      doc.text(`${this.form.nama}`, 100, y + 20, {
-        align: 'center',
-        maxWidth: 30,
-      })
-      doc.setLineWidth(0.1)
-      doc.roundedRect(80, y - 6, 40, 30, 1, 1)
 
       doc.setFontSize(11)
       doc.text(`Car Speed`, 160, y, {
@@ -1620,6 +1747,46 @@ export default {
       doc.roundedRect(140, y - 6, 40, 30, 1, 1)
 
       doc.save('workorder.pdf')
+    },
+    openAddServiceModal() {
+      this.showAddServiceModal = true
+    },
+    closeAddServiceModal() {
+      this.showAddServiceModal = false
+      this.newService = {
+        name: '',
+        description: '',
+        price: 0,
+        cost: 0,
+      }
+    },
+    async submitNewService() {
+      try {
+        this.loadingStore.show()
+        const response = await api.post(
+          `${this.BASE_URL}products/service/create/new`,
+          this.newService,
+        )
+        console.log('New service created:', response.data.data)
+        // Add the new service to the services array
+        this.services.push(response.data.data)
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Service berhasil ditambahkan!'
+        this.closeAddServiceModal()
+      } catch (error) {
+        console.error('Error creating service:', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Gagal menambahkan service!'
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    validateQuantity(item) {
+      if (item.quantity > item.stockku) {
+        item.quantity = item.stockku
+        this.show_toast = true
+        this.message_toast = `Quantity untuk ${item.product_name} tidak boleh melebihi stok (${item.stockku}).`
+      }
     },
     async getProductsId(item) {
       if (!item.product_id) return
