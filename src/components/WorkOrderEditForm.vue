@@ -1,7 +1,7 @@
 <template>
-  <div class="max-w-6xl mx-auto mt-8 mb-8">
+  <div class="max-w-8xl mx-auto mt-8 mb-8">
     <!-- Main Card Container -->
-    <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-xl border border-slate-700 overflow-hidden">
       <!-- Gradient Header -->
       <div class="gradient-header px-8 py-6">
         <div class="flex items-center justify-between">
@@ -17,24 +17,9 @@
               </svg>
             </div>
             <div>
-              <h2 class="text-2xl font-bold text-white">Work Order Form</h2>
-              <p class="text-blue-100 text-sm">Formulir pemesanan layanan bengkel</p>
+              <h2 class="text-xl font-semibold text-white">Work Order Form</h2>
+              <p class="text-slate-300 text-sm">Formulir pemesanan layanan bengkel</p>
             </div>
-            <button
-              type="button"
-              class="modern-btn-activity flex items-center gap-2"
-              @click="printPDF"
-            >
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-                />
-              </svg>
-              Print PDF
-            </button>
           </div>
         </div>
       </div>
@@ -43,7 +28,7 @@
       <div class="px-8 py-8">
         <!-- Customer Information Section -->
         <div class="mb-8">
-          <div class="flex items-center gap-2 mb-6">
+          <div class="flex items-center gap-2 mb-2">
             <div class="bg-blue-100 p-2 rounded-lg">
               <svg
                 class="h-5 w-5 text-blue-600"
@@ -59,9 +44,9 @@
                 />
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-800">Informasi Pelanggan & Kendaraan</h3>
+            <h3 class="text-lg font-bold text-gray-800">Informasi Pelanggan & Kendaraan</h3>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="info-card">
               <label class="info-label">Nama Pelanggan</label>
               <div class="info-value">{{ form.nama }}</div>
@@ -74,14 +59,15 @@
               <label class="info-label">Email</label>
               <div class="info-value">{{ form.email }}</div>
             </div>
-            <div class="info-card lg:col-span-3">
-              <label class="info-label">Alamat</label>
-              <div class="info-value">{{ form.alamat }}</div>
-            </div>
             <div class="info-card">
               <label class="info-label">No. Polisi</label>
               <div class="info-value">{{ form.no_pol }}</div>
             </div>
+            <div class="info-card lg:col-span-3">
+              <label class="info-label">Alamat</label>
+              <div class="info-value">{{ form.alamat }}</div>
+            </div>
+
             <div class="info-card">
               <label class="info-label">Brand</label>
               <div class="info-value">{{ form.brand }}</div>
@@ -113,6 +99,26 @@
                   :disabled="isCompleted"
                 />
                 <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="flex-1 relative">
+                <select
+                  v-model="form.karyawan_id"
+                  class="modern-select peer"
+                  required
+                  :disabled="isCompleted"
+                >
+                  <option value="" disabled selected>-- Pilih Karyawan --</option>
+                  <option
+                    v-for="karyawanItem in karyawan"
+                    :key="karyawanItem.id"
+                    :value="karyawanItem.id"
+                  >
+                    {{ karyawanItem.nama }}
+                  </option>
+                </select>
+                <label class="modern-select-label">Karyawan</label>
               </div>
             </div>
             <div class="info-card">
@@ -151,48 +157,6 @@
           </div>
         </div>
 
-        <!-- Karyawan Selection Section -->
-        <div class="mb-8">
-          <div class="flex items-center gap-2 mb-4">
-            <div class="bg-indigo-100 p-2 rounded-lg">
-              <svg
-                class="h-5 w-5 text-indigo-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800">Pilih Karyawan</h3>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-4">
-            <div class="flex-1 relative">
-              <select
-                v-model="form.karyawan_id"
-                class="modern-select peer"
-                required
-                :disabled="isCompleted"
-              >
-                <option value="" disabled selected>-- Pilih Karyawan --</option>
-                <option
-                  v-for="karyawanItem in karyawan"
-                  :key="karyawanItem.id"
-                  :value="karyawanItem.id"
-                >
-                  {{ karyawanItem.nama }}
-                </option>
-              </select>
-              <label class="modern-select-label">Karyawan</label>
-            </div>
-          </div>
-        </div>
-
         <form @submit.prevent="submitForm">
           <!-- Input Keluhan dan Saran -->
           <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -218,25 +182,11 @@
             </div>
           </div>
 
-          <!-- Keterangan Section -->
-          <div class="mb-6">
-            <div class="relative">
-              <textarea
-                v-model="form.keterangan"
-                class="modern-textarea peer"
-                placeholder=" "
-                rows="4"
-                :disabled="isCompleted"
-              ></textarea>
-              <label class="modern-textarea-label">Keterangan</label>
-            </div>
-          </div>
-
           <!-- Product Order Section -->
           <div class="mb-8">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center justify-between mb-1">
               <div class="flex items-center gap-2">
-                <div class="bg-green-100 p-2 rounded-lg">
+                <div class="bg-green-100 p-1 rounded-lg">
                   <svg
                     class="h-5 w-5 text-green-600"
                     fill="none"
@@ -251,7 +201,7 @@
                     />
                   </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-800">Product Order (Sparepart)</h3>
+                <h3 class="text-lg font-bold text-gray-800">Product Order (Sparepart)</h3>
               </div>
               <button
                 type="button"
@@ -271,15 +221,28 @@
               </button>
             </div>
 
+            <div class="grid grid-cols-17 gap-2 mb-1 p-1">
+              <div class="col-span-3">Product</div>
+              <div>Stock</div>
+              <div>Quantity</div>
+              <div class="hidden">Satuan</div>
+              <div class="col-span-2">HPP</div>
+
+              <div class="col-span-2">Harga</div>
+              <div class="col-span-2">Discount</div>
+              <div>Sub HPP</div>
+              <div class="col-span-2">Sub Total</div>
+              <div class="col-span-2">Aksi</div>
+            </div>
             <!-- Product Items -->
-            <div class="space-y-4">
+            <div class="">
               <div
                 v-for="(item, idx) in form.product_ordered"
                 :key="'prod-' + idx"
                 class="product-item-card"
               >
-                <div class="grid grid-cols-9 gap-4 mb-4">
-                  <div class="relative col-span-2">
+                <div class="grid grid-cols-17 gap-1 mb-1">
+                  <div class="relative col-span-3">
                     <select
                       v-model="item.product_id"
                       class="modern-select peer"
@@ -295,10 +258,19 @@
                         {{ productku.name }}
                       </option>
                     </select>
-                    <label class="modern-select-label">Nama Sparepart</label>
                   </div>
                   <input type="hidden" v-model="item.product_name" />
                   <input type="hidden" v-model="item.id" />
+                  <div>
+                    <input
+                      v-model.number="item.stockku"
+                      type="number"
+                      min="0"
+                      class="modern-input peer text-sm"
+                      placeholder=" "
+                      :disabled="isCompleted"
+                    />
+                  </div>
                   <div class="relative col-span-1">
                     <input
                       v-model.number="item.quantity"
@@ -311,9 +283,8 @@
                       @input="validateQuantity(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">quantity</label>
                   </div>
-                  <div class="relative col-span-1">
+                  <div class="hidden relative col-span-1">
                     <select
                       id="satuan_id"
                       v-model="item.satuan_id"
@@ -325,7 +296,16 @@
                         {{ value.name }}
                       </option>
                     </select>
-                    <label class="modern-select-label">Satuan</label>
+                  </div>
+                  <div class="col-span-2">
+                    <input
+                      v-model.number="item.cost"
+                      type="number"
+                      min="0"
+                      class="modern-input peer text-sm"
+                      placeholder=" "
+                      :disabled="isCompleted"
+                    />
                   </div>
                   <div class="relative col-span-2">
                     <input
@@ -337,9 +317,8 @@
                       @change="markProductModified(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">Harga</label>
                   </div>
-                  <div class="relative col-span-1">
+                  <div class="relative col-span-2">
                     <input
                       v-model.number="item.discount"
                       type="number"
@@ -349,7 +328,17 @@
                       @change="markProductModified(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">Discount</label>
+                  </div>
+                  <div class="hidden col-span-2">
+                    <input
+                      type="number"
+                      id="product-subtotal-hpp"
+                      v-model.number="item.productSubtotalHPP"
+                      class="modern-input peer text-sm"
+                    />
+                  </div>
+                  <div class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200">
+                    {{ formatCurrency(productSubtotalHPP(item)) }}
                   </div>
                   <div class="relative col-span-2">
                     <input
@@ -358,80 +347,46 @@
                       v-model.number="item.subtotal"
                       :size="Math.max(item.subtotal?.length || 0, 1)"
                     />
-                    <label class="subtotal-label">Subtotal</label>
+
                     <div class="subtotal-display">
                       {{ formatCurrency(productSubtotal(item)) }}
                     </div>
                   </div>
-                </div>
-                <div class="gap-3 flex justify-end">
-                  <div class="flex gap-2">
-                    <label class="text-xs">Stock</label>
-                    <input
-                      v-model.number="item.stockku"
-                      type="number"
-                      min="0"
-                      class="naked-input"
-                      placeholder=" "
+                  <div class="col-span-2">
+                    <button
+                      v-if="item.isNew"
+                      type="button"
+                      class="modern-btn-info"
+                      @click="confirmAddProduct(idx)"
                       :disabled="isCompleted"
-                    />
-                  </div>
-                  <div class="flex gap-2">
-                    <label class="text-xs">HPP</label>
-                    <input
-                      v-model.number="item.cost"
-                      type="number"
-                      min="0"
-                      class="naked-input"
-                      placeholder=" "
+                    >
+                      Confirm Add
+                    </button>
+                    <button
+                      v-if="item.isModified"
+                      type="button"
+                      class="modern-btn-info"
+                      @click="confirmUpdateProduct(idx)"
                       :disabled="isCompleted"
-                    />
+                    >
+                      Confirm Update
+                    </button>
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      @click="removeProductOrder(idx)"
+                      :disabled="isCompleted"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                  <div class="flex gap-2">
-                    <label class="text-xs">Subtotal HPP</label>
-                    <input
-                      type="hidden"
-                      id="product-subtotal"
-                      v-model.number="item.productSubtotalHPP"
-                    />
-                    <div class="text-xs font-bold">
-                      {{ formatCurrency(productSubtotalHPP(item)) }}
-                    </div>
-                  </div>
-                  <button
-                    v-if="item.isNew"
-                    type="button"
-                    class="modern-btn-info"
-                    @click="confirmAddProduct(idx)"
-                    :disabled="isCompleted"
-                  >
-                    Confirm Add
-                  </button>
-                  <button
-                    v-if="item.isModified"
-                    type="button"
-                    class="modern-btn-info"
-                    @click="confirmUpdateProduct(idx)"
-                    :disabled="isCompleted"
-                  >
-                    Confirm Update
-                  </button>
-                  <button
-                    type="button"
-                    class="delete-btn"
-                    @click="removeProductOrder(idx)"
-                    :disabled="isCompleted"
-                  >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    Hapus Item
-                  </button>
                 </div>
               </div>
               <div v-if="form.product_ordered.length === 0" class="empty-state">
@@ -485,9 +440,9 @@
           </div>
 
           <!-- Service Order Section -->
-          <div class="mb-8">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center gap-2">
+          <div class="mb-2">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-1">
                 <div class="bg-purple-100 p-2 rounded-lg">
                   <svg
                     class="h-5 w-5 text-purple-600"
@@ -530,7 +485,7 @@
               </button>
               <button
                 type="button"
-                class="modern-btn-secondary flex items-center gap-2"
+                class="modern-btn-primary flex items-center gap-2"
                 @click="addServiceOrder"
                 :disabled="isCompleted"
               >
@@ -546,15 +501,25 @@
               </button>
             </div>
 
+            <div class="grid grid-cols-16 gap-1 p-1">
+              <div class="col-span-3">Service/Jasa</div>
+              <div>Quantity</div>
+              <div class="col-span-2">HPP</div>
+              <div class="col-span-2">Harga</div>
+              <div class="col-span-2">Discount</div>
+              <div class="">Sub HPP</div>
+              <div class="col-span-2">Sub Total</div>
+              <div class="col-span-2">Aksi</div>
+            </div>
             <!-- Service Items -->
-            <div class="space-y-4">
+            <div class="">
               <div
                 v-for="(item, idx) in form.service_ordered"
                 :key="'svc-' + idx"
                 class="service-item-card"
               >
-                <div class="grid grid-cols-8 gap-4 mb-4">
-                  <div class="relative col-span-2">
+                <div class="grid grid-cols-16 gap-1">
+                  <div class="relative col-span-3">
                     <select
                       v-model="item.service_id"
                       @change="(getServicesId(item), markServiceModified(item))"
@@ -570,7 +535,6 @@
                         {{ serviceku.name }}
                       </option>
                     </select>
-                    <label class="modern-select-label">Nama Jasa</label>
                   </div>
                   <input type="hidden" v-model="item.id" />
                   <input type="hidden" v-model="item.service_name" />
@@ -584,7 +548,17 @@
                       @change="markServiceModified(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">quantity</label>
+                  </div>
+
+                  <div class="col-span-2">
+                    <input
+                      v-model.number="item.cost"
+                      type="number"
+                      min="0"
+                      class="modern-input peer"
+                      placeholder=" "
+                      :disabled="isCompleted"
+                    />
                   </div>
 
                   <div class="relative col-span-2">
@@ -597,9 +571,8 @@
                       @change="markServiceModified(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">Harga</label>
                   </div>
-                  <div class="relative col-span-1">
+                  <div class="relative col-span-2">
                     <input
                       v-model.number="item.discount"
                       type="number"
@@ -609,8 +582,19 @@
                       @change="markServiceModified(item)"
                       :disabled="isCompleted"
                     />
-                    <label class="modern-label">Discount</label>
                   </div>
+                  <div class="hidden">
+                    <input
+                      type="hidden"
+                      id="service-subtotal-hpp"
+                      v-model.number="item.serviceSubtotalHPP"
+                      min="0"
+                    />
+                  </div>
+                  <div class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200">
+                    {{ formatCurrency(serviceSubtotalHPP(item)) }}
+                  </div>
+
                   <div class="relative col-span-2">
                     <input
                       type="hidden"
@@ -620,67 +604,42 @@
                     <div class="subtotal-display">
                       {{ formatCurrency(serviceSubtotal(item)) }}
                     </div>
-                    <label class="subtotal-label">Subtotal</label>
                   </div>
-                </div>
-                <div class="flex justify-end">
-                  <div class="flex gap-2">
-                    <label class="text-xs">HPP</label>
-                    <input
-                      v-model.number="item.cost"
-                      type="number"
-                      min="0"
-                      class="naked-input"
-                      placeholder=" "
+                  <div class="col-span-2">
+                    <button
+                      v-if="item.isNew"
+                      type="button"
+                      class="modern-btn-info"
+                      @click="confirmAddService(idx)"
                       :disabled="isCompleted"
-                    />
+                    >
+                      Confirm Add
+                    </button>
+                    <button
+                      v-if="item.isModified"
+                      type="button"
+                      class="modern-btn-info"
+                      @click="confirmUpdateService(idx)"
+                      :disabled="isCompleted"
+                    >
+                      Confirm Update
+                    </button>
+                    <button
+                      type="button"
+                      class="delete-btn"
+                      @click="removeServiceOrder(idx)"
+                      :disabled="isCompleted"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
                   </div>
-                  <div class="flex gap-2">
-                    <label class="text-xs">Subtotal HPP</label>
-                    <input
-                      type="hidden"
-                      id="service-subtotal-hpp"
-                      v-model.number="item.serviceSubtotalHPP"
-                      min="0"
-                    />
-                    <div class="text-xs font-bold">
-                      {{ formatCurrency(serviceSubtotalHPP(item)) }}
-                    </div>
-                  </div>
-                  <button
-                    v-if="item.isNew"
-                    type="button"
-                    class="modern-btn-info"
-                    @click="confirmAddService(idx)"
-                    :disabled="isCompleted"
-                  >
-                    Confirm Add
-                  </button>
-                  <button
-                    v-if="item.isModified"
-                    type="button"
-                    class="modern-btn-info"
-                    @click="confirmUpdateService(idx)"
-                    :disabled="isCompleted"
-                  >
-                    Confirm Update
-                  </button>
-                  <button
-                    type="button"
-                    class="delete-btn"
-                    @click="removeServiceOrder(idx)"
-                    :disabled="isCompleted"
-                  >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                    Hapus Item
-                  </button>
                 </div>
               </div>
               <div v-if="form.service_ordered.length === 0" class="empty-state">
@@ -836,9 +795,33 @@
               />
             </div>
           </div>
+          <!-- Keterangan Section -->
+          <div class="mb-6">
+            <div class="relative">
+              <textarea
+                v-model="form.keterangan"
+                class="modern-input peer"
+                placeholder=" "
+                rows="4"
+                :disabled="isCompleted"
+              ></textarea>
+              <label class="modern-textarea-label">Keterangan</label>
+            </div>
+          </div>
 
           <!-- Submit Button -->
-          <div class="flex justify-end">
+          <div class="flex justify-end gap-4">
+            <button type="button" class="modern-btn-info flex items-center gap-2" @click="printPDF">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                />
+              </svg>
+              Print PDF
+            </button>
             <button
               type="submit"
               :disabled="hasUnconfirmedChanges || isCompleted"
@@ -1507,10 +1490,9 @@ export default {
       return (item.quantity || 0) * (item.cost || 0)
     },
     formatCurrency(val) {
-      if (!val || isNaN(val)) return 'Rp 0'
+      if (!val || isNaN(val)) return '0'
       return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
+        style: 'decimal',
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }).format(val)
@@ -1831,7 +1813,7 @@ export default {
 <style scoped>
 /* Custom Gradient Classes */
 .gradient-header {
-  background: linear-gradient(to right, #2563eb, #1e40af);
+  background: linear-gradient(to right, #575757, #dcdfe7);
 }
 
 .gradient-summary {
@@ -1845,9 +1827,9 @@ export default {
 /* Modern Input Styles */
 .modern-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
+  padding: 0.2rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
   background-color: white;
   color: #111827;
   font-family: 'Lexend', sans-serif;
@@ -1901,10 +1883,10 @@ export default {
 /* Modern Select Styles */
 .modern-select {
   width: 100%;
-  padding: 0.75rem 1rem;
-  padding-right: 2.5rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
+  padding: 0.2rem 1rem;
+  padding-right: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.2rem;
   background-color: white;
   color: #111827;
   font-family: 'Lexend', sans-serif;
@@ -1915,12 +1897,13 @@ export default {
   background-position: right 0.75rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
+  font-size: 10pt;
 }
 
 .modern-select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.3);
+  border-color: #222223;
+  box-shadow: 0 0 0 2px rgba(147, 197, 253, 0.3);
   background-color: rgba(239, 246, 255, 0.3);
 }
 
@@ -1932,7 +1915,7 @@ export default {
 .modern-label {
   position: absolute;
   left: 1rem;
-  top: 0.75rem;
+  top: 0.5rem;
   color: #6b7280;
   font-size: 0.875rem;
   font-family: 'Lexend', sans-serif;
@@ -1992,8 +1975,8 @@ export default {
   background: linear-gradient(to right, #2563eb, #1d4ed8);
   color: white;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
+  padding: 0.2rem 1.5rem;
+  border-radius: 0.2rem;
   box-shadow:
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -2004,10 +1987,12 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 10pt;
+  font-weight: 400;
 }
 
 .modern-btn-primary:hover {
-  background: linear-gradient(to right, #1d4ed8, #1e40af);
+  background: linear-gradient(to right, #1a1a1a, #252628);
   box-shadow:
     0 20px 25px -5px rgba(0, 0, 0, 0.1),
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -2070,14 +2055,14 @@ export default {
 .modern-btn-info {
   background: linear-gradient(to right, #0891b2, #0e7490);
   color: white;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  font-weight: 300;
+  padding: 0.5rem 0.5rem;
+  border-radius: 0.2rem;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.1),
     0 2px 4px -1px rgba(0, 0, 0, 0.06);
   font-family: 'Lexend', sans-serif;
-  font-size: 0.875rem;
+  font-size: 0.5rem;
   border: none;
   cursor: pointer;
   transition: all 0.3s ease-in-out;
@@ -2157,8 +2142,8 @@ export default {
 .info-card {
   background: linear-gradient(to right, #f8fafc, #f1f5f9);
   border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  padding: 1rem;
+  border-radius: 0.3rem;
+  padding: 0.1rem;
   transition: all 0.3s ease-in-out;
 }
 
@@ -2171,26 +2156,26 @@ export default {
 
 .info-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 500;
   color: #64748b;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.05rem;
   font-family: 'Lexend', sans-serif;
 }
 
 .info-value {
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: 0.775rem;
+  font-weight: 500;
   color: #1e293b;
   font-family: 'Lexend', sans-serif;
 }
 
 /* Card Styles */
 .product-item-card {
-  background: linear-gradient(to right, #f0fdf4, #ecfdf5);
-  border: 2px solid #bbf7d0;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  background: linear-gradient(to right, #f7f7f7, #eae7e7);
+  border: 1px solid #141414;
+  border-radius: 0.2rem;
+  padding: 0.1rem;
   transition: all 0.3s ease-in-out;
   animation: fadeInUp 0.5s ease-out;
 }
@@ -2204,9 +2189,9 @@ export default {
 
 .service-item-card {
   background: linear-gradient(to right, #faf5ff, #f3e8ff);
-  border: 2px solid #d8b4fe;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
+  border: 1px solid #d8b4fe;
+  border-radius: 0.2rem;
+  padding: 0.1rem;
   transition: all 0.3s ease-in-out;
   animation: fadeInUp 0.5s ease-out;
 }
@@ -2220,13 +2205,13 @@ export default {
 
 /* Subtotal Display */
 .subtotal-display {
-  background: linear-gradient(to right, #dbeafe, #bfdbfe);
-  border: 2px solid #93c5fd;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #1e40af;
+  background: linear-gradient(to right, #f1f1f2, #e6e6e6);
+  border: 0.2px solid #93c5fd;
+  border-radius: 0.1rem;
+  padding: 0.21rem 0.21rem;
+  color: #080808;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 1rem;
   text-align: center;
   font-family: 'Lexend', sans-serif;
 }

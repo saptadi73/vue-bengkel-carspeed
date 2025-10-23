@@ -1,1 +1,6 @@
-- [x] Tambahkan kondisi v-if="order.status === 'diterima'" pada tombol payment di tabel desktop di TablePurchaseOrderAll.vue
+# TODO: Apply Design and Layout from WorkOrderForm.vue to WorkOrderEditForm.vue
+
+- [ ] Update template structure (header, cards, sections)
+- [ ] Update CSS styles (gradients, buttons, inputs, etc.)
+- [ ] Ensure functionality remains intact
+- [ ] Test the updated form
