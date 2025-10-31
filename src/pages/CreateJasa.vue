@@ -8,7 +8,8 @@
       <div class="relative">
         <label for="name" class="modern-label-label">Nama Jasa</label>
         <input
-          v-model="form.name"
+          :value="form.name"
+          @input="onNameInput($event.target.value)"
           type="text"
           id="name"
           class="modern-input peer"
@@ -83,8 +84,8 @@ export default {
       form: {
         name: '',
         description: '',
-        cost: '',
-        price: '',
+        cost: 0,
+        price: 0,
       },
     }
   },
@@ -95,6 +96,9 @@ export default {
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   methods: {
+    onNameInput(val) {
+      this.form.name = (val || '').toString().toUpperCase()
+    },
     async tutupToast() {
       this.show_toast = false
       this.message_toast = ''

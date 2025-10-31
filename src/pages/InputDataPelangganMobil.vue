@@ -82,18 +82,39 @@
           </div>
           <div class="mb-4">
             <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
-            <select
-              v-model="formData.brand_id"
-              id="brand_id"
-              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
-            >
-              <option value="" disabled>Pilih Brand</option>
-              <option v-for="brand in brands" :key="brand.id" :value="brand.id">
-                {{ brand.name }}
-              </option>
-            </select>
+            <div class="flex gap-2 items-end">
+              <select
+                v-model="formData.brand_id"
+                id="brand_id"
+                class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                required
+              >
+                <option value="" disabled>Pilih Brand</option>
+                <option v-for="brand in brands" :key="brand.id" :value="brand.id">
+                  {{ (brand.name || '').toString().toUpperCase() }}
+                </option>
+              </select>
+              <button type="button" class="modern-btn-info" @click="showBrandModal = true">
+                Add Brand
+              </button>
+            </div>
           </div>
+
+          <BrandModal
+            v-model:open="showBrandModal"
+            :text="newBrandName"
+            @update:text="val => newBrandName = (val || '').toString().toUpperCase()"
+            title="Add New Brand"
+            description="Masukkan nama brand untuk menambah brand baru."
+            input-label="Nama Brand"
+            input-placeholder="Nama brand"
+            ok-text="Add"
+            cancel-text="Cancel"
+            :ok-disabled="!newBrandName || !newBrandName.trim()"
+            autofocus="input"
+            @ok="addBrand"
+            @cancel="showBrandModal = false"
+          />
 
           <div class="mb-4">
             <label for="tahun" class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
@@ -185,10 +206,11 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { BASE_URL } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
+import BrandModal from '@/pages/BrandModal.vue'
 
 export default {
   name: 'InputDataPelangganMobil',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, BrandModal },
   data() {
     return {
       formData: {
@@ -208,6 +230,8 @@ export default {
         warna: '',
       },
       brands: [],
+      showBrandModal: false,
+      newBrandName: '',
       show_toast: false,
       message_toast: '',
     }
@@ -288,6 +312,36 @@ export default {
         this.message_toast =
           (error.response && error.response.data && error.response.data.message) ||
           'Terjadi kesalahan saat mengirim data.'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async addBrand() {
+      if (!this.newBrandName || !this.newBrandName.trim()) return
+      try {
+        this.loadingStore.show()
+        const res = await api.post(`${BASE_URL}products/brand/create/new`, {
+          name: (this.newBrandName || '').toString().toUpperCase().trim(),
+        })
+        this.newBrandName = ''
+        this.showBrandModal = false
+        await this.getBrandsAll()
+        const created = res.data?.data
+        if (created?.id) {
+          this.formData.brand_id = created.id
+        } else {
+          const found = this.brands.find(
+            (b) => b.name?.toLowerCase() === (res.data?.data?.name || '').toLowerCase(),
+          )
+          if (found) this.formData.brand_id = found.id
+        }
+        this.message_toast = res.data?.message || 'Brand created'
+        this.show_toast = true
+      } catch (err) {
+        this.message_toast =
+          (err.response && err.response.data && err.response.data.message) ||
+          'Gagal menambahkan brand.'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()

@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto p-6 ipad:w-[60vw]">
+  <div class="container mx-auto p-6 ipad:w-[80vw]">
     <h2 class="text-center font-montserrat font-bold text-blue-600 text-2xl ipad:text-4xl">
       Form Penambahan Produk di Inventory
     </h2>
@@ -8,11 +8,12 @@
     <div class="mb-4 mt-10 info-card">
       <label for="name" class="block text-gray-700 font-semibold">Nama Produk</label>
       <input
-        v-model="form.name"
-        type="text"
-        id="name"
-        class="modern-input peer"
-        placeholder="Masukkan nama produk"
+      :value="form.name"
+      @input="onNameInput($event.target.value)"
+      type="text"
+      id="name"
+      class="modern-input peer"
+      placeholder="Masukkan nama produk"
       />
     </div>
 
@@ -24,7 +25,7 @@
           <select v-model="form.category_id" id="kategori" class="modern-select peer">
             <option value="" disabled selected>Pilih Kategori</option>
             <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
+              {{ (category.name || '').toString().toUpperCase() }}
             </option>
           </select>
 
@@ -40,7 +41,7 @@
           <select v-model="form.brand_id" id="brand" class="modern-select peer">
             <option value="" disabled selected>Pilih Brand</option>
             <option v-for="brand in brands" :key="brand.id" :value="brand.id">
-              {{ brand.name }}
+              {{ (brand.name || '').toString().toUpperCase() }}
             </option>
           </select>
 
@@ -131,6 +132,86 @@
           class="modern-input peer"
           placeholder="Keterangan yang perlu ditambahkan"
         />
+      </div>
+    </div>
+
+    <!-- Consignment Section -->
+    <div class="info-card mt-3">
+      <div class="flex items-center gap-3">
+        <input type="checkbox" id="is_consignment" v-model="form.is_consignment" />
+        <label for="is_consignment" class="modern-label-label">Barang Konsinyasi</label>
+      </div>
+
+      <div v-if="form.is_consignment" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3">
+        <div class="info-card">
+          <div class="relative">
+            <label for="consignment_commission" class="modern-label-label">Komisi Konsinyasi</label>
+            <input
+              v-model="form.consignment_commission"
+              type="number"
+              id="consignment_commission"
+              class="modern-input peer"
+              placeholder="Persentase komisi konsinyasi"
+            />
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="relative flex items-center gap-3">
+            <label for="supplier_id" class="modern-label-label">Supplier</label>
+            <div class="flex items-center gap-3 w-full">
+              <select v-model="form.supplier_id" id="supplier_id" class="modern-select peer w-full">
+                <option value="" disabled selected>Pilih Supplier</option>
+                <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                  {{ supplier.nama || supplier.name }}
+                </option>
+              </select>
+              <button type="button" class="modern-btn-info" @click="openSupplierModal">
+                Add Supplier
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Add Supplier -->
+    <div v-if="showSupplierModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
+      <div class="bg-white rounded-lg p-6 w-96 shadow-2xl">
+        <h3 class="text-xl font-semibold mb-4">Tambah Supplier</h3>
+        <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+            <input v-model="supplierForm.nama" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">HP</label>
+            <input v-model="supplierForm.hp" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <input v-model="supplierForm.alamat" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input v-model="supplierForm.email" type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">NPWP</label>
+            <input v-model="supplierForm.npwp" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Perusahaan</label>
+            <input v-model="supplierForm.perusahaan" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Toko</label>
+            <input v-model="supplierForm.toko" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+          <button type="button" class="modern-btn-cancel" @click="closeSupplierModal">Cancel</button>
+          <button type="button" class="modern-btn-primary" :disabled="!supplierForm.nama || !supplierForm.hp" @click="addSupplier">Save</button>
+        </div>
       </div>
     </div>
 
@@ -271,17 +352,32 @@ export default {
         min_stock: '',
         price: '',
         cost: '',
+        // New consignment fields
+        supplier_id: '',
+        is_consignment: false,
+        consignment_commission: '',
       },
 
       units: [],
       brands: [],
       categories: [],
+      suppliers: [],
       newCategory: '',
       newBrand: '',
       newUnit: '',
       isCategoryModalOpen: false,
       isBrandModalOpen: false,
       isUnitModalOpen: false,
+      showSupplierModal: false,
+      supplierForm: {
+        nama: '',
+        hp: '',
+        alamat: '',
+        email: '',
+        npwp: '',
+        perusahaan: '',
+        toko: '',
+      },
     }
   },
   setup() {
@@ -291,6 +387,9 @@ export default {
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   methods: {
+    onNameInput(val) {
+      this.form.name = (val || '').toString().toUpperCase()
+    },
     async tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -328,6 +427,52 @@ export default {
         this.units = response.data.data
       } catch (error) {
         console.log('error : ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async getSuppliers() {
+      try {
+        this.loadingStore.show()
+        const response = await axios.get(`${BASE_URL}suppliers/all`)
+        console.log('Suppliers Data: ', response.data.data)
+        this.suppliers = Array.isArray(response.data.data) ? response.data.data : []
+      } catch (error) {
+        console.log('error : ', error)
+        this.suppliers = []
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    openSupplierModal() {
+      this.showSupplierModal = true
+    },
+    closeSupplierModal() {
+      this.showSupplierModal = false
+      this.supplierForm = { nama: '', hp: '', alamat: '', email: '', npwp: '', perusahaan: '', toko: '' }
+    },
+    async addSupplier() {
+      try {
+        this.loadingStore.show()
+        const payload = {
+          nama: (this.supplierForm.nama || '').toString().trim(),
+          hp: (this.supplierForm.hp || '').toString().trim(),
+          alamat: this.supplierForm.alamat || null,
+          email: this.supplierForm.email || null,
+          npwp: this.supplierForm.npwp || null,
+          perusahaan: this.supplierForm.perusahaan || null,
+          toko: this.supplierForm.toko || null,
+        }
+        const res = await api.post(`${BASE_URL}suppliers/create`, payload)
+        this.show_toast = true
+        this.message_toast = res.data?.message || 'Supplier created'
+        await this.getSuppliers()
+        const created = res.data?.data
+        if (created?.id) this.form.supplier_id = created.id
+        this.closeSupplierModal()
+      } catch (err) {
+        this.show_toast = true
+        this.message_toast = (err.response && err.response.data && err.response.data.message) || 'Gagal menambahkan supplier.'
       } finally {
         this.loadingStore.hide()
       }
@@ -401,8 +546,25 @@ export default {
     async submitForm() {
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}products/create/new`, this.form)
-        console.log('Form Data: ', this.form)
+        // Build payload to match backend expectations
+        const payload = {
+          name: this.form.name,
+          type: this.form.type,
+          description: this.form.description || null,
+          price: this.form.price,
+          cost: this.form.cost || null,
+          min_stock: this.form.min_stock,
+          brand_id: this.form.brand_id,
+          satuan_id: this.form.satuan_id,
+          category_id: this.form.category_id,
+          supplier_id: this.form.is_consignment ? this.form.supplier_id || null : null,
+          is_consignment: !!this.form.is_consignment,
+          consignment_commission: this.form.is_consignment
+            ? this.form.consignment_commission || null
+            : null,
+        }
+        const response = await api.post(`${BASE_URL}products/create/new`, payload)
+        console.log('Form Data: ', payload)
         this.show_toast = true
         this.message_toast = response.data.message
         console.log('Add Product Result: ', response.data)
@@ -419,6 +581,7 @@ export default {
     this.getBrands()
     this.getCategories()
     this.getUnits()
+    this.getSuppliers()
   },
 }
 </script>

@@ -61,13 +61,34 @@
         <!-- Brand Input -->
         <div class="info-card mt-3">
           <label for="brand_id" class="modern-label-label text-blue-700 font-bold">Brand</label>
-          <select v-model="formData.brand_id" id="brand_id" class="modern-select peer" required>
-            <option value="" disabled selected>Select Brand</option>
-            <option v-for="value in brands" :key="value.id" :value="value.id">
-              {{ value.name }}
-            </option>
-          </select>
+          <div class="flex gap-2 items-end">
+            <select v-model="formData.brand_id" id="brand_id" class="modern-select peer" required>
+              <option value="" disabled selected>Select Brand</option>
+              <option v-for="value in brands" :key="value.id" :value="value.id">
+                {{ (value.name || '').toString().toUpperCase() }}
+              </option>
+            </select>
+            <button type="button" class="modern-btn-info" @click="showBrandModal = true">
+              Add Brand
+            </button>
+          </div>
         </div>
+
+        <BrandModal
+          v-model:open="showBrandModal"
+          :text="newBrandName"
+          @update:text="(val) => (newBrandName = (val || '').toString().toUpperCase())"
+          title="Add New Brand"
+          description="Enter the brand name to create a new brand."
+          input-label="Brand Name"
+          input-placeholder="Enter brand name"
+          ok-text="Add"
+          cancel-text="Cancel"
+          :ok-disabled="!newBrandName || !newBrandName.trim()"
+          autofocus="input"
+          @ok="addBrand"
+          @cancel="showBrandModal = false"
+        />
 
         <div
           class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 rounded-lg shadow-lg bg-gradient-to-b from-gray-300 to-gray-100"
@@ -177,7 +198,7 @@
         <!-- Submit Button -->
         <div>
           <div class="flex items-center">
-            <button type="submit" @click="handleSubmit" class="modern-btn-primary mt-5">
+            <button type="submit" class="modern-btn-primary mt-5">
               <span class="material-symbols-outlined">car_tag</span> Simpan
             </button>
           </div>
@@ -197,10 +218,11 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { BASE_URL } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
+import BrandModal from '@/pages/BrandModal.vue'
 
 export default {
   name: 'InputDataMobil',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, BrandModal },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -221,6 +243,8 @@ export default {
         no_pol: '',
         warna: '',
       },
+      showBrandModal: false,
+      newBrandName: '',
       customers: [
         // Dummy customer data for the select options
         { name: 'John Doe' },
@@ -236,6 +260,36 @@ export default {
     this.getbrandsAll()
   },
   methods: {
+    async addBrand() {
+      if (!this.newBrandName || !this.newBrandName.trim()) return
+      try {
+        this.loadingStore.show()
+        const res = await api.post(`${BASE_URL}products/brand/create/new`, {
+          name: (this.newBrandName || '').toString().toUpperCase().trim(),
+        })
+        this.newBrandName = ''
+        this.showBrandModal = false
+        await this.getbrandsAll()
+        const created = res.data?.data
+        if (created?.id) {
+          this.formData.brand_id = created.id
+        } else {
+          const found = this.brands.find(
+            (b) => b.name?.toLowerCase() === (res.data?.data?.name || '').toLowerCase(),
+          )
+          if (found) this.formData.brand_id = found.id
+        }
+        this.message_toast = res.data?.message || 'Brand created'
+        this.show_toast = true
+      } catch (err) {
+        this.message_toast =
+          (err.response && err.response.data && err.response.data.message) ||
+          'Failed to create brand.'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
     async handleSubmit() {
       try {
         this.loadingStore.show()
