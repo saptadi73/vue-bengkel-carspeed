@@ -136,12 +136,50 @@
             </div>
             <div class="info-card">
               <div class="relative">
+                <input
+                  v-model.number="form.kilometer"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  @input="updateNextServiceKm"
+                />
+                <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model.number="form.next_service_km"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya KM</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model="form.next_service_date"
+                  type="date"
+                  class="modern-input peer"
+                  placeholder=" "
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya Tanggal</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
                 <select v-model="form.status" id="status" class="modern-select peer">
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
                   <option value="in_progress">in_progress</option>
                 </select>
-                <label class="modern-select-label">Tahun</label>
+                <label class="modern-select-label">Status</label>
               </div>
             </div>
           </div>
@@ -907,6 +945,10 @@ export default {
         type: '',
         model: '',
         kapasitas: '',
+        kilometer: 0,
+        next_service_km: 0,
+        next_service_date: '',
+        last_service: '',
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -1008,12 +1050,27 @@ export default {
     this.getSatuans()
     this.getVehiclesPelanggan()
     this.getKaryawan()
+    this.initializeNextServiceDate()
   },
   methods: {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
+    },
+
+    initializeNextServiceDate() {
+      // Set next service date to current date + 4 months if not already set
+      if (!this.form.next_service_date) {
+        const today = new Date()
+        today.setMonth(today.getMonth() + 4)
+        this.form.next_service_date = today.toISOString().split('T')[0]
+      }
+    },
+
+    updateNextServiceKm() {
+      // Auto-calculate next service km as current km + 40000
+      this.form.next_service_km = (this.form.kilometer || 0) + 40000
     },
 
     async getKaryawan() {
@@ -1051,6 +1108,11 @@ export default {
         this.form.model = this.dataWorkorder.vehicle_model
         this.form.no_pol = this.dataWorkorder.vehicle_no_pol
         this.form.type = this.dataWorkorder.vehicle_type
+        this.form.kilometer = this.dataWorkorder.kilometer || 0
+        this.form.next_service_km =
+          this.dataWorkorder.next_service_km || this.form.kilometer + 40000
+        this.form.next_service_date = this.dataWorkorder.next_service_date || ''
+        this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.product_ordered = this.dataWorkorder.product_ordered || []
         this.form.service_ordered = this.dataWorkorder.service_ordered || []
         if (this.dataWorkorder.pajak > 0) {
@@ -1253,6 +1315,10 @@ export default {
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
+      // Set last_service to current date (YYYY-MM-DD format) if not already set
+      if (!this.form.last_service) {
+        this.form.last_service = new Date().toISOString().split('T')[0]
+      }
       this.form.total_biaya = this.isitotalPembayaran
       this.form.pajak = this.isiPajakAmount
       this.form.total_discount = this.isitotalProductDiscount + this.isitotalServiceDiscount

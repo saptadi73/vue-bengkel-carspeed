@@ -97,8 +97,36 @@
                   class="modern-input peer"
                   placeholder=" "
                   :disabled="isCompleted"
+                  @input="updateNextServiceKm"
                 />
                 <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model.number="form.next_service_km"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  :disabled="isCompleted"
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya KM</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model="form.next_service_date"
+                  type="date"
+                  class="modern-input peer"
+                  placeholder=" "
+                  :disabled="isCompleted"
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya Tanggal</label>
               </div>
             </div>
             <div class="info-card">
@@ -132,6 +160,7 @@
                   <option value="" disabled selected>Pilih Status Pembayaran</option>
                   <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
                   <option value="belum_lunas">Belum Lunas</option>
+                  <option value="tempo">Tempo</option>
                   <option value="lunas">Lunas</option>
                 </select>
                 <label class="modern-select-label">Status Pembayaran</label>
@@ -823,6 +852,26 @@
               Print PDF
             </button>
             <button
+              type="button"
+              class="modern-btn-payment flex items-center gap-2"
+              @click="openPaymentModal"
+              :disabled="form.status !== 'selesai' || form.status_pembayaran === 'lunas'"
+              :class="{
+                'opacity-50 cursor-not-allowed':
+                  form.status !== 'selesai' || form.status_pembayaran === 'lunas',
+              }"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              Proses Pembayaran
+            </button>
+            <button
               type="submit"
               :disabled="hasUnconfirmedChanges || isCompleted"
               :class="[
@@ -847,6 +896,17 @@
   </div>
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+
+  <!-- Payment Modal -->
+  <payment-modal
+    :is-open="showPaymentModal"
+    :initial-amount="totalPembayaran"
+    :expense-id="$route.params.id"
+    :expense-name="`Work Order - ${form.nama}`"
+    :expense-type="`${form.no_pol}`"
+    @close="closePaymentModal"
+    @submit="handlePaymentSubmit"
+  />
 
   <!-- Add Service Modal -->
   <div
@@ -932,6 +992,7 @@ import api from '@/user/axios'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
@@ -940,7 +1001,7 @@ import logoImage from '@/assets/images/logo_carspeed.png'
 
 export default {
   name: 'WorkOrderForm',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, PaymentModal },
   data() {
     return {
       services: [],
@@ -970,6 +1031,9 @@ export default {
         kapasitas: '',
         tahun: '',
         kilometer: 0,
+        next_service_km: 0,
+        next_service_date: '',
+        last_service: '',
         status_pembayaran: 'belum_ada_pembayaran',
         product_ordered: [],
         service_ordered: [],
@@ -994,6 +1058,7 @@ export default {
         price: 0,
         cost: 0,
       },
+      showPaymentModal: false,
     }
   },
   computed: {
@@ -1040,7 +1105,11 @@ export default {
       return hasUnconfirmedProduct || hasUnconfirmedService
     },
     isCompleted() {
-      return this.initialStatus === 'selesai' || this.initialStatus === 'dibayar'
+      // Consider completed only if status is selesai/dibayar AND payment is already lunas
+      // This allows updating WO while payment status is not lunas
+      const statusCompleted = this.initialStatus === 'selesai' || this.initialStatus === 'dibayar'
+      const paymentLunas = this.form.status_pembayaran === 'lunas'
+      return statusCompleted && paymentLunas
     },
   },
   watch: {
@@ -1082,12 +1151,27 @@ export default {
     this.getSatuans()
     this.getWorkOrderData()
     this.getKaryawan()
+    this.initializeNextServiceDate()
   },
   methods: {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
+    },
+
+    initializeNextServiceDate() {
+      // Set next service date to current date + 3 months if not already set
+      if (!this.form.next_service_date) {
+        const today = new Date()
+        today.setMonth(today.getMonth() + 3)
+        this.form.next_service_date = today.toISOString().split('T')[0]
+      }
+    },
+
+    updateNextServiceKm() {
+      // Auto-calculate next service km as current km + 5000
+      this.form.next_service_km = (this.form.kilometer || 0) + 5000
     },
 
     calculatetotalProductDiscount() {
@@ -1188,6 +1272,10 @@ export default {
         this.form.type = this.dataWorkorder.vehicle_type
         this.form.tahun = this.dataWorkorder.vehicle_tahun || ''
         this.form.kilometer = this.dataWorkorder.kilometer || 0
+        this.form.next_service_km =
+          this.dataWorkorder.next_service_km || this.form.kilometer + 5000
+        this.form.next_service_date = this.dataWorkorder.next_service_date || ''
+        this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
@@ -1509,6 +1597,10 @@ export default {
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
+      // Set last_service to current date (YYYY-MM-DD format) if not already set
+      if (!this.form.last_service) {
+        this.form.last_service = new Date().toISOString().split('T')[0]
+      }
       this.form.total_biaya = this.totalPembayaran
       this.form.pajak = this.pajakAmount
       this.form.total_discount = this.totalProductDiscount + this.totalServiceDiscount
@@ -1665,6 +1757,20 @@ export default {
         align: 'right',
         maxWidth: 30,
       })
+
+      y += 6
+
+      // Add kilometer and next service information
+      doc.setFontSize(9)
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`Kilometer: ${this.formatCurrency(this.form.kilometer)} km`, 10, y)
+      doc.text(`Service Km Berikutnya: ${this.formatCurrency(this.form.next_service_km)} km`, 50, y)
+      doc.text(
+        `Service Tanggal Berikutnya: ${this.formatDate(this.form.next_service_date)}`,
+        120,
+        y,
+      )
+
       y += 10
 
       doc.setFontSize(11)
@@ -1702,8 +1808,11 @@ export default {
         align: 'right',
         maxWidth: 30,
       })
-      y += 20
+      y += 8
 
+      y += 10
+
+      doc.setFont('Helvetica', 'normal')
       doc.setFontSize(11)
       doc.text(`Nama Pelanggan`, 40, y, {
         align: 'center',
@@ -1759,6 +1868,51 @@ export default {
         console.error('Error creating service:', error)
         this.show_toast = true
         this.message_toast = error.response?.data?.message || 'Gagal menambahkan service!'
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    openPaymentModal() {
+      if (this.form.status === 'selesai' && this.form.status_pembayaran !== 'lunas') {
+        this.showPaymentModal = true
+      }
+    },
+    closePaymentModal() {
+      this.showPaymentModal = false
+    },
+    async handlePaymentSubmit(paymentData) {
+      try {
+        this.loadingStore.show()
+
+        // Prepare payment data
+        const paymentPayload = {
+          workorder_id: this.$route.params.id,
+          amount: paymentData.amount,
+          payment_method: paymentData.paymentMethod,
+          bank_code: paymentData.bankCode,
+          description: paymentData.description,
+          payment_date: paymentData.date,
+        }
+
+        console.log('Payment Data:', paymentPayload)
+
+        // Submit payment to backend
+        const response = await api.post(`${this.BASE_URL}workorders/payment`, paymentPayload)
+
+        // Update status to 'dibayar' after successful payment
+        this.form.status = 'dibayar'
+        this.form.status_pembayaran = 'lunas'
+        this.initialStatus = 'dibayar'
+
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Pembayaran berhasil diproses!'
+
+        // Refresh data
+        await this.getWorkOrderData()
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran!'
       } finally {
         this.loadingStore.hide()
       }
@@ -2077,6 +2231,38 @@ export default {
     0 10px 15px -3px rgba(0, 0, 0, 0.1),
     0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transform: translateY(-1px);
+}
+
+.modern-btn-payment {
+  background: linear-gradient(to right, #059669, #047857);
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  font-family: 'Lexend', sans-serif;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modern-btn-payment:hover:not(:disabled) {
+  background: linear-gradient(to right, #047857, #065f46);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+.modern-btn-payment:disabled {
+  background: linear-gradient(to right, #9ca3af, #6b7280);
+  cursor: not-allowed;
 }
 
 .modern-btn-activity {

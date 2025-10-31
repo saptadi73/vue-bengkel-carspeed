@@ -131,8 +131,34 @@
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
+                  @input="updateNextServiceKm"
                 />
                 <label class="modern-label">Kilometer</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model.number="form.next_service_km"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya KM</label>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="relative">
+                <input
+                  v-model="form.next_service_date"
+                  type="date"
+                  class="modern-input peer"
+                  placeholder=" "
+                  readonly
+                />
+                <label class="modern-label">Service Berikutnya Tanggal</label>
               </div>
             </div>
             <div class="info-card">
@@ -160,6 +186,7 @@
                   <option value="" disabled selected>Pilih Status Pembayaran</option>
                   <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
                   <option value="belum_lunas">Belum Lunas</option>
+                  <option value="tempo">Tempo</option>
                   <option value="lunas">Lunas</option>
                 </select>
                 <label class="modern-select-label">Status Pembayaran</label>
@@ -863,6 +890,9 @@ export default {
         kapasitas: '',
         tahun: '',
         kilometer: 0,
+        next_service_km: 0,
+        next_service_date: '',
+        last_service: '',
         status_pembayaran: '',
         product_ordered: [],
         service_ordered: [],
@@ -962,12 +992,25 @@ export default {
     this.getSatuans()
     this.getVehiclesPelanggan()
     this.getKaryawan()
+    this.initializeNextServiceDate()
   },
   methods: {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
+    },
+
+    initializeNextServiceDate() {
+      // Set next service date to current date + 3 months
+      const today = new Date()
+      today.setMonth(today.getMonth() + 3)
+      this.form.next_service_date = today.toISOString().split('T')[0]
+    },
+
+    updateNextServiceKm() {
+      // Auto-calculate next service km as current km + 5000
+      this.form.next_service_km = (this.form.kilometer || 0) + 5000
     },
 
     calculatetotalProductHarga() {
@@ -1219,6 +1262,15 @@ export default {
         maximumFractionDigits: 0,
       }).format(val)
     },
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('id-ID', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+    },
     formatCurrencyRp(val) {
       if (!val || isNaN(val)) return 'Rp 0'
       return new Intl.NumberFormat('id-ID', {
@@ -1231,6 +1283,8 @@ export default {
     async submitForm() {
       // Tanggal masuk: now lengkap dengan jam (format ISO)
       this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
+      // Set last_service to current date (YYYY-MM-DD format)
+      this.form.last_service = new Date().toISOString().split('T')[0]
       this.form.total_biaya = this.totalPembayaran
       this.form.pajak = this.pajakAmount
       this.form.total_discount = this.totalProductDiscount + this.totalServiceDiscount
@@ -1341,6 +1395,24 @@ export default {
       doc.text(`Total Discount: ${this.formatCurrency(this.grandTotalDiscount)}`, 70, y)
       doc.text(`Pajak (11%): ${this.formatCurrency(this.pajakAmount)}`, 120, y)
       doc.text(`Total Bayar: ${this.formatCurrency(this.totalPembayaran)}`, 140, y)
+
+      y += 2
+
+      // Add kilometer and next service information
+      doc.setFontSize(8)
+      doc.setFont('Helvetica', 'italic')
+      doc.text(`Kilometer: ${this.formatCurrency(this.form.kilometer)} km`, 10, y)
+      doc.text(
+        `Service Berikutnya: ${this.formatCurrency(this.form.next_service_km)} km`,
+        10,
+        y + 2,
+      )
+      doc.text(
+        `Tanggal Service Berikutnya: ${this.formatDate(this.form.next_service_date)}`,
+        150,
+        y + 4,
+      )
+
       doc.save('workorder.pdf')
     },
     async getProductsId(item) {
