@@ -131,6 +131,10 @@ const navItems = reactive([
         url: '/karyawan/list',
       },
       {
+        text: 'Registrasi Karyawan',
+        url: '/karyawan/input',
+      },
+      {
         text: 'Daftar Absen',
         url: '/karyawan/rekap-absen',
         badge: {

@@ -245,7 +245,7 @@ export default {
     async fetchInventory() {
       try {
         this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/inventory/all`)
+        const response = await axios.get(`${BASE_URL}products/inventory/all/excconsignment`)
         this.inventoryList = response.data.data || []
         console.log('Inventoriy: ', this.inventoryList)
       } catch (error) {

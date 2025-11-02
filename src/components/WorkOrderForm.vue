@@ -1281,8 +1281,8 @@ export default {
       }).format(val)
     },
     async submitForm() {
-      // Tanggal masuk: now lengkap dengan jam (format ISO)
-      this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
+      // Tanggal masuk: set as Date object
+      this.form.tanggal_masuk = new Date()
       // Set last_service to current date (YYYY-MM-DD format)
       this.form.last_service = new Date().toISOString().split('T')[0]
       this.form.total_biaya = this.totalPembayaran
@@ -1298,6 +1298,24 @@ export default {
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
+
+      // Ensure numeric fields in product_ordered are numbers
+      this.form.product_ordered.forEach((item) => {
+        item.quantity = Number(item.quantity) || 0
+        item.price = parseFloat(item.price) || 0
+        item.discount = parseFloat(item.discount) || 0
+        item.cost = parseFloat(item.cost) || 0
+        item.subtotal = parseFloat(item.subtotal) || 0
+      })
+
+      // Ensure numeric fields in service_ordered are numbers
+      this.form.service_ordered.forEach((item) => {
+        item.quantity = Number(item.quantity) || 0
+        item.price = parseFloat(item.price) || 0
+        item.discount = parseFloat(item.discount) || 0
+        item.cost = parseFloat(item.cost) || 0
+        item.serviceSubtotal = parseFloat(item.serviceSubtotal) || 0
+      })
 
       try {
         this.loadingStore.show()
@@ -1315,6 +1333,7 @@ export default {
       }
 
       console.log('Form Data:', this.form)
+      this.$router.push('/wo/all')
     },
     printPDF() {
       const doc = new jsPDF()

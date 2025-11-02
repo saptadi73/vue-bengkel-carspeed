@@ -204,10 +204,11 @@ export default {
       }
     },
     async handleSubmit() {
+      this.formData.type = 'outcome'
       console.log('Inventory Adjustment Submitted', this.formData)
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}inventory/move/new`, this.formData)
+        const response = await api.post(`${BASE_URL}inventory/move/loss`, this.formData)
         console.log('Response: ', response.data.data)
         this.show_toast = true
         this.message_toast = response.data.message

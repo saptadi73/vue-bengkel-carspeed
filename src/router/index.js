@@ -170,6 +170,11 @@ const router = createRouter({
           component: () => import('../pages/KaryawanList.vue'),
         },
         {
+          path: 'input',
+          name: 'Inpout Karyawan',
+          component: () => import('../pages/InputKaryawan.vue'),
+        },
+        {
           path: 'absen',
           name: 'absen',
           component: () => import('../pages/TableAbsenKaryawan.vue'),

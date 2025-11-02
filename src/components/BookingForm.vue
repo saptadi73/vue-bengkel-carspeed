@@ -111,20 +111,12 @@
           <label class="block mb-1">Tanggal Booking</label>
           <input
             v-model="form.tanggal_booking"
-            type="date"
+            type="datetime-local"
             class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
             required
           />
         </div>
-        <div class="mb-4">
-          <label class="block mb-1">Jam Booking (format HH:mm AM/PM)</label>
-          <input
-            v-model="form.jam_booking"
-            type="time"
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
-            required
-          />
-        </div>
+
         <button
           @click="submitBooking"
           class="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-semibold shadow"
@@ -168,7 +160,6 @@ export default {
         type: '',
         warna: '',
         tanggal_booking: '',
-        jam_booking: '',
         no_pol: '',
         vehicle_id: null,
         customer_id: null,
@@ -219,7 +210,6 @@ export default {
           warna: found.warna,
           model: found.model,
           tanggal_booking: '',
-          jam_booking: '',
           no_pol: found.no_pol,
           vehicle_id: found.id || null, // Assuming vehicle_id exists in customer data
           customer_id: found.customer.id || null, // Assuming customer_id exists in customer data
@@ -234,8 +224,7 @@ export default {
           model: '',
           type: '',
           warna: '',
-          _booking: '',
-          jam_booking: '',
+          tanggal_booking: '',
           no_pol: isAlphaNum ? val.toUpperCase() : '',
           vehicle_id: null, // Reset vehicle_id when not found
           customer_id: null, // New customer, so no ID yet
@@ -243,8 +232,8 @@ export default {
       }
     },
     async submitBooking() {
-      if (!this.form.tanggal_booking || !this.form.jam_booking) {
-        this.successMsg = 'Tanggal dan jam booking wajib diisi!'
+      if (!this.form.tanggal_booking) {
+        this.successMsg = 'Tanggal booking wajib diisi!'
         return
       }
       try {
@@ -273,14 +262,14 @@ export default {
         this.foundCustomer = null
         this.form = {
           nama: '',
-          nohp: '',
-          brand: '',
-          tipe: '',
+          hp: '',
+          model: '',
+          type: '',
           warna: '',
           tanggal_booking: '',
-          jam_booking: '',
-          vehicle_id: '',
-          customer_id: '',
+          no_pol: '',
+          vehicle_id: null,
+          customer_id: null,
         }
         this.successMsg = ''
       }, 2000)

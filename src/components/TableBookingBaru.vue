@@ -23,7 +23,7 @@
             <th class="px-6 py-3">Tipe</th>
             <th class="px-6 py-3">Warna</th>
             <th class="px-6 py-3">Tanggal</th>
-            <th class="px-6 py-3">Jam</th>
+
             <th class="px-6 py-3">Aksi</th>
           </tr>
         </thead>
@@ -39,8 +39,8 @@
             <td class="px-6 py-4">{{ booking.model }}</td>
             <td class="px-6 py-4">{{ booking.type }}</td>
             <td class="px-6 py-4">{{ booking.warna }}</td>
-            <td class="px-6 py-4">{{ formatDate(booking.tanggal_booking) }}</td>
-            <td class="px-6 py-4">{{ formattedTime(booking.jam_booking) }}</td>
+            <td class="px-6 py-4">{{ formatDateTime(booking.tanggal_booking) }}</td>
+
             <td class="px-6 py-4">
               <button
                 v-if="booking.customer_id"
@@ -80,8 +80,8 @@
           </div>
         </div>
         <div class="flex justify-between text-sm text-gray-700">
-          <div><strong>Tanggal:</strong> {{ formatDate(booking.tanggal_booking) }}</div>
-          <div><strong>Jam:</strong> {{ formattedTime(booking.jam_booking) }}</div>
+          <div><strong>Tanggal:</strong> {{ formatDateTime(booking.tanggal_booking) }}</div>
+
           <div class="p-1">
             <button
               v-if="booking.customer_id"
@@ -159,18 +159,15 @@ async function getBooking() {
   }
 }
 
-function formatDate(dateStr) {
+function formatDateTime(dateStr) {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
-  return d.toLocaleDateString('id-ID')
-}
-
-const formattedTime = (time) => {
-  const date = new Date('1970-01-01T' + time + 'Z') // Assume the time is in HH:mm:ss format
-  return date.toLocaleTimeString('id-ID', {
+  return d.toLocaleString('id-ID', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false, // 24-hour format
   })
 }
 
@@ -198,7 +195,6 @@ function saveToCustomer(booking) {
     type: booking.type,
     warna: booking.warna,
     tanggal_booking: booking.tanggal_booking,
-    jam_booking: booking.jam_booking,
     booking_id: booking.id,
   }
   localStorage.setItem('bookingDataSaveToCustomer', JSON.stringify(bookingku))
@@ -215,7 +211,6 @@ function saveToWO(booking) {
     type: booking.type,
     warna: booking.warna,
     tanggal_booking: booking.tanggal_booking,
-    jam_booking: booking.jam_booking,
     booking_id: booking.id,
     customer_id: booking.customer_id,
     vehicle_id: booking.vehicle_id,

@@ -188,26 +188,27 @@
 
         <form @submit.prevent="submitForm">
           <!-- Input Keluhan dan Saran -->
-          <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="mb-6 grid grid-cols-1 gap-6">
             <div class="relative">
-              <input
+              <textarea
                 v-model="form.keluhan"
-                type="text"
-                class="modern-input peer"
+                class="modern-textarea peer"
                 placeholder=" "
+                rows="4"
                 :disabled="isCompleted"
-              />
-              <label class="modern-label">Keluhan</label>
+              ></textarea>
+              <label class="modern-textarea-label">Keluhan</label>
             </div>
+
             <div class="relative">
-              <input
+              <textarea
                 v-model="form.saran"
-                type="text"
-                class="modern-input peer"
+                class="modern-textarea peer"
                 placeholder=" "
+                rows="4"
                 :disabled="isCompleted"
-              />
-              <label class="modern-label">Saran</label>
+              ></textarea>
+              <label class="modern-textarea-label">Saran</label>
             </div>
           </div>
 
@@ -1272,8 +1273,7 @@ export default {
         this.form.type = this.dataWorkorder.vehicle_type
         this.form.tahun = this.dataWorkorder.vehicle_tahun || ''
         this.form.kilometer = this.dataWorkorder.kilometer || 0
-        this.form.next_service_km =
-          this.dataWorkorder.next_service_km || this.form.kilometer + 5000
+        this.form.next_service_km = this.dataWorkorder.next_service_km || this.form.kilometer + 5000
         this.form.next_service_date = this.dataWorkorder.next_service_date || ''
         this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
@@ -1595,8 +1595,8 @@ export default {
       })
     },
     async submitForm() {
-      // Tanggal masuk: now lengkap dengan jam (format ISO)
-      this.form.tanggal_masuk = new Date().toISOString().slice(0, 19)
+      // Tanggal masuk: set as Date object
+      this.form.tanggal_masuk = new Date()
       // Set last_service to current date (YYYY-MM-DD format) if not already set
       if (!this.form.last_service) {
         this.form.last_service = new Date().toISOString().split('T')[0]
@@ -1615,6 +1615,24 @@ export default {
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
       this.form.workorder_id = this.$route.params.id
+
+      // Ensure numeric fields in product_ordered are numbers
+      this.form.product_ordered.forEach((item) => {
+        item.quantity = Number(item.quantity) || 0
+        item.price = parseFloat(item.price) || 0
+        item.discount = parseFloat(item.discount) || 0
+        item.cost = parseFloat(item.cost) || 0
+        item.subtotal = parseFloat(item.subtotal) || 0
+      })
+
+      // Ensure numeric fields in service_ordered are numbers
+      this.form.service_ordered.forEach((item) => {
+        item.quantity = Number(item.quantity) || 0
+        item.price = parseFloat(item.price) || 0
+        item.discount = parseFloat(item.discount) || 0
+        item.cost = parseFloat(item.cost) || 0
+        item.serviceSubtotal = parseFloat(item.serviceSubtotal) || 0
+      })
 
       try {
         this.loadingStore.show()
@@ -1649,6 +1667,18 @@ export default {
       if (this.form.status === 'draft') {
         doc.setFontSize(9)
         doc.text('ESTIMASI WORK ORDER', 156, 13)
+        doc.setLineWidth(0.1)
+        doc.rect(155, 10, 40, 5)
+      }
+      if (this.form.status_pembayaran === 'lunas') {
+        doc.setFontSize(9)
+        doc.text('LUNAS', 156, 13)
+        doc.setLineWidth(0.1)
+        doc.rect(155, 10, 40, 5)
+      }
+      if (this.form.status_pembayaran === 'tempo') {
+        doc.setFontSize(9)
+        doc.text('TEMPO', 156, 13)
         doc.setLineWidth(0.1)
         doc.rect(155, 10, 40, 5)
       }
@@ -1699,7 +1729,6 @@ export default {
       doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
       doc.text('Quantity', 70, y)
-      doc.text('Satuan', 85, y)
       doc.text('Harga', 115, y)
       doc.text('Disc', 150, y)
       doc.text('Subtotal', 170, y)
@@ -1707,7 +1736,6 @@ export default {
       this.form.product_ordered.forEach((item) => {
         doc.text(String(item.product_name), 10, y)
         doc.text(String(item.quantity), 73, y)
-        doc.text(String(item.satuan_name), 87, y)
         doc.text(this.formatCurrency(item.price), 125, y, { align: 'right', maxWidth: 25 })
         doc.text(this.formatCurrency(item.discount), 155, y, { align: 'right', maxWidth: 20 })
         doc.text(this.formatCurrency(item.subtotal), 190, y, { align: 'right', maxWidth: 40 })
@@ -1745,10 +1773,32 @@ export default {
       y += 4
 
       doc.setFont('Helvetica', 'italic')
-      doc.text(`Keluhan : ${this.form.keluhan}`, 10, y)
-      doc.text(`Saran : ${this.form.saran}`, 100, y)
 
-      y += 6
+      // Wrap Keluhan text
+      doc.text('Keluhan:', 10, y)
+      y += 5
+      const keluhanText = `${this.form.keluhan}`
+      const keluhanLines = doc.splitTextToSize(keluhanText, 170) // Max width for keluhan
+      doc.text(keluhanLines, 10, y)
+      const keluhanHeight = keluhanLines.length * 4 // Approximate line height
+      y += keluhanHeight
+      doc.setLineWidth(0.1)
+      doc.roundedRect(8, y - keluhanHeight - 4, 174, keluhanHeight + 2, 1, 1) // Adjusted width to 174 (170 + 4 padding)
+
+      y += 4
+      doc.text('Saran:', 10, y)
+      y += 5
+
+      // Wrap Saran text
+      const saranText = `${this.form.saran}`
+      const saranLines = doc.splitTextToSize(saranText, 170) // Max width for saran
+      doc.text(saranLines, 10, y) // Adjust y to align with keluhan if needed
+      const saranHeight = saranLines.length * 4
+      y += Math.max(0, saranHeight - keluhanHeight) + 2 // Adjust y based on the taller text
+      doc.setLineWidth(0.1)
+      doc.roundedRect(8, y - saranHeight - 6 + keluhanHeight, 174, saranHeight + 2, 1, 1) // Adjusted width to 174 (170 + 4 padding)
+
+      y += 4 + saranHeight
 
       doc.setFont('Helvetica', 'normal')
       doc.setFontSize(9)
@@ -1775,6 +1825,7 @@ export default {
 
       doc.setFontSize(11)
       doc.text(`Total Harga Spare Part`, 115, y)
+      doc.text(`Rp`, 160, y)
       doc.text(`${this.formatCurrency(this.totalProductHarga)}`, 190, y, {
         align: 'right',
         maxWidth: 30,
@@ -1782,6 +1833,7 @@ export default {
       y += 6
       doc.setFontSize(11)
       doc.text(`Total Harga Jasa`, 115, y)
+      doc.text(`Rp`, 160, y)
       doc.text(`${this.formatCurrency(this.form.totalServiceHarga)}`, 190, y, {
         align: 'right',
         maxWidth: 30,
@@ -1789,6 +1841,7 @@ export default {
       y += 6
       doc.setFontSize(11)
       doc.text(`Total Harga`, 115, y)
+      doc.text(`Rp`, 160, y)
       doc.text(`${this.formatCurrency(this.form.grandTotalHarga)}`, 190, y, {
         align: 'right',
         maxWidth: 30,
@@ -1797,6 +1850,7 @@ export default {
 
       doc.setFontSize(11)
       doc.text(`Pajak (11%)`, 115, y)
+      doc.text(`Rp`, 160, y)
       doc.text(`${this.formatCurrency(this.form.pajak)}`, 190, y, {
         align: 'right',
         maxWidth: 30,
@@ -1804,6 +1858,7 @@ export default {
       y += 6
       doc.setFontSize(11)
       doc.text(`Total Pembayaran`, 115, y)
+      doc.text(`Rp`, 160, y)
       doc.text(`${this.formatCurrency(this.form.totalPembayaran)}`, 190, y, {
         align: 'right',
         maxWidth: 30,
