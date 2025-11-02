@@ -125,6 +125,26 @@
         </div>
       </div>
 
+      <!-- Status Pembayaran -->
+      <div class="grid grid-cols-1 gap-6">
+        <div>
+          <label for="status_pembayaran" class="block text-sm font-medium text-gray-700"
+            >Status Pembayaran</label
+          >
+          <select
+            v-model="form.status_pembayaran"
+            id="status_pembayaran"
+            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :disabled="isCompleted"
+          >
+            <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
+            <option value="tempo">Tempo</option>
+            <option value="dp">DP</option>
+            <option value="lunas">Lunas</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Tax Option -->
       <div class="border-t pt-6">
         <div class="flex items-center">
@@ -326,13 +346,20 @@
       </div>
 
       <!-- Submit Button -->
-      <div class="text-center">
+      <div class="text-center space-x-4">
         <button
           type="submit"
           :disabled="statusUpdated == 'diterima'"
           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Create Purchase Order
+          Update Purchase Order
+        </button>
+        <button
+          v-if="form.status === 'diterima'"
+          @click="openPaymentModal"
+          class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+        >
+          Bayar Purchase Order
         </button>
       </div>
     </form>
@@ -363,6 +390,14 @@
 
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+  <payment-modal
+    :is-open="showPaymentModal"
+    :initial-amount="form.pembayaran || 0"
+    :expense-name="`PO ${form.po_no || ''}`"
+    :expense-type="form.supplier_name || ''"
+    @close="closePaymentModal"
+    @submit="handlePaymentSubmit"
+  />
 </template>
 
 <script>
@@ -370,12 +405,13 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, PaymentModal },
   data() {
     return {
       statusUpdated: '',
@@ -385,6 +421,7 @@ export default {
       satuans: [],
       showModal: false,
       modalUrl: '',
+      showPaymentModal: false,
       form: {
         supplier_id: '',
         purchase_order_id: this.$route.params.id,
@@ -396,6 +433,7 @@ export default {
         email: '',
         date: '',
         status: '',
+        status_pembayaran: 'belum_ada_pembayaran',
         includeTax: false,
         document: null,
         bukti_transfer: '',
@@ -503,22 +541,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    async updateCost(productId, index) {
-      if (!productId) return
-      try {
-        const updateCost = {
-          product_id: productId,
-          cost: this.form.items[index].price,
-        }
-        console.log('isi Update: ', updateCost)
-        const response = await api.put(`${BASE_URL}inventory/cost`, updateCost)
-        console.log('Update Cost: ', response.data.data)
-        this.form.items[index].price = response.data.data.cost
-        this.calculateItemTotal(index)
-      } catch (error) {
-        console.log('Error', error)
-      }
-    },
+
     async getCost(productId, index) {
       if (!productId) return
       try {
@@ -540,6 +563,7 @@ export default {
         this.form = {
           ...this.form,
           ...poData,
+          status_pembayaran: poData.status_pembayaran || 'belum_ada_pembayaran',
           items: poData.lines.map((line) => ({
             id: line.id,
             product_id: line.product_id,
@@ -692,6 +716,7 @@ export default {
           total: this.subtotal,
           pembayaran: this.total,
           status: this.form.status,
+          status_pembayaran: this.form.status_pembayaran,
           lines: this.form.items.map((item) => ({
             id: item.id,
             product_id: item.product_id,
@@ -722,10 +747,10 @@ export default {
           },
         )
 
-        console.log('Purchase Order created:', response.data.data)
+        console.log('Purchase Order Edited:', response.data.data)
 
         this.show_toast = true
-        this.message_toast = response.data.message || 'Purchase Order created successfully!'
+        this.message_toast = response.data.message || 'Purchase Order Edited successfully!'
 
         // Reset form after submission
         this.form = {
@@ -740,6 +765,7 @@ export default {
           toko: '',
           deliveryDate: '',
           status: '',
+          status_pembayaran: 'belum_ada_pembayaran',
           includeTax: false,
           document: null,
           items: [
@@ -780,6 +806,47 @@ export default {
     },
     isImage(url) {
       return /\.(jpeg|jpg|png)$/i.test(url)
+    },
+    openPaymentModal() {
+      this.showPaymentModal = true
+    },
+    closePaymentModal() {
+      this.showPaymentModal = false
+    },
+    async handlePaymentSubmit(paymentData) {
+      const form = {
+        amount: paymentData.amount,
+        date: paymentData.date,
+        kas_bank_code: paymentData.bankCode,
+        purchase_id: this.$route.params.id,
+        hutang_code: '3001',
+        supplier_id: this.form.supplier_id,
+        memo: paymentData.description,
+      }
+
+      console.log('Formdata: ', form)
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}accounting/purchase-payment-journal`, form)
+        console.log('Response Payment: ', response.data.message)
+
+        if (response.data.message == 'Jurnal pembayaran pembelian berhasil dibuat') {
+          try {
+            const responku = await api.post(`${BASE_URL}purchase-orders/pay/${form.purchase_id}`)
+            this.show_toast = true
+            this.message_toast = responku.data.message + ' purchase_id: ' + form.purchase_id
+          } catch (error) {
+            console.log('Error purchase: ', error)
+          }
+        }
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        this.message_toast = 'Gagal memproses pembayaran'
+        this.show_toast = true
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
     },
   },
 }

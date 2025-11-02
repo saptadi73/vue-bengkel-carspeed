@@ -828,14 +828,14 @@
           <!-- Keterangan Section -->
           <div class="mb-6">
             <div class="relative">
-              <textarea
+              <input
+                type="text"
                 v-model="form.keterangan"
                 class="modern-input peer"
                 placeholder=" "
-                rows="4"
                 :disabled="isCompleted"
-              ></textarea>
-              <label class="modern-textarea-label">Keterangan</label>
+              />
+              <label class="modern-label">Keterangan</label>
             </div>
           </div>
 
@@ -932,19 +932,19 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Service</label>
           <input
-            v-model="newService.name"
+            :value="newService.name"
+            @input="onServiceNameInput($event.target.value)"
             type="text"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi (Optional)</label>
           <textarea
             v-model="newService.description"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="3"
-            required
           ></textarea>
         </div>
         <div>
@@ -1155,6 +1155,9 @@ export default {
     this.initializeNextServiceDate()
   },
   methods: {
+    onServiceNameInput(val) {
+      this.newService.name = (val || '').toString().toUpperCase()
+    },
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''

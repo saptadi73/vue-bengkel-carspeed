@@ -165,13 +165,6 @@
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="updateProductCost(newItem.product.id, newItem.cost)"
-              class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            >
-              Update Cost
-            </button>
             <button type="button" @click="closeAddModal" class="px-4 py-2 bg-gray-300 rounded-md">
               Batal
             </button>
@@ -446,29 +439,7 @@ export default {
     updateNewSubtotal() {
       this.newItem.subtotal = this.newItem.quantity * this.newItem.cost - this.newItem.discount
     },
-    async updateProductCost(productId, newCost) {
-      if (!productId || !newCost) return
-      try {
-        const updateCost = {
-          product_id: productId,
-          cost: newCost,
-        }
-        console.log('Update Cost: ', updateCost)
-        const response = await api.put(`${BASE_URL}products/cost`, updateCost)
-        console.log('Update Cost Response: ', response.data.data)
-        // Refresh products list
-        await this.getProduct()
-        // Update the cost in newItem if it's the same product
-        if (this.newItem.product && this.newItem.product.id === productId) {
-          this.newItem.cost = response.data.data.cost
-          this.updateNewSubtotal()
-        }
-        alert('Cost updated successfully!')
-      } catch (error) {
-        console.log('Error updating cost:', error)
-        alert('Error updating cost')
-      }
-    },
+
     formatCurrency(value) {
       return new Intl.NumberFormat('id-ID', {
         style: 'currency',

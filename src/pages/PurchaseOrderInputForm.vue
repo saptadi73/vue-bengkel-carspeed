@@ -288,22 +288,7 @@ export default {
       }
       this.calculateItemTotal(index)
     },
-    async updateCost(productId, index) {
-      if (!productId) return
-      try {
-        const updateCost = {
-          product_id: productId,
-          cost: this.form.items[index].price,
-        }
-        console.log('isi Update: ', updateCost)
-        const response = await api.put(`${BASE_URL}products/cost`, updateCost)
-        console.log('Update Cost: ', response.data.data)
-        this.form.items[index].price = response.data.data.cost
-        this.calculateItemTotal(index)
-      } catch (error) {
-        console.log('Error', error)
-      }
-    },
+
     async getSatuans() {
       try {
         this.loadingStore.show()
@@ -377,14 +362,16 @@ export default {
           total: this.subtotal,
           pembayaran: this.total,
           status: this.form.status,
-          lines: this.form.items.map((item) => ({
-            product_id: item.product_id,
-            satuan_id: item.satuan_id,
-            quantity: item.quantity,
-            price: item.price,
-            discount: item.discount,
-            subtotal: item.subtotal,
-          })),
+          lines: this.form.items
+            .filter((item) => item.product_id)
+            .map((item) => ({
+              product_id: item.product_id,
+              satuan_id: item.satuan_id,
+              quantity: item.quantity,
+              price: item.price,
+              discount: item.discount,
+              subtotal: item.subtotal,
+            })),
         }
 
         const formData = new FormData()

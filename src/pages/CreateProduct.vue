@@ -8,12 +8,12 @@
     <div class="mb-4 mt-10 info-card">
       <label for="name" class="block text-gray-700 font-semibold">Nama Produk</label>
       <input
-      :value="form.name"
-      @input="onNameInput($event.target.value)"
-      type="text"
-      id="name"
-      class="modern-input peer"
-      placeholder="Masukkan nama produk"
+        :value="form.name"
+        @input="onNameInput($event.target.value)"
+        type="text"
+        id="name"
+        class="modern-input peer"
+        placeholder="Masukkan nama produk"
       />
     </div>
 
@@ -55,13 +55,13 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-3 bg-blue-100 p-3 rounded-md shadow-lg">
       <div class="info-card">
         <div class="relative">
-          <label for="type" class="modern-label-label">Type</label>
+          <label for="type" class="modern-label-label">Type (Optional)</label>
           <input
             v-model="form.type"
             type="text"
             id="type"
             class="modern-input peer"
-            placeholder="Type tertera"
+            placeholder="Type tertera (opsional)"
           />
         </div>
       </div>
@@ -175,42 +175,84 @@
     </div>
 
     <!-- Modal Add Supplier -->
-    <div v-if="showSupplierModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]">
+    <div
+      v-if="showSupplierModal"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[1000]"
+    >
       <div class="bg-white rounded-lg p-6 w-96 shadow-2xl">
         <h3 class="text-xl font-semibold mb-4">Tambah Supplier</h3>
         <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-            <input v-model="supplierForm.nama" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+            <input
+              v-model="supplierForm.nama"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              required
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">HP</label>
-            <input v-model="supplierForm.hp" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
+            <input
+              v-model="supplierForm.hp"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              required
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
-            <input v-model="supplierForm.alamat" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            <input
+              v-model="supplierForm.alamat"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input v-model="supplierForm.email" type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            <input
+              v-model="supplierForm.email"
+              type="email"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">NPWP</label>
-            <input v-model="supplierForm.npwp" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            <input
+              v-model="supplierForm.npwp"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Perusahaan</label>
-            <input v-model="supplierForm.perusahaan" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            <input
+              v-model="supplierForm.perusahaan"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Toko</label>
-            <input v-model="supplierForm.toko" type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" />
+            <input
+              v-model="supplierForm.toko"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+            />
           </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-          <button type="button" class="modern-btn-cancel" @click="closeSupplierModal">Cancel</button>
-          <button type="button" class="modern-btn-primary" :disabled="!supplierForm.nama || !supplierForm.hp" @click="addSupplier">Save</button>
+          <button type="button" class="modern-btn-cancel" @click="closeSupplierModal">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="modern-btn-primary"
+            :disabled="!supplierForm.nama || !supplierForm.hp"
+            @click="addSupplier"
+          >
+            Save
+          </button>
         </div>
       </div>
     </div>
@@ -449,7 +491,15 @@ export default {
     },
     closeSupplierModal() {
       this.showSupplierModal = false
-      this.supplierForm = { nama: '', hp: '', alamat: '', email: '', npwp: '', perusahaan: '', toko: '' }
+      this.supplierForm = {
+        nama: '',
+        hp: '',
+        alamat: '',
+        email: '',
+        npwp: '',
+        perusahaan: '',
+        toko: '',
+      }
     },
     async addSupplier() {
       try {
@@ -472,7 +522,9 @@ export default {
         this.closeSupplierModal()
       } catch (err) {
         this.show_toast = true
-        this.message_toast = (err.response && err.response.data && err.response.data.message) || 'Gagal menambahkan supplier.'
+        this.message_toast =
+          (err.response && err.response.data && err.response.data.message) ||
+          'Gagal menambahkan supplier.'
       } finally {
         this.loadingStore.hide()
       }

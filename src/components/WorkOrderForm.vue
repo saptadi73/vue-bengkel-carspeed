@@ -744,7 +744,7 @@
                 class="modern-input peer"
                 placeholder=" "
               />
-              <label class="modern-textarea-label">Keterangan</label>
+              <label class="modern-label">Keterangan</label>
             </div>
           </div>
 
@@ -792,19 +792,19 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Service</label>
           <input
-            v-model="newService.name"
+            :value="newService.name"
+            @input="onServiceNameInput($event.target.value)"
             type="text"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi (Optional)</label>
           <textarea
             v-model="newService.description"
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows="3"
-            required
           ></textarea>
         </div>
         <div>
@@ -995,6 +995,9 @@ export default {
     this.initializeNextServiceDate()
   },
   methods: {
+    onServiceNameInput(val) {
+      this.newService.name = (val || '').toString().toUpperCase()
+    },
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -1281,6 +1284,13 @@ export default {
       }).format(val)
     },
     async submitForm() {
+      // Validation: Check if karyawan_id is selected
+      if (!this.form.karyawan_id) {
+        this.message_toast = 'Silakan pilih karyawan terlebih dahulu.'
+        this.show_toast = true
+        return
+      }
+
       // Tanggal masuk: set as Date object
       this.form.tanggal_masuk = new Date()
       // Set last_service to current date (YYYY-MM-DD format)

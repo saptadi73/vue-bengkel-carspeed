@@ -136,11 +136,7 @@
               >
                 Status
               </th>
-              <th
-                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-              >
-                Bayar
-              </th>
+
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
@@ -239,16 +235,6 @@
                   {{ order.status }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button
-                  v-if="order.status === 'selesai'"
-                  @click="openPaymentModal(order)"
-                  title="Bayar Work Order"
-                  class="cursor-pointer"
-                >
-                  <span class="material-symbols-outlined text-blue-700">payment</span>
-                </button>
-              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <a
                   :href="`${BASE_URL2}pelanggan/history/${order.vehicle_id}`"
@@ -279,7 +265,7 @@
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
-              <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
                     class="h-12 w-12 text-gray-400 mb-4"
@@ -538,16 +524,6 @@
 
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
-  <payment-modal
-    :is-open="showPaymentModal"
-    :initial-amount="selectedOrderForPayment ? selectedOrderForPayment.total_biaya : 0"
-    :expense-name="selectedOrderForPayment ? `WO ${selectedOrderForPayment.no_wo}` : ''"
-    :expense-type="selectedOrderForPayment ? selectedOrderForPayment.customer_name : ''"
-    :expense-workorder="selectedOrderForPayment ? selectedOrderForPayment.id : ''"
-    :expense-customer="selectedOrderForPayment ? selectedOrderForPayment.customer_id : ''"
-    @close="closePaymentModal"
-    @submit="handlePaymentSubmit"
-  />
 </template>
 
 <script>
@@ -555,14 +531,12 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
-import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
-import api from '@/user/axios'
 
 export default {
   name: 'TableWorkOrderAll',
-  components: { LoadingOverlay, ToastCard, PaymentModal },
+  components: { LoadingOverlay, ToastCard },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -577,8 +551,6 @@ export default {
       confirmAction: '',
       selectedOrder: null,
       workOrders: [],
-      showPaymentModal: false,
-      selectedOrderForPayment: null,
     }
   },
   computed: {
@@ -730,41 +702,7 @@ export default {
         this.loadingStore.hide()
       }
     },
-    openPaymentModal(order) {
-      this.selectedOrderForPayment = order
-      this.showPaymentModal = true
-    },
-    closePaymentModal() {
-      this.showPaymentModal = false
-      this.selectedOrderForPayment = null
-    },
-    async handlePaymentSubmit(paymentData) {
-      const form = {
-        date: paymentData.date,
-        amount: paymentData.amount,
-        kas_bank_code: paymentData.bankCode,
-        memo: paymentData.description,
-        workorder_id: this.selectedOrderForPayment.id,
-        customer_id: this.selectedOrderForPayment.customer_id,
-        piutang_code: '2001',
-      }
-      console.log('Formnya: ', form)
-      try {
-        this.loadingStore.show()
-        // Assuming API endpoint for workorder payment
-        const response = await api.post(`${BASE_URL}workorders/update-only-status`, form)
-        this.message_toast = response.data.message || 'Pembayaran Work Order berhasil!'
-        this.show_toast = true
-        this.fetchWorkOrders() // Refresh data
-      } catch (error) {
-        console.error('Error processing payment:', error)
-        this.message_toast = 'Gagal memproses pembayaran'
-        this.show_toast = true
-        console.log('Error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
+
     tutupToast() {
       this.show_toast = false
     },

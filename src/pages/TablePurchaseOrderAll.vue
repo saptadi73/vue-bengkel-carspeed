@@ -183,14 +183,7 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button
-                  v-if="order.status === 'diterima'"
-                  @click="openPaymentModal(order)"
-                  title="Bayar Purchase Order"
-                  class="cursor-pointer"
-                >
-                  <span class="material-symbols-outlined text-blue-700">payment</span>
-                </button>
+                <!-- Payment button removed -->
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <a :href="`/finansial/purchase/${order.id}`" title="Edit PO"
