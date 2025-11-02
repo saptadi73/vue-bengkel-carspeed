@@ -1471,7 +1471,7 @@ export default {
         const data = response.data.data
         // Update satuan_id dan price pada item yang dipilih
         if (data.price) item.price = data.price
-        if (data.cost) item.cost = Number(data.cost) || 0
+        if (data.cost) item.cost = Math.round(Number(data.cost) || 0)
         this.updateServiceSubtotal(item)
       } catch (error) {
         console.log('error: ', error)
