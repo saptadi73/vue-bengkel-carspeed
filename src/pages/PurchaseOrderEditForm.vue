@@ -126,7 +126,7 @@
       </div>
 
       <!-- Status Pembayaran -->
-      <div class="grid grid-cols-1 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="status_pembayaran" class="block text-sm font-medium text-gray-700"
             >Status Pembayaran</label
@@ -139,10 +139,21 @@
           >
             <option value="" disabled selected>Pilih Status Pembayaran</option>
             <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
-            <option value="belum_lunas">Belum Lunas</option>
             <option value="tempo">Tempo</option>
+            <option value="dp">DP</option>
             <option value="lunas">Lunas</option>
           </select>
+        </div>
+        <div v-if="form.status_pembayaran === 'dp'">
+          <label for="dp_amount" class="block text-sm font-medium text-gray-700">DP Amount</label>
+          <input
+            v-model.number="form.dp_amount"
+            type="number"
+            id="dp_amount"
+            min="0"
+            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :disabled="isCompleted"
+          />
         </div>
       </div>
 
@@ -356,7 +367,7 @@
           Update Purchase Order
         </button>
         <button
-          v-if="form.status === 'diterima'"
+          v-if="form.status === 'diterima' && purchaseOrderUpdated"
           @click="openPaymentModal"
           class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
         >
@@ -416,6 +427,7 @@ export default {
   data() {
     return {
       statusUpdated: '',
+      purchaseOrderUpdated: false,
       suppliers: [],
       products: [],
       units: [],
@@ -435,6 +447,7 @@ export default {
         date: '',
         status: '',
         status_pembayaran: 'belum_ada_pembayaran',
+        dp_amount: 0,
         includeTax: false,
         document: null,
         bukti_transfer: '',
@@ -511,8 +524,11 @@ export default {
     tax() {
       return this.subtotal * 0.11
     },
+    // total now includes dp
     total() {
-      return this.form.includeTax ? this.subtotal + this.tax : this.subtotal
+      const dp = Number(this.form.dp_amount) || 0
+      const base = this.form.includeTax ? this.subtotal + this.tax : this.subtotal
+      return base - dp
     },
     hasUnsavedChanges() {
       return (
@@ -565,6 +581,7 @@ export default {
           ...this.form,
           ...poData,
           status_pembayaran: poData.status_pembayaran || 'belum_ada_pembayaran',
+          dp_amount: poData.dp_amount || 0,
           items: poData.lines.map((line) => ({
             id: line.id,
             product_id: line.product_id,
@@ -718,6 +735,7 @@ export default {
           pembayaran: this.total,
           status: this.form.status,
           status_pembayaran: this.form.status_pembayaran,
+          dp_amount: this.form.dp_amount || 0,
           lines: this.form.items.map((item) => ({
             id: item.id,
             product_id: item.product_id,
@@ -753,6 +771,9 @@ export default {
         this.show_toast = true
         this.message_toast = response.data.message || 'Purchase Order Edited successfully!'
 
+        // Set flag that purchase order has been updated
+        this.purchaseOrderUpdated = true
+
         // Reset form after submission
         this.form = {
           supplier_id: '',
@@ -767,6 +788,7 @@ export default {
           deliveryDate: '',
           status: '',
           status_pembayaran: 'belum_ada_pembayaran',
+          dp_amount: 0,
           includeTax: false,
           document: null,
           items: [

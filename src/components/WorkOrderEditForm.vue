@@ -159,11 +159,24 @@
                 >
                   <option value="" disabled selected>Pilih Status Pembayaran</option>
                   <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
-                  <option value="belum_lunas">Belum Lunas</option>
+                  <option value="dp">DP</option>
                   <option value="tempo">Tempo</option>
                   <option value="lunas">Lunas</option>
                 </select>
                 <label class="modern-select-label">Status Pembayaran</label>
+              </div>
+            </div>
+            <div class="info-card" v-if="form.status_pembayaran === 'dp'">
+              <div class="relative">
+                <input
+                  v-model.number="form.dp_amount"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                  :disabled="isCompleted"
+                />
+                <label class="modern-label">DP Amount</label>
               </div>
             </div>
             <div class="info-card">
@@ -771,7 +784,7 @@
               </div>
               <h3 class="text-lg font-bold text-gray-800">Ringkasan Total</h3>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-white rounded-lg p-4 border border-green-200">
                 <div class="text-sm text-gray-600 mb-1">Total Harga</div>
                 <input
@@ -792,7 +805,20 @@
                   {{ formatCurrency(pajakAmount) }}
                 </div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-blue-200">
+              <div
+                class="bg-white rounded-lg p-4 border border-purple-200"
+                v-if="form.status_pembayaran === 'dp'"
+              >
+                <div class="text-sm text-gray-600 mb-1">DP</div>
+                <input type="hidden" id="dp-amount" v-model.number="form.dp_amount" readonly />
+                <div class="text-xl font-bold text-purple-600">
+                  {{ formatCurrency(form.dp_amount) }}
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-lg p-4 border border-blue-200"
+                :class="form.status_pembayaran !== 'dp' ? 'md:col-span-2 lg:col-span-1' : ''"
+              >
                 <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
                 <input
                   type="hidden"
@@ -856,10 +882,14 @@
               type="button"
               class="modern-btn-payment flex items-center gap-2"
               @click="openPaymentModal"
-              :disabled="form.status !== 'selesai' || form.status_pembayaran === 'lunas'"
+              :disabled="
+                form.status !== 'selesai' || form.status_pembayaran === 'lunas' || !workOrderUpdated
+              "
               :class="{
                 'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' || form.status_pembayaran === 'lunas',
+                  form.status !== 'selesai' ||
+                  form.status_pembayaran === 'lunas' ||
+                  !workOrderUpdated,
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1018,6 +1048,7 @@ export default {
       isiPajakAmount: 0,
       karyawan: [],
       initialStatus: '', // Menyimpan status awal dari database
+      workOrderUpdated: false, // Flag to track if work order has been updated
       form: {
         customer_id: '',
         vehicle_id: '',
@@ -1036,6 +1067,7 @@ export default {
         next_service_date: '',
         last_service: '',
         status_pembayaran: 'belum_ada_pembayaran',
+        dp_amount: 0,
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -1215,7 +1247,16 @@ export default {
 
     calculatetotalPembayaran() {
       const subtotal = Math.max(0, this.grandTotalHarga)
-      return (this.form.totalPembayaran = subtotal + this.pajakAmount)
+      let total = subtotal + this.pajakAmount
+
+      // Reduce total by DP amount if status_pembayaran is 'dp'
+      if (this.form.status_pembayaran === 'dp') {
+        // Assuming DP amount is stored in form.dp_amount or similar
+        // For now, we'll need to add a field for DP amount
+        total -= this.form.dp_amount || 0
+      }
+
+      return (this.form.totalPembayaran = Math.max(0, total))
     },
 
     calculatepajakAmount() {
@@ -1280,6 +1321,7 @@ export default {
         this.form.next_service_date = this.dataWorkorder.next_service_date || ''
         this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
+        this.form.dp_amount = this.dataWorkorder.dp_amount || 0
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -1617,6 +1659,7 @@ export default {
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
+      this.form.dp_amount = this.form.dp_amount || 0
       this.form.workorder_id = this.$route.params.id
 
       // Ensure numeric fields in product_ordered are numbers
@@ -1647,6 +1690,7 @@ export default {
         this.message_toast = response.data.message
         console.log('Workorder id: ', this.form.workorder_id)
         this.initialStatus = this.form.status // Update initialStatus setelah submit berhasil
+        this.workOrderUpdated = true // Set flag bahwa work order telah diupdate
         this.getBookingData()
       } catch (error) {
         console.log('error: ', error)
@@ -1859,6 +1903,16 @@ export default {
         maxWidth: 30,
       })
       y += 6
+      if (this.form.status_pembayaran === 'dp') {
+        doc.setFontSize(11)
+        doc.text(`DP`, 115, y)
+        doc.text(`Rp`, 160, y)
+        doc.text(`${this.formatCurrency(this.form.dp_amount)}`, 190, y, {
+          align: 'right',
+          maxWidth: 30,
+        })
+        y += 6
+      }
       doc.setFontSize(11)
       doc.text(`Total Pembayaran`, 115, y)
       doc.text(`Rp`, 160, y)
