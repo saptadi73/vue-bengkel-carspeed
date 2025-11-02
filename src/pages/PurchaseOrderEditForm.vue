@@ -137,9 +137,10 @@
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             :disabled="isCompleted"
           >
+            <option value="" disabled selected>Pilih Status Pembayaran</option>
             <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
+            <option value="belum_lunas">Belum Lunas</option>
             <option value="tempo">Tempo</option>
-            <option value="dp">DP</option>
             <option value="lunas">Lunas</option>
           </select>
         </div>
