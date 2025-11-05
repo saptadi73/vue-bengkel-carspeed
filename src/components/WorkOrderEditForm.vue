@@ -96,7 +96,7 @@
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                   @input="updateNextServiceKm"
                 />
                 <label class="modern-label">Kilometer</label>
@@ -110,7 +110,7 @@
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                   readonly
                 />
                 <label class="modern-label">Service Berikutnya KM</label>
@@ -123,7 +123,7 @@
                   type="date"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                   readonly
                 />
                 <label class="modern-label">Service Berikutnya Tanggal</label>
@@ -135,7 +135,7 @@
                   v-model="form.karyawan_id"
                   class="modern-select peer"
                   required
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                 >
                   <option value="" disabled selected>-- Pilih Karyawan --</option>
                   <option
@@ -155,26 +155,25 @@
                   v-model="form.status_pembayaran"
                   id="status_pembayaran"
                   class="modern-select peer"
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                 >
                   <option value="" disabled selected>Pilih Status Pembayaran</option>
                   <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
-                  <option value="dp">DP</option>
                   <option value="tempo">Tempo</option>
                   <option value="lunas">Lunas</option>
                 </select>
                 <label class="modern-select-label">Status Pembayaran</label>
               </div>
             </div>
-            <div class="info-card" v-if="form.status_pembayaran === 'dp'">
+            <div class="info-card">
               <div class="relative">
                 <input
-                  v-model.number="form.dp_amount"
+                  v-model.number="form.dp"
                   type="number"
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                 />
                 <label class="modern-label">DP Amount</label>
               </div>
@@ -185,7 +184,7 @@
                   v-model="form.status"
                   id="status"
                   class="modern-select peer"
-                  :disabled="isCompleted"
+                  :disabled="initialStatus === 'selesai'"
                 >
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
@@ -208,7 +207,7 @@
                 class="modern-textarea peer"
                 placeholder=" "
                 rows="4"
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               ></textarea>
               <label class="modern-textarea-label">Keluhan</label>
             </div>
@@ -219,7 +218,7 @@
                 class="modern-textarea peer"
                 placeholder=" "
                 rows="4"
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               ></textarea>
               <label class="modern-textarea-label">Saran</label>
             </div>
@@ -250,7 +249,7 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="addProductOrder"
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -290,7 +289,7 @@
                       v-model="item.product_id"
                       class="modern-select peer"
                       @change="(getProductsId(item), markProductModified(item))"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       <option value="" disabled selected>Pilih Product</option>
                       <option
@@ -311,7 +310,7 @@
                       min="0"
                       class="modern-input peer text-sm"
                       placeholder=" "
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="relative col-span-1">
@@ -324,7 +323,7 @@
                       placeholder=" "
                       @change="markProductModified(item)"
                       @input="validateQuantity(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="hidden relative col-span-1">
@@ -332,7 +331,7 @@
                       id="satuan_id"
                       v-model="item.satuan_id"
                       class="modern-select peer"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
@@ -347,7 +346,7 @@
                       min="0"
                       class="modern-input peer text-sm"
                       placeholder=" "
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -358,7 +357,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -369,7 +368,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="hidden col-span-2">
@@ -401,7 +400,7 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmAddProduct(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       Confirm Add
                     </button>
@@ -410,7 +409,7 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmUpdateProduct(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       Confirm Update
                     </button>
@@ -418,7 +417,7 @@
                       type="button"
                       class="delete-btn"
                       @click="removeProductOrder(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
@@ -514,7 +513,7 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="openAddServiceModal"
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -530,7 +529,7 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="addServiceOrder"
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -567,7 +566,7 @@
                       v-model="item.service_id"
                       @change="(getServicesId(item), markServiceModified(item))"
                       class="modern-select peer"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       <option value="" disabled selected>Pilih Service/Jasa</option>
                       <option
@@ -589,7 +588,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
 
@@ -600,7 +599,7 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
 
@@ -612,7 +611,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -623,7 +622,7 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     />
                   </div>
                   <div class="hidden">
@@ -654,7 +653,7 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmAddService(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       Confirm Add
                     </button>
@@ -663,7 +662,7 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmUpdateService(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       Confirm Update
                     </button>
@@ -671,7 +670,7 @@
                       type="button"
                       class="delete-btn"
                       @click="removeServiceOrder(idx)"
-                      :disabled="isCompleted"
+                      :disabled="initialStatus === 'selesai'"
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
@@ -759,7 +758,7 @@
               id="useTax"
               v-model="isUseTax"
               class="mr-2"
-              :disabled="isCompleted"
+              :disabled="initialStatus === 'selesai'"
             />
             <label for="useTax" class="text-sm font-semibold">Gunakan Pajak 11%</label>
           </div>
@@ -805,14 +804,11 @@
                   {{ formatCurrency(pajakAmount) }}
                 </div>
               </div>
-              <div
-                class="bg-white rounded-lg p-4 border border-purple-200"
-                v-if="form.status_pembayaran === 'dp'"
-              >
+              <div class="bg-white rounded-lg p-4 border border-purple-200" v-if="form.dp > 0">
                 <div class="text-sm text-gray-600 mb-1">DP</div>
-                <input type="hidden" id="dp-amount" v-model.number="form.dp_amount" readonly />
+                <input type="hidden" id="dp-amount" v-model.number="form.dp" readonly />
                 <div class="text-xl font-bold text-purple-600">
-                  {{ formatCurrency(form.dp_amount) }}
+                  {{ formatCurrency(form.dp) }}
                 </div>
               </div>
               <div
@@ -859,7 +855,7 @@
                 v-model="form.keterangan"
                 class="modern-input peer"
                 placeholder=" "
-                :disabled="isCompleted"
+                :disabled="initialStatus === 'selesai'"
               />
               <label class="modern-label">Keterangan</label>
             </div>
@@ -882,14 +878,10 @@
               type="button"
               class="modern-btn-payment flex items-center gap-2"
               @click="openPaymentModal"
-              :disabled="
-                form.status !== 'selesai' || form.status_pembayaran === 'lunas' || !workOrderUpdated
-              "
+              :disabled="form.status !== 'selesai' || form.status_pembayaran === 'lunas'"
               :class="{
                 'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' ||
-                  form.status_pembayaran === 'lunas' ||
-                  !workOrderUpdated,
+                  form.status !== 'selesai' || form.status_pembayaran === 'lunas',
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -904,10 +896,13 @@
             </button>
             <button
               type="submit"
-              :disabled="hasUnconfirmedChanges || isCompleted"
+              :disabled="hasUnconfirmedChanges || initialStatus === 'selesai'"
               :class="[
                 'modern-btn-success flex items-center gap-2',
-                { 'opacity-50 cursor-not-allowed': hasUnconfirmedChanges || isCompleted },
+                {
+                  'opacity-50 cursor-not-allowed':
+                    hasUnconfirmedChanges || initialStatus === 'selesai',
+                },
               ]"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1068,7 +1063,7 @@ export default {
         next_service_date: '',
         last_service: '',
         status_pembayaran: 'belum_ada_pembayaran',
-        dp_amount: 0,
+        dp: 0,
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -1250,11 +1245,9 @@ export default {
       const subtotal = Math.max(0, this.grandTotalHarga)
       let total = subtotal + this.pajakAmount
 
-      // Reduce total by DP amount if status_pembayaran is 'dp'
-      if (this.form.status_pembayaran === 'dp') {
-        // Assuming DP amount is stored in form.dp_amount or similar
-        // For now, we'll need to add a field for DP amount
-        total -= this.form.dp_amount || 0
+      // Reduce total by DP amount if DP amount is greater than 0
+      if (this.form.dp > 0) {
+        total -= this.form.dp || 0
       }
 
       return (this.form.totalPembayaran = Math.max(0, total))
@@ -1323,7 +1316,7 @@ export default {
         this.form.next_service_date = this.dataWorkorder.next_service_date || ''
         this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
-        this.form.dp_amount = this.dataWorkorder.dp_amount || 0
+        this.form.dp = this.dataWorkorder.dp || 0
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -1661,7 +1654,7 @@ export default {
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
-      this.form.dp_amount = this.form.dp_amount || 0
+      this.form.dp = this.form.dp || 0
       this.form.workorder_id = this.$route.params.id
 
       // Ensure numeric fields in product_ordered are numbers
@@ -1892,11 +1885,11 @@ export default {
       doc.text(`Rp`, 130, y)
       doc.text(`${this.formatCurrency(this.form.pajak)}`, 150, y)
       y += 5
-      if (this.form.status_pembayaran === 'dp') {
+      if (this.form.dp > 0) {
         doc.setFontSize(8)
         doc.text(`DP`, 80, y)
         doc.text(`Rp`, 130, y)
-        doc.text(`${this.formatCurrency(this.form.dp_amount)}`, 150, y)
+        doc.text(`${this.formatCurrency(this.form.dp)}`, 150, y)
         y += 5
       }
       doc.setFontSize(8)
