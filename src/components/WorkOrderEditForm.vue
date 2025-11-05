@@ -1698,224 +1698,285 @@ export default {
       console.log('Form Data:', this.form)
     },
     printPDF() {
-      const doc = new jsPDF()
-      // Draw rounded border for logo
-      doc.setLineWidth(0.1)
-      doc.setDrawColor(0, 0, 0)
-      doc.roundedRect(10, 10, 60, 16, 1, 1)
-      doc.addImage(logoImage, 'PNG', 10, 10, 60, 16)
-      doc.setFontSize(14)
-      doc.text('Bengkel Car Speed', 75, 13)
-      if (this.form.status === 'draft') {
-        doc.setFontSize(9)
-        doc.text('ESTIMASI WORK ORDER', 156, 13)
-        doc.setLineWidth(0.1)
-        doc.rect(155, 10, 40, 5)
+      const doc = new jsPDF('p', 'mm', 'a4')
+
+      const primaryColor = [0, 0, 0]
+
+      // ===== HEADER =====
+      doc.setFillColor(245, 245, 245)
+      doc.rect(10, 8, 190, 20, 'F')
+
+      // logo
+      doc.setDrawColor(220, 220, 220)
+      doc.roundedRect(12, 10, 50, 16, 2, 2)
+      if (typeof logoImage !== 'undefined' && logoImage) {
+        doc.addImage(logoImage, 'PNG', 12, 10, 50, 16)
       }
-      if (this.form.status_pembayaran === 'lunas') {
-        doc.setFontSize(9)
-        doc.text('INVOICE LUNAS', 156, 13)
-        doc.setLineWidth(0.1)
-        doc.rect(155, 10, 40, 5)
+
+      // nama bengkel
+      doc.setTextColor(...primaryColor)
+      doc.setFontSize(13)
+      doc.setFont('Helvetica', 'bold')
+      doc.text('Bengkel Car Speed', 66, 15)
+
+      doc.setFontSize(8.5)
+      doc.setFont('Helvetica', 'normal')
+      doc.text('Jl. Suryopranoto No. 10, Gunung Ketur, Pakualaman, Yogyakarta', 66, 20)
+      doc.text('Telp 0274-5021953', 66, 24)
+
+      // ===== badge status (diperkecil) =====
+      let badgeText = ''
+      if (this.form.status === 'draft') badgeText = 'ESTIMASI WO'
+      if (this.form.status_pembayaran === 'lunas') badgeText = 'INVOICE LUNAS'
+      if (this.form.status_pembayaran === 'tempo') badgeText = 'INVOICE TEMPO'
+
+      if (badgeText) {
+        const badgeX = 158
+        const badgeY = 11
+        const badgeW = 40
+        const badgeH = 8
+        doc.setFillColor(237, 248, 255)
+        doc.setDrawColor(66, 133, 244)
+        doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 2, 2, 'FD')
+        doc.setFontSize(7.3)
+        doc.setTextColor(0, 0, 0)
+        doc.text(badgeText, badgeX + badgeW / 2, badgeY + 5, { align: 'center' })
       }
-      if (this.form.status_pembayaran === 'tempo') {
-        doc.setFontSize(9)
-        doc.text('INVOICE TEMPO', 156, 13)
-        doc.setLineWidth(0.1)
-        doc.rect(155, 10, 40, 5)
-      }
-      doc.setFontSize(10)
-      doc.text('Jl. Suryopranoto No. 10, Gunung Ketur', 75, 20)
-      doc.setFontSize(10)
-      doc.text('Pakualaman, Yogyakarta. Telp 0274-5021953', 75, 25)
-      doc.setLineWidth(0.7)
-      doc.line(10, 33, 200, 33)
+
+      // garis bawah header
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.4)
+      doc.line(10, 30, 200, 30)
+
+      // ===== INFO UTAMA / BOX PELANGGAN =====
+      let y = 36
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(9)
-      doc.text(`No: ${this.form.no_wo}`, 10, 45, { align: 'left' })
-      let y = 50
+      doc.text(`No: ${this.form.no_wo || '-'}`, 10, y)
+      y += 4
+
+      // box
+      doc.setDrawColor(230, 230, 230)
+      doc.setLineWidth(0.2)
+      doc.roundedRect(10, y, 190, 26, 2, 2)
+
+      const leftX = 14
+      const rightX = 110
+      let rowY = y + 5
 
       doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text('Nama', 10, y)
-      doc.text(`: ${this.form.nama}`, 30, y)
-      doc.text('HP', 120, y)
-      doc.text(`: ${this.form.hp}`, 140, y)
-      y += 4
-      doc.text('Alamat', 10, y)
-      doc.text(`: ${this.form.alamat}`, 30, y)
-      doc.text('Email', 120, y)
-      doc.text(`: ${this.form.email}`, 140, y)
-      y += 4
-      doc.text(`No. Polisi`, 10, y)
-      doc.text(`: ${this.form.no_pol}`, 30, y)
-      doc.text(`Brand`, 120, y)
-      doc.text(`: ${this.form.brand}`, 140, y)
-      y += 4
-      doc.text(`Type`, 10, y)
-      doc.text(`: ${this.form.type}`, 30, y)
-      doc.text(`Model`, 120, y)
-      doc.text(`: ${this.form.model}`, 140, y)
-      y += 4
-      doc.text(`Kilometer`, 10, y)
-      doc.text(`: ${this.form.kilometer}`, 30, y)
-      doc.text(`Tanggal`, 120, y)
-      doc.text(`: ${this.formatDate(this.form.tanggal_masuk)}`, 140, y)
-      y += 8
+      doc.setFontSize(8.5)
 
-      doc.setFontSize(11)
+      // kolom kiri (pakai titik dua supaya rapi)
+      doc.text('Nama', leftX, rowY)
+      doc.text(':', leftX + 18, rowY)
+      doc.text(this.form.nama || '-', leftX + 20, rowY)
+
+      doc.text('Alamat', leftX, rowY + 4)
+      doc.text(':', leftX + 18, rowY + 4)
+      doc.text(this.form.alamat || '-', leftX + 20, rowY + 4)
+
+      doc.text('No. Polisi', leftX, rowY + 8)
+      doc.text(':', leftX + 18, rowY + 8)
+      doc.text(this.form.no_pol || '-', leftX + 20, rowY + 8)
+
+      doc.text('Kilometer', leftX, rowY + 12)
+      doc.text(':', leftX + 18, rowY + 12)
+      doc.text(String(this.form.kilometer || '-'), leftX + 20, rowY + 12)
+
+      // kolom kanan (label, :, isi) -> supaya Brand / Type & Tanggal sejajar
+      const labelX = rightX
+      const colonX = rightX + 23
+      const valueX = rightX + 25
+
+      doc.text('HP', labelX, rowY)
+      doc.text(':', colonX, rowY)
+      doc.text(this.form.hp || '-', valueX, rowY)
+
+      doc.text('Email', labelX, rowY + 4)
+      doc.text(':', colonX, rowY + 4)
+      doc.text(this.form.email || '-', valueX, rowY + 4)
+
+      doc.text('Brand / Type', labelX, rowY + 8)
+      doc.text(':', colonX, rowY + 8)
+      doc.text(`${this.form.brand || '-'} / ${this.form.type || '-'}`, valueX, rowY + 8)
+
+      doc.text('Tanggal', labelX, rowY + 12)
+      doc.text(':', colonX, rowY + 12)
+      doc.text(this.formatDate(this.form.tanggal_masuk) || '-', valueX, rowY + 12)
+
+      y = y + 26 + 6
+
+      // ===== PRODUCT ORDER =====
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(9.5)
       doc.text('Product Order (Sparepart)', 10, y)
-      y += 6
-      doc.setFontSize(9)
-      doc.setFillColor(200, 200, 200)
-      doc.rect(10, y - 4, 180, 5, 'F')
-      doc.text('Nama', 10, y)
-      doc.text('Quantity', 70, y)
-      doc.text('Harga', 115, y)
-      doc.text('Disc', 150, y)
-      doc.text('Subtotal', 170, y)
-      y += 6
+      y += 4
+      doc.roundedRect(10, y, 190, 6, 1, 1)
+      doc.setFillColor(245, 245, 245)
+      doc.rect(10, y, 190, 6, 'F')
+
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.text('No', 12, y + 4)
+      doc.text('Nama', 20, y + 4)
+      doc.text('Qty', 105, y + 4)
+      doc.text('Harga', 125, y + 4)
+      doc.text('Disc', 150, y + 4)
+      doc.text('Subtotal', 175, y + 4)
+      y += 7
+
+      doc.setFont('Helvetica', 'normal')
+      const products = this.form.product_ordered || []
       let productIndex = 1
-      this.form.product_ordered.forEach((item) => {
-        doc.text(`${productIndex}. ${item.product_name}`, 10, y)
-        doc.text(String(item.quantity), 73, y)
-        doc.text(this.formatCurrency(item.price), 113, y)
-        doc.text(this.formatCurrency(item.discount), 155, y, { align: 'right' })
-        doc.text(this.formatCurrency(item.subtotal), 182, y, { align: 'right' })
-        doc.setLineWidth(0.1)
-        doc.line(10, y + 2, 190, y + 2)
+      products.forEach((item) => {
+        doc.setDrawColor(240, 240, 240)
+        doc.line(10, y + 1.5, 200, y + 1.5)
+
+        doc.text(String(productIndex), 12, y + 4)
+        doc.text(item.product_name || '-', 20, y + 4)
+        doc.text(String(item.quantity || 0), 107, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.price || 0)), 140, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.discount || 0)), 162, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.subtotal || 0)), 198, y + 4, { align: 'right' })
         productIndex++
         y += 6
       })
+
       y += 4
 
-      doc.setFontSize(11)
-      doc.text('Service Order (Jasa):', 10, y)
-      y += 6
-      doc.setFontSize(9)
-      doc.setFillColor(200, 200, 200)
-      doc.rect(10, y - 4, 180, 5, 'F')
-      doc.text('Nama', 10, y)
-      doc.text('Quantity', 62, y)
-      doc.text('Harga', 105, y)
-      doc.text('Disc', 135, y)
-      doc.text('Subtotal', 160, y)
-      y += 6
+      // ===== SERVICE ORDER =====
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(9.5)
+      doc.text('Service Order (Jasa)', 10, y)
+      y += 4
+      doc.roundedRect(10, y, 190, 6, 1, 1)
+      doc.setFillColor(245, 245, 245)
+      doc.rect(10, y, 190, 6, 'F')
+
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(8)
+      doc.text('No', 12, y + 4)
+      doc.text('Nama Jasa', 20, y + 4)
+      doc.text('Qty', 105, y + 4)
+      doc.text('Harga', 125, y + 4)
+      doc.text('Disc', 150, y + 4)
+      doc.text('Subtotal', 175, y + 4)
+      y += 7
+
+      doc.setFont('Helvetica', 'normal')
+      const services = this.form.service_ordered || []
       let serviceIndex = 1
-      this.form.service_ordered.forEach((item) => {
-        doc.text(`${serviceIndex}. ${item.service_name}`, 10, y)
-        doc.text(String(item.quantity), 70, y)
-        doc.text(this.formatCurrency(item.price), 100, y)
-        doc.text(this.formatCurrency(item.discount), 140, y, { align: 'right' })
-        doc.text(this.formatCurrency(item.serviceSubtotal), 172, y, { align: 'right' })
-        doc.setLineWidth(0.1)
-        doc.line(10, y + 2, 190, y + 2)
+      services.forEach((item) => {
+        doc.setDrawColor(240, 240, 240)
+        doc.line(10, y + 1.5, 200, y + 1.5)
+
+        doc.text(String(serviceIndex), 12, y + 4)
+        doc.text(item.service_name || '-', 20, y + 4)
+        doc.text(String(item.quantity || 0), 107, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.price || 0)), 140, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.discount || 0)), 162, y + 4, { align: 'right' })
+        doc.text(String(this.formatCurrency(item.serviceSubtotal || 0)), 198, y + 4, {
+          align: 'right',
+        })
         serviceIndex++
         y += 6
       })
-      y += 4
-
-      doc.setFont('Helvetica', 'italic')
-
-      // Wrap Keluhan text
-      doc.text('Keluhan:', 10, y)
-      y += 5
-      const keluhanText = `${this.form.keluhan}`
-      const keluhanLines = doc.splitTextToSize(keluhanText, 170) // Max width for keluhan
-      doc.text(keluhanLines, 10, y)
-      const keluhanHeight = keluhanLines.length * 4 // Approximate line height
-      y += keluhanHeight
-      doc.setLineWidth(0.1)
-      doc.roundedRect(8, y - keluhanHeight - 4, 174, keluhanHeight + 2, 1, 1) // Adjusted width to 174 (170 + 4 padding)
-
-      y += 4
-      doc.text('Saran:', 10, y)
-      y += 5
-
-      // Wrap Saran text
-      const saranText = `${this.form.saran}`
-      const saranLines = doc.splitTextToSize(saranText, 170) // Max width for saran
-      doc.text(saranLines, 10, y) // Adjust y to align with keluhan if needed
-      const saranHeight = saranLines.length * 4
-      y += Math.max(0, saranHeight - keluhanHeight) + 2 // Adjust y based on the taller text
-      doc.setLineWidth(0.1)
-      doc.roundedRect(8, y - saranHeight - 6 + keluhanHeight, 174, saranHeight + 2, 1, 1) // Adjusted width to 174 (170 + 4 padding)
-
-      y += 4 + saranHeight
-
-      doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text(`Total Discount :`, 10, y)
-      doc.text(`${this.formatCurrency(this.form.grandTotalDiscount)}`, 70, y)
 
       y += 6
 
-      // Add kilometer and next service information
-      doc.setFontSize(9)
-      doc.setFont('Helvetica', 'italic')
-      doc.text(`Kilometer: ${this.formatCurrency(this.form.kilometer)} km`, 10, y)
-      doc.text(`Service Km Berikutnya: ${this.formatCurrency(this.form.next_service_km)} km`, 50, y)
+      // ===== KELUHAN + INFO SERVIS =====
+      doc.setFont('Helvetica', 'bold')
+      doc.text('Keluhan', 10, y)
+      y += 2
+      const keluhanLines = doc.splitTextToSize(this.form.keluhan || '-', 120)
+      const keluhanHeight = keluhanLines.length * 4 + 4
+      doc.setDrawColor(230, 230, 230)
+      doc.roundedRect(10, y + 1, 120, keluhanHeight, 2, 2)
+      doc.setFont('Helvetica', 'normal')
+      doc.text(keluhanLines, 13, y + 6)
+
+      // kolom kanan info servis berikutnya
+      doc.setFont('Helvetica', 'bold')
+      doc.text('Info Servis Berikutnya', 135, y)
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(8)
       doc.text(
-        `Service Tanggal Berikutnya: ${this.formatDate(this.form.next_service_date)}`,
-        120,
-        y,
+        `Kilometer berikutnya : ${String(this.formatCurrency(this.form.next_service_km || 0))} km`,
+        135,
+        y + 6,
+      )
+      doc.text(
+        `Tanggal berikutnya  : ${this.formatDate(this.form.next_service_date) || '-'}`,
+        135,
+        y + 11,
       )
 
-      y += 10
+      y = y + keluhanHeight + 6
 
-      // Section for totals
-      doc.setFontSize(8)
-      doc.text(`Total Harga Spare Part`, 80, y)
-      doc.text(`Rp`, 130, y)
-      doc.text(`${this.formatCurrency(this.totalProductHarga)}`, 150, y)
-      y += 5
-      doc.setFontSize(8)
-      doc.text(`Total Harga Jasa`, 80, y)
-      doc.text(`Rp`, 130, y)
-      doc.text(`${this.formatCurrency(this.form.totalServiceHarga)}`, 150, y)
-      y += 5
-      doc.setFontSize(8)
-      doc.text(`Total Harga`, 80, y)
-      doc.text(`Rp`, 130, y)
-      doc.text(`${this.formatCurrency(this.form.grandTotalHarga)}`, 150, y)
-      y += 5
-
-      doc.setFontSize(8)
-      doc.text(`Pajak (11%)`, 80, y)
-      doc.text(`Rp`, 130, y)
-      doc.text(`${this.formatCurrency(this.form.pajak)}`, 150, y)
-      y += 5
-      if (this.form.dp > 0) {
-        doc.setFontSize(8)
-        doc.text(`DP`, 80, y)
-        doc.text(`Rp`, 130, y)
-        doc.text(`${this.formatCurrency(this.form.dp)}`, 150, y)
-        y += 5
-      }
-      doc.setFontSize(8)
-      doc.text(`Total Pembayaran`, 80, y)
-      doc.text(`Rp`, 130, y)
-      doc.text(`${this.formatCurrency(this.form.totalPembayaran)}`, 150, y)
-      y += 8
-
-      y += 10
-
-      //section for signature
+      // ===== SARAN =====
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text('Saran', 10, y)
+      y += 2
+      const saranLines = doc.splitTextToSize(this.form.saran || '-', 120)
+      const saranHeight = saranLines.length * 4 + 4
+      doc.setDrawColor(230, 230, 230)
+      doc.roundedRect(10, y + 1, 120, saranHeight, 2, 2)
       doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.text(`Nama Pelanggan`, 15, y)
-      doc.text(`${this.form.nama}`, 15, y + 20)
-      doc.setLineWidth(0.1)
-      doc.roundedRect(10, y - 6, 40, 30, 1, 1)
+      doc.setFontSize(8.5)
+      doc.text(saranLines, 13, y + 6)
 
-      doc.setFontSize(9)
-      doc.text(`Car Speed`, 131, y)
-      doc.text(`${this.username}`, 131, y + 20)
-      doc.setLineWidth(0.1)
-      doc.roundedRect(120, y - 6, 40, 30, 1, 1)
+      // ===== BOX TOTAL DI KANAN =====
+      const totalBoxTop = y + 1
+      doc.setDrawColor(230, 230, 230)
+      doc.roundedRect(135, totalBoxTop, 65, 40, 2, 2)
+      let totalY = totalBoxTop + 6
+      doc.setFont('Helvetica', 'bold')
+      doc.setFontSize(8.5)
+      doc.text('Ringkasan Biaya', 168, totalY, { align: 'center' })
+      totalY += 4
+      doc.setFont('Helvetica', 'normal')
+
+      const putTotalRow = (label, value) => {
+        doc.text(label, 138, totalY)
+        // Rp agak ke kiri supaya nggak nempel nominal
+        doc.text('Rp', 178, totalY, { align: 'right' })
+        const amountText = String(this.formatCurrency(value || 0))
+        doc.text(amountText, 198, totalY, { align: 'right' })
+        totalY += 4
+      }
+
+      putTotalRow('Total Sparepart', this.totalProductHarga)
+      putTotalRow('Total Jasa', this.form.totalServiceHarga)
+      putTotalRow('Pajak (11%)', this.form.pajak)
+      if (this.form.dp > 0) {
+        putTotalRow('DP', this.form.dp)
+      }
+
+      // total bayar
+      doc.setFont('Helvetica', 'bold')
+      doc.text('TOTAL BAYAR', 138, totalY + 1.5)
+      doc.text('Rp', 178, totalY + 1.5, { align: 'right' })
+      const grandTotalText = String(this.formatCurrency(this.form.totalPembayaran || 0))
+      doc.text(grandTotalText, 198, totalY + 1.5, { align: 'right' })
+
+      // ===== SIGNATURE DI BAWAH =====
+      const maxBottom = Math.max(y + saranHeight + 8, totalBoxTop + 40 + 5)
+      let sigY = maxBottom + 10
+
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(8.5)
+      doc.text('Nama Pelanggan', 20, sigY)
+      doc.text('Car Speed', 140, sigY)
+      doc.line(15, sigY + 18, 60, sigY + 18)
+      doc.line(135, sigY + 18, 185, sigY + 18)
+      doc.text(this.form.nama || '-', 20, sigY + 23)
+      doc.text(this.username || '-', 140, sigY + 23)
 
       doc.save('workorder.pdf')
     },
+
     openAddServiceModal() {
       this.showAddServiceModal = true
     },
