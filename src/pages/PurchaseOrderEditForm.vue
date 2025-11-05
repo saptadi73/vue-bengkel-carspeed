@@ -135,16 +135,14 @@
             v-model="form.status_pembayaran"
             id="status_pembayaran"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            :disabled="isCompleted"
           >
             <option value="" disabled selected>Pilih Status Pembayaran</option>
             <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
             <option value="tempo">Tempo</option>
-            <option value="dp">DP</option>
             <option value="lunas">Lunas</option>
           </select>
         </div>
-        <div v-if="form.status_pembayaran === 'dp'">
+        <div v-if="form.status_pembayaran !== 'lunas'">
           <label for="dp_amount" class="block text-sm font-medium text-gray-700">DP Amount</label>
           <input
             v-model.number="form.dp_amount"
@@ -152,7 +150,6 @@
             id="dp_amount"
             min="0"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            :disabled="isCompleted"
           />
         </div>
       </div>
@@ -346,14 +343,35 @@
         </div>
       </div>
 
-      <!-- Totals -->
-      <div class="border-t pt-6">
-        <div class="flex justify-end space-x-4 text-lg font-semibold">
-          <div>
-            <p>Subtotal: {{ formatCurrency(subtotal) }}</p>
-            <p v-if="form.includeTax">Tax (11%): {{ formatCurrency(tax) }}</p>
-            <p>Total: {{ formatCurrency(total) }}</p>
+      <!-- totals / summary area — tambahkan DP dan Grand Total -->
+      <div class="totals mt-4">
+        <div class="flex justify-between text-sm text-gray-600">
+          <div>Subtotal</div>
+          <div>{{ formatCurrency(subtotal) }}</div>
+        </div>
+        <div v-if="form.includeTax" class="flex justify-between text-sm text-gray-600">
+          <div>Tax (11%)</div>
+          <div>{{ formatCurrency(tax) }}</div>
+        </div>
+
+        <!-- DP input and display -->
+        <div class="flex items-center gap-3 mt-2">
+          <label class="text-sm text-gray-700">DP</label>
+          <input
+            type="number"
+            v-model.number="form.dp_amount"
+            min="0"
+            class="px-2 py-1 border rounded w-36"
+            placeholder="0"
+          />
+          <div class="ml-auto text-sm text-gray-600">
+            DP: {{ formatCurrency(Number(form.dp_amount || 0)) }}
           </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-3 text-lg font-bold">
+          <div>Grand Total</div>
+          <div>{{ formatCurrency(grandTotal) }}</div>
         </div>
       </div>
 
@@ -361,13 +379,14 @@
       <div class="text-center space-x-4">
         <button
           type="submit"
-          :disabled="statusUpdated == 'diterima'"
+          :disabled="isSubmitting || isCompleted"
           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Update Purchase Order
+          {{ isSubmitting ? 'Updating...' : 'Update Purchase Order' }}
         </button>
         <button
-          v-if="form.status === 'diterima' && purchaseOrderUpdated"
+          v-if="serverStatus === 'diterima'"
+          type="button"
           @click="openPaymentModal"
           class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
         >
@@ -385,7 +404,11 @@
     <div class="bg-white rounded-lg shadow-lg max-w-4xl max-h-4xl w-full h-full relative">
       <div class="flex justify-between items-center p-4 border-b">
         <h3 class="text-lg font-semibold">Bukti Transfer</h3>
-        <button @click="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">
+        <button
+          type="button"
+          @click="closeModal"
+          class="text-gray-500 hover:text-gray-700 text-2xl"
+        >
           &times;
         </button>
       </div>
@@ -404,7 +427,7 @@
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   <payment-modal
     :is-open="showPaymentModal"
-    :initial-amount="form.pembayaran || 0"
+    :initial-amount="dpValue > 0 ? dpValue : grandTotal"
     :expense-name="`PO ${form.po_no || ''}`"
     :expense-type="form.supplier_name || ''"
     @close="closePaymentModal"
@@ -427,6 +450,7 @@ export default {
   data() {
     return {
       statusUpdated: '',
+      serverStatus: '', // Track status from server
       purchaseOrderUpdated: false,
       suppliers: [],
       products: [],
@@ -435,6 +459,7 @@ export default {
       showModal: false,
       modalUrl: '',
       showPaymentModal: false,
+      isSubmitting: false, // prevent double submit
       form: {
         supplier_id: '',
         purchase_order_id: this.$route.params.id,
@@ -522,13 +547,14 @@ export default {
       return this.form.items.reduce((sum, item) => sum + item.subtotal, 0)
     },
     tax() {
-      return this.subtotal * 0.11
+      return this.form.includeTax ? +(this.subtotal * 0.11) : 0
     },
-    // total now includes dp
-    total() {
-      const dp = Number(this.form.dp_amount) || 0
-      const base = this.form.includeTax ? this.subtotal + this.tax : this.subtotal
-      return base - dp
+    dpValue() {
+      return Number(this.form.dp_amount || 0) || 0
+    },
+    // Grand total = subtotal + tax - dp (DP reduces the total)
+    grandTotal() {
+      return Math.max(0, this.subtotal + this.tax - this.dpValue)
     },
     hasUnsavedChanges() {
       return (
@@ -537,7 +563,7 @@ export default {
       )
     },
     isCompleted() {
-      return this.form.status === 'diterima' || this.form.status === 'dibayarkan'
+      return this.serverStatus === 'diterima' || this.serverStatus === 'dibayarkan'
     },
   },
   methods: {
@@ -576,12 +602,13 @@ export default {
         const response = await axios.get(`${BASE_URL}purchase-orders/${this.$route.params.id}`)
         const poData = response.data.data
         this.statusUpdated = response.data.data.status
+        this.serverStatus = response.data.data.status // Store server status
         console.log('statusUpdated: ', this.statusUpdated)
         this.form = {
           ...this.form,
           ...poData,
           status_pembayaran: poData.status_pembayaran || 'belum_ada_pembayaran',
-          dp_amount: poData.dp_amount || 0,
+          dp_amount: poData.dp || poData.dp_amount || 0,
           items: poData.lines.map((line) => ({
             id: line.id,
             product_id: line.product_id,
@@ -725,17 +752,19 @@ export default {
       }).format(amount)
     },
     async submitForm() {
+      if (this.isSubmitting) return
+      this.isSubmitting = true
       try {
         this.loadingStore.show()
         const payload = {
           supplier_id: this.form.supplier_id,
           date: this.form.date,
           pajak: this.form.includeTax ? this.tax : null,
-          total: this.subtotal,
-          pembayaran: this.total,
+          total: this.grandTotal, // total before DP deduction
+          pembayaran: this.dpValue, // DP as pembayaran
+          dp: this.dpValue, // DP field
           status: this.form.status,
           status_pembayaran: this.form.status_pembayaran,
-          dp_amount: this.form.dp_amount || 0,
           lines: this.form.items.map((item) => ({
             id: item.id,
             product_id: item.product_id,
@@ -812,6 +841,7 @@ export default {
         this.message_toast = error.response?.data?.message || 'Error creating purchase order'
       } finally {
         this.loadingStore.hide()
+        this.isSubmitting = false
       }
     },
     tutupToast() {
@@ -838,19 +868,19 @@ export default {
     },
     async handlePaymentSubmit(paymentData) {
       const form = {
-        amount: paymentData.amount,
         date: paymentData.date,
-        kas_bank_code: paymentData.bankCode,
-        purchase_id: this.$route.params.id,
-        hutang_code: '3001',
-        supplier_id: this.form.supplier_id,
         memo: paymentData.description,
+        supplier_id: this.form.supplier_id,
+        purchase_id: this.$route.params.id,
+        amount: paymentData.amount,
+        kas_bank_code: paymentData.bankCode,
+        hutang_code: '2100',
       }
 
       console.log('Formdata: ', form)
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}accounting/purchase-payment-journal`, form)
+        const response = await api.post(`${BASE_URL}accountings/purchase-payment-journal`, form)
         console.log('Response Payment: ', response.data.message)
 
         if (response.data.message == 'Jurnal pembayaran pembelian berhasil dibuat') {

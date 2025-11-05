@@ -192,6 +192,19 @@
                 <label class="modern-select-label">Status Pembayaran</label>
               </div>
             </div>
+
+            <div class="info-card" v-if="form.status_pembayaran !== 'lunas'">
+              <div class="relative">
+                <input
+                  v-model.number="form.dp_amount"
+                  type="number"
+                  min="0"
+                  class="modern-input peer"
+                  placeholder=" "
+                />
+                <label class="modern-label">DP Amount</label>
+              </div>
+            </div>
             <div class="info-card">
               <div class="relative">
                 <select v-model="form.status" id="status" class="modern-select peer">
@@ -702,8 +715,15 @@
                   {{ formatCurrency(pajakAmount) }}
                 </div>
               </div>
-              <div class="bg-white rounded-lg p-4 border border-blue-200">
+
+              <div
+                class="bg-white rounded-lg p-4 border border-blue-200"
+                :class="'md:col-span-2 lg:col-span-1'"
+              >
                 <div class="text-sm text-gray-600 mb-1">Total Pembayaran</div>
+                <div class="text-xs text-gray-500 mb-1" v-if="form.dp_amount > 0">
+                  (DP: {{ formatCurrency(form.dp_amount) }})
+                </div>
                 <input
                   type="hidden"
                   id="total-pembayaran"
@@ -894,6 +914,7 @@ export default {
         next_service_date: '',
         last_service: '',
         status_pembayaran: '',
+        dp_amount: 0,
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -1053,7 +1074,14 @@ export default {
 
     calculatetotalPembayaran() {
       const subtotal = Math.max(0, this.grandTotalHarga)
-      return (this.form.totalPembayaran = subtotal + this.pajakAmount)
+      let total = subtotal + this.pajakAmount
+
+      // Subtract DP if present
+      if (this.form.dp_amount > 0) {
+        total -= this.form.dp_amount
+      }
+
+      return (this.form.totalPembayaran = Math.max(0, total))
     },
 
     calculatepajakAmount() {
@@ -1308,6 +1336,7 @@ export default {
       this.form.totalProductDiscount = this.totalProductDiscount
       this.form.totalServiceDiscount = this.totalServiceDiscount
       this.form.hpp = this.totalServiceCost + this.totalProductCost
+      this.form.dp_amount = this.form.dp_amount || 0
 
       // Ensure numeric fields in product_ordered are numbers
       this.form.product_ordered.forEach((item) => {

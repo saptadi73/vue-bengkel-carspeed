@@ -6,6 +6,7 @@
     <!-- Add/Remove Buttons -->
     <div class="flex justify-end space-x-2">
       <button
+        type="button"
         @click="addItem"
         class="px-3 py-1 bg-green-500 text-white text-sm rounded-md hover:bg-green-600"
       >
@@ -13,6 +14,7 @@
       </button>
       <button
         v-if="items.length > 0"
+        type="button"
         @click="removeLastItem"
         class="px-3 py-1 bg-red-500 text-white text-sm rounded-md hover:bg-red-600"
       >
@@ -195,6 +197,7 @@
               <label class="block text-sm font-medium text-gray-700">Nama Product</label>
               <input
                 v-model="newProduct.name"
+                @input="newProduct.name = $event.target.value.toUpperCase()"
                 type="text"
                 required
                 class="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -354,14 +357,6 @@ export default {
       )
     },
   },
-  watch: {
-    items: {
-      handler() {
-        this.$emit('items', this.items)
-      },
-      deep: true,
-    },
-  },
   methods: {
     async getProduct() {
       try {
@@ -414,6 +409,7 @@ export default {
     removeLastItem() {
       if (this.items.length > 0) {
         this.items.pop()
+        this.emitItems()
       }
     },
     confirmAddItem() {
@@ -421,6 +417,7 @@ export default {
         this.items.push({ ...this.newItem })
         this.resetNewItem()
         this.closeAddModal()
+        this.emitItems() // emit explicit after user confirms
       } else {
         alert('Pilih produk terlebih dahulu')
       }
@@ -431,10 +428,15 @@ export default {
     },
     removeItem(index) {
       this.items.splice(index, 1)
+      this.emitItems()
     },
     updateSubtotal(index) {
       const item = this.items[index]
       item.subtotal = item.quantity * item.cost - item.discount
+      this.emitItems()
+    },
+    emitItems() {
+      this.$emit('items', this.items)
     },
     updateNewSubtotal() {
       this.newItem.subtotal = this.newItem.quantity * this.newItem.cost - this.newItem.discount
@@ -491,6 +493,18 @@ export default {
       } catch (error) {
         console.log('error: ', error)
       }
+    },
+    openAddModal(event) {
+      // optional: pastikan tidak memicu submit
+      if (event && event.preventDefault) event.preventDefault()
+      if (event && event.stopPropagation) event.stopPropagation()
+      // ...open modal / emit event...
+      this.$emit('open-add')
+    },
+    onAddClick(e) {
+      e.preventDefault()
+      e.stopPropagation()
+      // deprecated: keep defensive but avoid automatic emit
     },
   },
   created() {

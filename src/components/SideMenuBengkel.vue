@@ -226,6 +226,10 @@ const navItems = reactive([
         text: 'Table Hutang-Piutang Mitra',
         url: '/finansial/hutang-piutang',
       },
+      {
+        text: 'Laporan Hutang Konsinyasi',
+        url: '/finansial/consignment-payable-report',
+      },
     ],
   },
   {

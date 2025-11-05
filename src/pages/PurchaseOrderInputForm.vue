@@ -120,6 +120,35 @@
         </div>
       </div>
 
+      <!-- Status Pembayaran -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label for="status_pembayaran" class="block text-sm font-medium text-gray-700"
+            >Status Pembayaran</label
+          >
+          <select
+            v-model="form.status_pembayaran"
+            id="status_pembayaran"
+            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" disabled selected>Pilih Status Pembayaran</option>
+            <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
+            <option value="tempo">Tempo</option>
+            <option value="lunas">Lunas</option>
+          </select>
+        </div>
+        <div v-if="form.status_pembayaran !== 'lunas'">
+          <label for="dp_amount" class="block text-sm font-medium text-gray-700">DP Amount</label>
+          <input
+            v-model.number="form.dp_amount"
+            type="number"
+            id="dp_amount"
+            min="0"
+            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
       <!-- Tax Option -->
       <div class="border-t pt-6">
         <div class="flex items-center">
@@ -137,7 +166,7 @@
 
       <!-- Order Items -->
       <div class="border-t pt-6">
-        <InputBoxSelectedDropDown @items="updateItems" />
+        <InputBoxSelectedDropDown @items="onItems" />
       </div>
 
       <!-- Document Upload -->
@@ -159,8 +188,44 @@
           <div>
             <p>Subtotal: {{ formatCurrency(subtotal) }}</p>
             <p v-if="form.includeTax">Tax (11%): {{ formatCurrency(tax) }}</p>
-            <p>Total: {{ formatCurrency(total) }}</p>
+            <p v-if="form.dp_amount > 0">DP: {{ formatCurrency(form.dp_amount) }}</p>
+
+            <div class="text-xs text-gray-500 mb-1" v-if="form.dp_amount > 0">
+              (DP: {{ formatCurrency(form.dp_amount) }})
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- totals / summary area — tambahkan DP dan Grand Total -->
+      <div class="totals mt-4">
+        <div class="flex justify-between text-sm text-gray-600">
+          <div>Subtotal</div>
+          <div>{{ formatCurrency(subtotal) }}</div>
+        </div>
+        <div v-if="form.includeTax" class="flex justify-between text-sm text-gray-600">
+          <div>Tax (11%)</div>
+          <div>{{ formatCurrency(tax) }}</div>
+        </div>
+
+        <!-- DP input and display -->
+        <div class="flex items-center gap-3 mt-2">
+          <label class="text-sm text-gray-700">DP</label>
+          <input
+            type="number"
+            v-model.number="form.dp_amount"
+            min="0"
+            class="px-2 py-1 border rounded w-36"
+            placeholder="0"
+          />
+          <div class="ml-auto text-sm text-gray-600">
+            DP: {{ formatCurrency(Number(form.dp_amount || 0)) }}
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center mt-3 text-lg font-bold">
+          <div>Grand Total</div>
+          <div>{{ formatCurrency(grandTotal) }}</div>
         </div>
       </div>
 
@@ -187,7 +252,7 @@ import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 
 export default {
-  components: { LoadingOverlay, ToastCard, InputBoxSelectedDropDown },
+  components: { InputBoxSelectedDropDown, LoadingOverlay, ToastCard },
   data() {
     return {
       suppliers: [],
@@ -214,8 +279,10 @@ export default {
             price: 0,
             discount: 0,
             subtotal: 0,
+            id: null,
           },
         ],
+        dp_amount: 0,
       },
     }
   },
@@ -250,43 +317,42 @@ export default {
         this.form.toko = ''
       }
     },
+    'form.dp_amount'(val) {
+      // ensure numeric
+      this.form.dp_amount = Number(val) || 0
+    },
   },
   computed: {
+    // computed subtotal/tax/total to drive UI reliably
     subtotal() {
-      return this.form.items.reduce((sum, item) => sum + item.subtotal, 0)
+      return this.form.items.reduce((s, it) => s + (Number(it.subtotal) || 0), 0)
     },
     tax() {
-      return this.subtotal * 0.11
+      return this.form.includeTax ? +(this.subtotal * 0.11) : 0
     },
-    total() {
-      return this.form.includeTax ? this.subtotal + this.tax : this.subtotal
+    dpValue() {
+      return Number(this.form.dp_amount || 0) || 0
+    },
+    // Grand total = subtotal + tax - dp (DP reduces the total)
+    grandTotal() {
+      return Math.max(0, this.subtotal + this.tax - this.dpValue)
     },
   },
   methods: {
-    updateItems(items) {
-      this.form.items = items.map((item) => ({
-        product_id: item.product?.id || '',
-        satuan_id: item.satuan_id || item.product?.satuan_id || '',
-        quantity: item.quantity || 1,
-        price: item.cost || 0,
-        discount: item.discount || 0,
-        subtotal: item.subtotal || 0,
+    // handler for child emit
+    onItems(items) {
+      // normalize items into form.items shape
+      this.form.items = (items || []).map((it) => ({
+        id: it.id || null,
+        product_id: it.product_id || it.product?.id || '',
+        satuan_id: it.satuan_id || it.satuan?.id || '',
+        quantity: Number(it.quantity) || 1,
+        price: Number(it.price || it.cost) || 0,
+        discount: Number(it.discount) || 0,
+        subtotal:
+          Number(it.subtotal) ||
+          Number(it.quantity || 0) * Number(it.price || 0) - Number(it.discount || 0),
       }))
-    },
-    onProductChange(index) {
-      const item = this.form.items[index]
-      const product = this.products.find((p) => p.id == item.product_id)
-      if (product) {
-        if (product.satuan_id) {
-          item.satuan_id = product.satuan_id
-        }
-        if (product.cost) {
-          item.price = product.cost
-        } else {
-          item.price = 0
-        }
-      }
-      this.calculateItemTotal(index)
     },
 
     async getSatuans() {
@@ -353,35 +419,44 @@ export default {
       }).format(amount)
     },
     async submitForm() {
+      if (this.isSubmitting) return
+      this.isSubmitting = true
+      // prevent create with no lines
+      const lines = (this.form.items || []).filter((i) => i.product_id)
+      if (!lines.length) {
+        this.show_toast = true
+        this.message_toast = 'Tidak ada item. Tambahkan minimal satu produk sebelum submit.'
+        this.isSubmitting = false
+        return
+      }
       try {
         this.loadingStore.show()
         const payload = {
           supplier_id: this.form.supplier_id,
           date: this.form.date,
           pajak: this.form.includeTax ? this.tax : null,
-          total: this.subtotal,
-          pembayaran: this.total,
+          total: this.grandTotal, // grand total (subtotal + tax - dp)
+          pembayaran: this.dpValue, // DP as pembayaran
+          dp: this.dpValue, // DP field
           status: this.form.status,
-          lines: this.form.items
-            .filter((item) => item.product_id)
-            .map((item) => ({
-              product_id: item.product_id,
-              satuan_id: item.satuan_id,
-              quantity: item.quantity,
-              price: item.price,
-              discount: item.discount,
-              subtotal: item.subtotal,
-            })),
+          status_pembayaran: this.form.status_pembayaran,
+          lines: lines.map((item) => ({
+            id: item.id || undefined,
+            product_id: item.product_id,
+            satuan_id: item.satuan_id,
+            quantity: Number(item.quantity) || 0,
+            price: Number(item.price) || 0,
+            discount: Number(item.discount) || 0,
+            subtotal: Number(item.subtotal) || 0,
+          })),
         }
 
         const formData = new FormData()
         formData.append('data', JSON.stringify(payload))
-        console.log('Format Payload: ', payload)
         if (this.form.document) {
           formData.append('bukti_transfer', this.form.document)
         }
-
-        // console.log('Data Form: ', payload)
+        console.log('Submitting Purchase Order with payload:', payload)
 
         const response = await api.post(`${BASE_URL}purchase-orders/create`, formData, {
           headers: {
@@ -407,6 +482,8 @@ export default {
           toko: '',
           deliveryDate: '',
           status: '',
+          status_pembayaran: '',
+          dp_amount: 0,
           includeTax: false,
           document: null,
           items: [
@@ -420,14 +497,16 @@ export default {
             },
           ],
         }
-        this.show_toast = true
-        this.message_toast = response.data.message
+
+        // navigate to list
+        this.$router.push('/finansial/purchase/all')
       } catch (error) {
         console.error('Error creating purchase order:', error)
         this.show_toast = true
         this.message_toast = error.response?.data?.message || 'Error creating purchase order'
       } finally {
         this.loadingStore.hide()
+        this.isSubmitting = false
       }
     },
     tutupToast() {

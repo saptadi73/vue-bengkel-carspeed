@@ -334,6 +334,11 @@ const router = createRouter({
           component: () => import('../pages/ReceivablePayableReport.vue'),
         },
         {
+          path: 'consignment-payable-report',
+          name: 'consignment payable',
+          component: () => import('../pages/ConsignmentPayableReport.vue'),
+        },
+        {
           path: 'coa',
           name: 'coa',
           component: () => import('../pages/TableCoa.vue'),

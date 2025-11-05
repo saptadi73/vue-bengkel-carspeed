@@ -518,7 +518,7 @@ export default {
     async deletePurchaseOrder() {
       try {
         this.loadingStore.show()
-        await axios.delete(`${BASE_URL}purchase-orders/${this.selectedOrder.id}`)
+        await api.delete(`${BASE_URL}purchase-orders/${this.selectedOrder.id}`)
         this.message_toast = 'Purchase Order berhasil dihapus'
         this.show_toast = true
         this.fetchPurchaseOrders()

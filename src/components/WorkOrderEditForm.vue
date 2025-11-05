@@ -1040,6 +1040,7 @@ export default {
       satuans: [],
       dataVehiclesPelanggan: [],
       stockku: 0,
+      no_wo: '',
       isitotalProductHarga: 0,
       isitotalServiceHarga: 0,
       isitotalProductDiscount: 0,
@@ -1314,6 +1315,7 @@ export default {
         this.form.kapasitas = this.dataWorkorder.vehicle_kapasitas
         this.form.model = this.dataWorkorder.vehicle_model
         this.form.no_pol = this.dataWorkorder.vehicle_no_pol
+        this.form.no_wo = this.dataWorkorder.no_wo
         this.form.type = this.dataWorkorder.vehicle_type
         this.form.tahun = this.dataWorkorder.vehicle_tahun || ''
         this.form.kilometer = this.dataWorkorder.kilometer || 0
@@ -1719,13 +1721,13 @@ export default {
       }
       if (this.form.status_pembayaran === 'lunas') {
         doc.setFontSize(9)
-        doc.text('LUNAS', 156, 13)
+        doc.text('INVOICE LUNAS', 156, 13)
         doc.setLineWidth(0.1)
         doc.rect(155, 10, 40, 5)
       }
       if (this.form.status_pembayaran === 'tempo') {
         doc.setFontSize(9)
-        doc.text('TEMPO', 156, 13)
+        doc.text('INVOICE TEMPO', 156, 13)
         doc.setLineWidth(0.1)
         doc.rect(155, 10, 40, 5)
       }
@@ -1736,12 +1738,12 @@ export default {
       doc.setLineWidth(0.7)
       doc.line(10, 33, 200, 33)
       doc.setFont('Helvetica', 'bold')
-      doc.setFontSize(12)
-      doc.text('Work Order', 105, 45, { align: 'center' })
-      let y = 55
+      doc.setFontSize(9)
+      doc.text(`No: ${this.form.no_wo}`, 10, 45, { align: 'left' })
+      let y = 50
 
       doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(8)
+      doc.setFontSize(9)
       doc.text('Nama', 10, y)
       doc.text(`: ${this.form.nama}`, 30, y)
       doc.text('HP', 120, y)
@@ -1771,7 +1773,7 @@ export default {
       doc.setFontSize(11)
       doc.text('Product Order (Sparepart)', 10, y)
       y += 6
-      doc.setFontSize(10)
+      doc.setFontSize(9)
       doc.setFillColor(200, 200, 200)
       doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
@@ -1780,14 +1782,16 @@ export default {
       doc.text('Disc', 150, y)
       doc.text('Subtotal', 170, y)
       y += 6
+      let productIndex = 1
       this.form.product_ordered.forEach((item) => {
-        doc.text(String(item.product_name), 10, y)
+        doc.text(`${productIndex}. ${item.product_name}`, 10, y)
         doc.text(String(item.quantity), 73, y)
-        doc.text(this.formatCurrency(item.price), 125, y, { align: 'right', maxWidth: 25 })
-        doc.text(this.formatCurrency(item.discount), 155, y, { align: 'right', maxWidth: 20 })
-        doc.text(this.formatCurrency(item.subtotal), 190, y, { align: 'right', maxWidth: 40 })
+        doc.text(this.formatCurrency(item.price), 113, y)
+        doc.text(this.formatCurrency(item.discount), 155, y, { align: 'right' })
+        doc.text(this.formatCurrency(item.subtotal), 182, y, { align: 'right' })
         doc.setLineWidth(0.1)
         doc.line(10, y + 2, 190, y + 2)
+        productIndex++
         y += 6
       })
       y += 4
@@ -1795,7 +1799,7 @@ export default {
       doc.setFontSize(11)
       doc.text('Service Order (Jasa):', 10, y)
       y += 6
-      doc.setFontSize(10)
+      doc.setFontSize(9)
       doc.setFillColor(200, 200, 200)
       doc.rect(10, y - 4, 180, 5, 'F')
       doc.text('Nama', 10, y)
@@ -1804,17 +1808,16 @@ export default {
       doc.text('Disc', 135, y)
       doc.text('Subtotal', 160, y)
       y += 6
+      let serviceIndex = 1
       this.form.service_ordered.forEach((item) => {
-        doc.text(String(item.service_name), 10, y)
+        doc.text(`${serviceIndex}. ${item.service_name}`, 10, y)
         doc.text(String(item.quantity), 70, y)
-        doc.text(this.formatCurrency(item.price), 115, y, { align: 'right', maxWidth: 25 })
-        doc.text(this.formatCurrency(item.discount), 140, y, { align: 'right', maxWidth: 20 })
-        doc.text(this.formatCurrency(item.serviceSubtotal), 175, y, {
-          align: 'right',
-          maxWidth: 40,
-        })
+        doc.text(this.formatCurrency(item.price), 100, y)
+        doc.text(this.formatCurrency(item.discount), 140, y, { align: 'right' })
+        doc.text(this.formatCurrency(item.serviceSubtotal), 172, y, { align: 'right' })
         doc.setLineWidth(0.1)
         doc.line(10, y + 2, 190, y + 2)
+        serviceIndex++
         y += 6
       })
       y += 4
@@ -1850,10 +1853,7 @@ export default {
       doc.setFont('Helvetica', 'normal')
       doc.setFontSize(9)
       doc.text(`Total Discount :`, 10, y)
-      doc.text(`${this.formatCurrency(this.form.grandTotalDiscount)}`, 70, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
+      doc.text(`${this.formatCurrency(this.form.grandTotalDiscount)}`, 70, y)
 
       y += 6
 
@@ -1870,84 +1870,56 @@ export default {
 
       y += 10
 
-      doc.setFontSize(11)
-      doc.text(`Total Harga Spare Part`, 115, y)
-      doc.text(`Rp`, 160, y)
-      doc.text(`${this.formatCurrency(this.totalProductHarga)}`, 190, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
-      y += 6
-      doc.setFontSize(11)
-      doc.text(`Total Harga Jasa`, 115, y)
-      doc.text(`Rp`, 160, y)
-      doc.text(`${this.formatCurrency(this.form.totalServiceHarga)}`, 190, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
-      y += 6
-      doc.setFontSize(11)
-      doc.text(`Total Harga`, 115, y)
-      doc.text(`Rp`, 160, y)
-      doc.text(`${this.formatCurrency(this.form.grandTotalHarga)}`, 190, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
-      y += 6
+      // Section for totals
+      doc.setFontSize(8)
+      doc.text(`Total Harga Spare Part`, 80, y)
+      doc.text(`Rp`, 130, y)
+      doc.text(`${this.formatCurrency(this.totalProductHarga)}`, 150, y)
+      y += 5
+      doc.setFontSize(8)
+      doc.text(`Total Harga Jasa`, 80, y)
+      doc.text(`Rp`, 130, y)
+      doc.text(`${this.formatCurrency(this.form.totalServiceHarga)}`, 150, y)
+      y += 5
+      doc.setFontSize(8)
+      doc.text(`Total Harga`, 80, y)
+      doc.text(`Rp`, 130, y)
+      doc.text(`${this.formatCurrency(this.form.grandTotalHarga)}`, 150, y)
+      y += 5
 
-      doc.setFontSize(11)
-      doc.text(`Pajak (11%)`, 115, y)
-      doc.text(`Rp`, 160, y)
-      doc.text(`${this.formatCurrency(this.form.pajak)}`, 190, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
-      y += 6
+      doc.setFontSize(8)
+      doc.text(`Pajak (11%)`, 80, y)
+      doc.text(`Rp`, 130, y)
+      doc.text(`${this.formatCurrency(this.form.pajak)}`, 150, y)
+      y += 5
       if (this.form.status_pembayaran === 'dp') {
-        doc.setFontSize(11)
-        doc.text(`DP`, 115, y)
-        doc.text(`Rp`, 160, y)
-        doc.text(`${this.formatCurrency(this.form.dp_amount)}`, 190, y, {
-          align: 'right',
-          maxWidth: 30,
-        })
-        y += 6
+        doc.setFontSize(8)
+        doc.text(`DP`, 80, y)
+        doc.text(`Rp`, 130, y)
+        doc.text(`${this.formatCurrency(this.form.dp_amount)}`, 150, y)
+        y += 5
       }
-      doc.setFontSize(11)
-      doc.text(`Total Pembayaran`, 115, y)
-      doc.text(`Rp`, 160, y)
-      doc.text(`${this.formatCurrency(this.form.totalPembayaran)}`, 190, y, {
-        align: 'right',
-        maxWidth: 30,
-      })
+      doc.setFontSize(8)
+      doc.text(`Total Pembayaran`, 80, y)
+      doc.text(`Rp`, 130, y)
+      doc.text(`${this.formatCurrency(this.form.totalPembayaran)}`, 150, y)
       y += 8
 
       y += 10
 
+      //section for signature
       doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(11)
-      doc.text(`Nama Pelanggan`, 40, y, {
-        align: 'center',
-        maxWidth: 30,
-      })
-      doc.text(`${this.form.nama}`, 40, y + 20, {
-        align: 'center',
-        maxWidth: 30,
-      })
+      doc.setFontSize(9)
+      doc.text(`Nama Pelanggan`, 15, y)
+      doc.text(`${this.form.nama}`, 15, y + 20)
       doc.setLineWidth(0.1)
-      doc.roundedRect(20, y - 6, 40, 30, 1, 1)
+      doc.roundedRect(10, y - 6, 40, 30, 1, 1)
 
-      doc.setFontSize(11)
-      doc.text(`Car Speed`, 160, y, {
-        align: 'center',
-        maxWidth: 30,
-      })
-      doc.text(`____________`, 160, y + 20, {
-        align: 'center',
-        maxWidth: 30,
-      })
+      doc.setFontSize(9)
+      doc.text(`Car Speed`, 131, y)
+      doc.text(`${this.username}`, 131, y + 20)
       doc.setLineWidth(0.1)
-      doc.roundedRect(140, y - 6, 40, 30, 1, 1)
+      doc.roundedRect(120, y - 6, 40, 30, 1, 1)
 
       doc.save('workorder.pdf')
     },
