@@ -1728,7 +1728,7 @@ export default {
       let badgeText = ''
       if (this.form.status === 'draft') badgeText = 'ESTIMASI WO'
       if (this.form.status_pembayaran === 'lunas') badgeText = 'INVOICE LUNAS'
-      if (this.form.status_pembayaran === 'tempo') badgeText = 'INVOICE TEMPO'
+      if (this.form.status_pembayaran === 'tempo') badgeText = 'WORK ORDER TEMPO'
 
       if (badgeText) {
         const badgeX = 158
@@ -1885,7 +1885,7 @@ export default {
 
       y += 6
 
-      // ===== KELUHAN + INFO SERVIS =====
+      // ===== KELUHAN =====
       doc.setFont('Helvetica', 'bold')
       doc.text('Keluhan', 10, y)
       y += 2
@@ -1896,39 +1896,25 @@ export default {
       doc.setFont('Helvetica', 'normal')
       doc.text(keluhanLines, 13, y + 6)
 
-      // kolom kanan info servis berikutnya
-      doc.setFont('Helvetica', 'bold')
-      doc.text('Info Servis Berikutnya', 135, y)
-      doc.setFont('Helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.text(
-        `Kilometer berikutnya : ${String(this.formatCurrency(this.form.next_service_km || 0))} km`,
-        135,
-        y + 6,
-      )
-      doc.text(
-        `Tanggal berikutnya  : ${this.formatDate(this.form.next_service_date) || '-'}`,
-        135,
-        y + 11,
-      )
+      const leftY = y + keluhanHeight + 6
 
-      y = y + keluhanHeight + 6
-
-      // ===== SARAN =====
+      // ===== SARAN ===== (right below Keluhan)
       doc.setFont('Helvetica', 'bold')
       doc.setFontSize(9)
-      doc.text('Saran', 10, y)
-      y += 2
+      doc.text('Saran', 10, leftY)
+      const saranY = leftY + 2
       const saranLines = doc.splitTextToSize(this.form.saran || '-', 120)
       const saranHeight = saranLines.length * 4 + 4
       doc.setDrawColor(230, 230, 230)
-      doc.roundedRect(10, y + 1, 120, saranHeight, 2, 2)
+      doc.roundedRect(10, saranY + 1, 120, saranHeight, 2, 2)
       doc.setFont('Helvetica', 'normal')
       doc.setFontSize(8.5)
-      doc.text(saranLines, 13, y + 6)
+      doc.text(saranLines, 13, saranY + 6)
+
+      const rightStartY = y // Right column starts at same y as Keluhan
 
       // ===== BOX TOTAL DI KANAN =====
-      const totalBoxTop = y + 1
+      const totalBoxTop = rightStartY + 1
       doc.setDrawColor(230, 230, 230)
       doc.roundedRect(135, totalBoxTop, 65, 40, 2, 2)
       let totalY = totalBoxTop + 6
@@ -1961,8 +1947,25 @@ export default {
       const grandTotalText = String(this.formatCurrency(this.form.totalPembayaran || 0))
       doc.text(grandTotalText, 198, totalY + 1.5, { align: 'right' })
 
+      // ===== INFO SERVIS BERIKUTNYA ===== (below Ringkasan Biaya)
+      const infoY = totalBoxTop + 40 + 5
+      doc.setFont('Helvetica', 'bold')
+      doc.text('Info Servis Berikutnya', 135, infoY)
+      doc.setFont('Helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.text(
+        `Kilometer berikutnya : ${String(this.formatCurrency(this.form.next_service_km || 0))} km`,
+        135,
+        infoY + 6,
+      )
+      doc.text(
+        `Tanggal berikutnya  : ${this.formatDate(this.form.next_service_date) || '-'}`,
+        135,
+        infoY + 11,
+      )
+
       // ===== SIGNATURE DI BAWAH =====
-      const maxBottom = Math.max(y + saranHeight + 8, totalBoxTop + 40 + 5)
+      const maxBottom = Math.max(leftY + saranHeight + 6, infoY + 20)
       let sigY = maxBottom + 10
 
       doc.setFont('Helvetica', 'normal')
@@ -1973,6 +1976,14 @@ export default {
       doc.line(135, sigY + 18, 185, sigY + 18)
       doc.text(this.form.nama || '-', 20, sigY + 23)
       doc.text(this.username || '-', 140, sigY + 23)
+
+      // ===== OUTER BORDER =====
+      doc.setDrawColor(10, 10, 145) // Blue color
+      doc.setLineWidth(1.5)
+      doc.setFillColor(0, 0, 255) // Blue fill for opacity effect
+      doc.setGState(new doc.GState({ opacity: 0.2 })) // Set opacity to 20%
+      doc.rect(5, 5, 200, 287, 'S') // Outer frame with stroke only
+      doc.setGState(new doc.GState({ opacity: 1 })) // Reset opacity
 
       doc.save('workorder.pdf')
     },
@@ -2022,25 +2033,36 @@ export default {
       try {
         this.loadingStore.show()
 
-        // Prepare payment data
+        // Prepare payment data for sales-payment-journal endpoint
         const paymentPayload = {
+          date: paymentData.date,
+          memo: paymentData.description,
+          customer_id: this.form.customer_id,
           workorder_id: this.$route.params.id,
           amount: paymentData.amount,
-          payment_method: paymentData.paymentMethod,
-          bank_code: paymentData.bankCode,
-          description: paymentData.description,
-          payment_date: paymentData.date,
+          kas_bank_code: paymentData.bankCode,
+          piutang_code: '2001',
         }
 
         console.log('Payment Data:', paymentPayload)
 
         // Submit payment to backend
-        const response = await api.post(`${this.BASE_URL}workorders/payment`, paymentPayload)
+        const response = await api.post(
+          `${this.BASE_URL}accounting/sales-payment-journal`,
+          paymentPayload,
+        )
 
-        // Update status to 'dibayar' after successful payment
-        this.form.status = 'dibayar'
-        this.form.status_pembayaran = 'lunas'
-        this.initialStatus = 'dibayar'
+        // Check if payment amount equals total payment amount
+        if (paymentData.amount === this.totalPembayaran) {
+          // Update status to 'dibayar' and 'lunas' using update-only-status endpoint
+          const statusPayload = { ...paymentPayload } // Same payload
+          await api.post(`${this.BASE_URL}workorders/update-only-status`, statusPayload)
+
+          // Update local status
+          this.form.status = 'dibayar'
+          this.form.status_pembayaran = 'lunas'
+          this.initialStatus = 'dibayar'
+        }
 
         this.show_toast = true
         this.message_toast = response.data.message || 'Pembayaran berhasil diproses!'

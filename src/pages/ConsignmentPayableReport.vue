@@ -185,17 +185,22 @@ function closePaymentModal() {
 }
 
 async function handlePaymentSubmit(paymentData) {
+  const username = localStorage.getItem('username') || 'admin'
   if (isSubmitting.value) return
   isSubmitting.value = true
 
   try {
     const payload = {
+      entry_no: null,
+      tanggal: paymentData.date,
       supplier_id: selectedSupplier.value.supplier_id,
       amount: paymentData.amount,
-      payment_method: paymentData.paymentMethod,
-      bank_code: paymentData.bankCode,
-      description: paymentData.description,
-      date: paymentData.date,
+      kas_bank_code: paymentData.bankCode,
+      hutang_konsinyasi_code: '3002',
+      potongan_konsinyasi_code: null,
+      discount: 0,
+      memo: paymentData.description,
+      created_by: username,
     }
 
     const response = await api.post(`${BASE_URL}accounting/consignment-payment`, payload)

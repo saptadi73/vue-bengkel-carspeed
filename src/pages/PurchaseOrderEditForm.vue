@@ -427,7 +427,7 @@
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
   <payment-modal
     :is-open="showPaymentModal"
-    :initial-amount="dpValue > 0 ? dpValue : grandTotal"
+    :initial-amount="grandTotal"
     :expense-name="`PO ${form.po_no || ''}`"
     :expense-type="form.supplier_name || ''"
     @close="closePaymentModal"
@@ -874,23 +874,26 @@ export default {
         purchase_id: this.$route.params.id,
         amount: paymentData.amount,
         kas_bank_code: paymentData.bankCode,
-        hutang_code: '2100',
+        hutang_code: '3001',
       }
 
       console.log('Formdata: ', form)
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}accountings/purchase-payment-journal`, form)
+        const response = await api.post(`${BASE_URL}accounting/purchase-payment-journal`, form)
         console.log('Response Payment: ', response.data.message)
 
-        if (response.data.message == 'Jurnal pembayaran pembelian berhasil dibuat') {
-          try {
-            const responku = await api.post(`${BASE_URL}purchase-orders/pay/${form.purchase_id}`)
-            this.show_toast = true
-            this.message_toast = responku.data.message + ' purchase_id: ' + form.purchase_id
-          } catch (error) {
-            console.log('Error purchase: ', error)
-          }
+        // Check if payment amount equals grand total
+        if (paymentData.amount === this.grandTotal) {
+          // Update status to 'dibayarkan' and 'lunas'
+          const statusResponse = await api.post(
+            `${BASE_URL}purchase-orders/pay/${form.purchase_id}`,
+          )
+          this.show_toast = true
+          this.message_toast = statusResponse.data.message + ' purchase_id: ' + form.purchase_id
+        } else {
+          this.show_toast = true
+          this.message_toast = response.data.message
         }
       } catch (error) {
         console.error('Error processing payment:', error)
