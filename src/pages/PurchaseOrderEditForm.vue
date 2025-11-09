@@ -142,15 +142,32 @@
             <option value="lunas">Lunas</option>
           </select>
         </div>
-        <div v-if="form.status_pembayaran !== 'lunas'">
+        <div>
           <label for="dp_amount" class="block text-sm font-medium text-gray-700">DP Amount</label>
-          <input
-            v-model.number="form.dp_amount"
-            type="number"
-            id="dp_amount"
-            min="0"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div class="flex items-center gap-2">
+            <input
+              v-model.number="form.dp_amount"
+              type="number"
+              id="dp_amount"
+              min="0"
+              class="mt-1 block flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              v-if="form.dp_amount > 0 && !form.dp_paid"
+              type="button"
+              class="mt-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
+              @click="openDpPaymentModal"
+              :disabled="isCompleted"
+            >
+              Bayar DP
+            </button>
+            <span
+              v-if="form.dp_amount > 0 && form.dp_paid"
+              class="mt-1 text-sm text-green-600 font-semibold px-3 py-2"
+            >
+              DP Sudah Dibayar
+            </span>
+          </div>
         </div>
       </div>
 
@@ -433,6 +450,14 @@
     @close="closePaymentModal"
     @submit="handlePaymentSubmit"
   />
+  <payment-modal
+    :is-open="showDpPaymentModal"
+    :initial-amount="form.dp_amount"
+    :expense-name="`DP PO ${form.po_no || ''}`"
+    :expense-type="form.supplier_name || ''"
+    @close="closeDpPaymentModal"
+    @submit="handleDpPaymentSubmit"
+  />
 </template>
 
 <script>
@@ -459,6 +484,7 @@ export default {
       showModal: false,
       modalUrl: '',
       showPaymentModal: false,
+      showDpPaymentModal: false,
       isSubmitting: false, // prevent double submit
       form: {
         supplier_id: '',
@@ -473,6 +499,7 @@ export default {
         status: '',
         status_pembayaran: 'belum_ada_pembayaran',
         dp_amount: 0,
+        dp_paid: false,
         includeTax: false,
         document: null,
         bukti_transfer: '',
@@ -609,6 +636,7 @@ export default {
           ...poData,
           status_pembayaran: poData.status_pembayaran || 'belum_ada_pembayaran',
           dp_amount: poData.dp || poData.dp_amount || 0,
+          dp_paid: poData.dp_paid || false,
           items: poData.lines.map((line) => ({
             id: line.id,
             product_id: line.product_id,
@@ -866,6 +894,14 @@ export default {
     closePaymentModal() {
       this.showPaymentModal = false
     },
+    openDpPaymentModal() {
+      if (this.form.dp_amount > 0) {
+        this.showDpPaymentModal = true
+      }
+    },
+    closeDpPaymentModal() {
+      this.showDpPaymentModal = false
+    },
     async handlePaymentSubmit(paymentData) {
       const form = {
         date: paymentData.date,
@@ -898,6 +934,37 @@ export default {
       } catch (error) {
         console.error('Error processing payment:', error)
         this.message_toast = 'Gagal memproses pembayaran'
+        this.show_toast = true
+        console.log('Error: ', error)
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async handleDpPaymentSubmit(paymentData) {
+      const form = {
+        date: paymentData.date,
+        memo: paymentData.description,
+        supplier_id: this.form.supplier_id,
+        purchase_id: this.$route.params.id,
+        amount: paymentData.amount,
+        kas_bank_code: paymentData.bankCode,
+        hutang_code: '3001',
+      }
+
+      console.log('DP Payment Formdata: ', form)
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}accounting/purchase-payment-journal`, form)
+        console.log('Response DP Payment: ', response.data.message)
+
+        // Update DP payment status
+        this.form.dp_paid = true
+
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Pembayaran DP berhasil diproses!'
+      } catch (error) {
+        console.error('Error processing DP payment:', error)
+        this.message_toast = 'Gagal memproses pembayaran DP'
         this.show_toast = true
         console.log('Error: ', error)
       } finally {

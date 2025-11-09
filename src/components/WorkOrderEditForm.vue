@@ -166,16 +166,33 @@
               </div>
             </div>
             <div class="info-card">
-              <div class="relative">
-                <input
-                  v-model.number="form.dp"
-                  type="number"
-                  min="0"
-                  class="modern-input peer"
-                  placeholder=" "
+              <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                  <input
+                    v-model.number="form.dp"
+                    type="number"
+                    min="0"
+                    class="modern-input peer"
+                    placeholder=" "
+                    :disabled="initialStatus === 'selesai'"
+                  />
+                  <label class="modern-label">DP Amount</label>
+                </div>
+                <button
+                  v-if="form.dp > 0 && !form.dp_paid"
+                  type="button"
+                  class="modern-btn-info text-xs px-2 py-1"
+                  @click="openDpPaymentModal"
                   :disabled="initialStatus === 'selesai'"
-                />
-                <label class="modern-label">DP Amount</label>
+                >
+                  Bayar DP
+                </button>
+                <span
+                  v-if="form.dp > 0 && form.dp_paid"
+                  class="text-xs text-green-600 font-semibold px-2 py-1"
+                >
+                  DP Sudah Dibayar
+                </span>
               </div>
             </div>
             <div class="info-card">
@@ -982,6 +999,17 @@
     @submit="handlePaymentSubmit"
   />
 
+  <!-- DP Payment Modal -->
+  <payment-modal
+    :is-open="showDpPaymentModal"
+    :initial-amount="form.dp"
+    :expense-id="$route.params.id"
+    :expense-name="`DP Work Order - ${form.nama}`"
+    :expense-type="`${form.no_pol}`"
+    @close="closeDpPaymentModal"
+    @submit="handleDpPaymentSubmit"
+  />
+
   <!-- Add Service Modal -->
   <div
     v-if="showAddServiceModal"
@@ -1112,6 +1140,7 @@ export default {
         last_service: '',
         status_pembayaran: 'belum_ada_pembayaran',
         dp: 0,
+        dp_paid: false,
         product_ordered: [],
         service_ordered: [],
         keluhan: '',
@@ -1136,6 +1165,7 @@ export default {
         cost: 0,
       },
       showPaymentModal: false,
+      showDpPaymentModal: false,
     }
   },
   computed: {
@@ -1365,6 +1395,7 @@ export default {
         this.form.last_service = this.dataWorkorder.last_service || ''
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
         this.form.dp = this.dataWorkorder.dp || 0
+        this.form.dp_paid = this.dataWorkorder.dp_paid || false
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -2088,8 +2119,16 @@ export default {
         this.showPaymentModal = true
       }
     },
+    openDpPaymentModal() {
+      if (this.form.dp > 0) {
+        this.showDpPaymentModal = true
+      }
+    },
     closePaymentModal() {
       this.showPaymentModal = false
+    },
+    closeDpPaymentModal() {
+      this.showDpPaymentModal = false
     },
     async handlePaymentSubmit(paymentData) {
       try {
@@ -2135,6 +2174,45 @@ export default {
         console.error('Error processing payment:', error)
         this.show_toast = true
         this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran!'
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    async handleDpPaymentSubmit(paymentData) {
+      try {
+        this.loadingStore.show()
+
+        // Prepare DP payment data for sales-payment-journal endpoint
+        const paymentPayload = {
+          date: paymentData.date,
+          memo: paymentData.description,
+          customer_id: this.form.customer_id,
+          workorder_id: this.$route.params.id,
+          amount: paymentData.amount,
+          kas_bank_code: paymentData.bankCode,
+          piutang_code: '2001',
+        }
+
+        console.log('DP Payment Data:', paymentPayload)
+
+        // Submit DP payment to backend
+        const response = await api.post(
+          `${this.BASE_URL}accounting/sales-payment-journal`,
+          paymentPayload,
+        )
+
+        // Update DP payment status
+        this.form.dp_paid = true
+
+        this.show_toast = true
+        this.message_toast = response.data.message || 'Pembayaran DP berhasil diproses!'
+
+        // Refresh data
+        await this.getWorkOrderData()
+      } catch (error) {
+        console.error('Error processing DP payment:', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran DP!'
       } finally {
         this.loadingStore.hide()
       }
