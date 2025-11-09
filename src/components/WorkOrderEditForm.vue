@@ -2192,7 +2192,7 @@ export default {
         this.getProductsId(currentItem)
         this.markProductModified(currentItem)
       }
-      this.productSearchQuery = ''
+      this.productSearchQuery = product.name
       this.showProductSuggestions = false
       this.activeProductIndex = -1
     },
@@ -2243,7 +2243,7 @@ export default {
         this.getServicesId(currentItem)
         this.markServiceModified(currentItem)
       }
-      this.serviceSearchQuery = ''
+      this.serviceSearchQuery = service.name
       this.showServiceSuggestions = false
       this.activeServiceIndex = -1
     },

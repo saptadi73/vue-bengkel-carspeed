@@ -1131,7 +1131,7 @@ export default {
         currentItem.product_name = product.name
         this.getProductsId(currentItem)
       }
-      this.productSearchQuery = ''
+      this.productSearchQuery = product.name
       this.showProductSuggestions = false
       this.activeProductIndex = -1
     },
@@ -1181,7 +1181,7 @@ export default {
         currentItem.service_name = service.name
         this.getServicesId(currentItem)
       }
-      this.serviceSearchQuery = ''
+      this.serviceSearchQuery = service.name
       this.showServiceSuggestions = false
       this.activeServiceIndex = -1
     },
