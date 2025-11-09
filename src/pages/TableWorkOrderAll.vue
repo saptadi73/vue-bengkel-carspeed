@@ -146,12 +146,12 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
-              v-for="(order, index) in filteredOrders"
+              v-for="(order, index) in paginatedOrders"
               :key="order.workOrderNumber"
               class="hover:bg-blue-50 transition-colors"
             >
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ index + 1 }}
+                {{ (currentPage - 1) * itemsPerPage + index + 1 }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
@@ -255,7 +255,7 @@
                 </button>
               </td>
             </tr>
-            <tr v-if="filteredOrders.length === 0">
+            <tr v-if="paginatedOrders.length === 0">
               <td colspan="8" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
@@ -284,7 +284,7 @@
     <!-- Mobile Card View -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:hidden">
       <div
-        v-for="(order, index) in filteredOrders"
+        v-for="(order, index) in paginatedOrders"
         :key="order.workOrderNumber"
         class="work-order-card"
       >
@@ -307,7 +307,9 @@
             </div>
             <div>
               <div class="font-semibold text-gray-900">{{ order.no_wo }}</div>
-              <div class="text-sm text-gray-500">#{{ index + 1 }}</div>
+              <div class="text-sm text-gray-500">
+                #{{ (currentPage - 1) * itemsPerPage + index + 1 }}
+              </div>
             </div>
           </div>
           <span
@@ -447,6 +449,71 @@
         </div>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex justify-center items-center mt-8 space-x-2">
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+      </button>
+
+      <template v-for="page in visiblePages" :key="page">
+        <button
+          @click="goToPage(page)"
+          :class="[
+            'px-3 py-2 text-sm font-medium border',
+            page === currentPage
+              ? 'text-blue-600 bg-blue-50 border-blue-500'
+              : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-50',
+          ]"
+        >
+          {{ page }}
+        </button>
+      </template>
+
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 5l7 7-7 7"
+          ></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Items per page selector -->
+    <div class="flex justify-center mt-4">
+      <div class="flex items-center space-x-2">
+        <label for="itemsPerPage" class="text-sm text-gray-700">Items per page:</label>
+        <select
+          v-model="itemsPerPage"
+          @change="resetPage"
+          id="itemsPerPage"
+          class="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option :value="5">5</option>
+          <option :value="10">10</option>
+          <option :value="20">20</option>
+          <option :value="50">50</option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <!-- Confirmation Modal -->
@@ -543,6 +610,8 @@ export default {
       confirmAction: '',
       selectedOrder: null,
       workOrders: [],
+      currentPage: 1,
+      itemsPerPage: 10,
     }
   },
   computed: {
@@ -567,6 +636,30 @@ export default {
       }
 
       return filtered
+    },
+    paginatedOrders() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      const end = start + this.itemsPerPage
+      return this.filteredOrders.slice(start, end)
+    },
+    totalPages() {
+      return Math.ceil(this.filteredOrders.length / this.itemsPerPage)
+    },
+    visiblePages() {
+      const pages = []
+      const maxVisible = 5
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisible / 2))
+      let end = Math.min(this.totalPages, start + maxVisible - 1)
+
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1)
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+
+      return pages
     },
     progressCount() {
       return this.workOrders.filter((order) => order.status === 'dikerjakan').length
@@ -695,6 +788,14 @@ export default {
       }
     },
 
+    goToPage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page
+      }
+    },
+    resetPage() {
+      this.currentPage = 1
+    },
     tutupToast() {
       this.show_toast = false
     },

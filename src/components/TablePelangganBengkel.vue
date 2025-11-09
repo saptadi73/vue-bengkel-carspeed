@@ -153,6 +153,7 @@ import axios from 'axios';
           <tr>
             <th
               v-for="(header, i) in [
+                'No. Urut',
                 'Nama',
                 'HP',
                 'No. Pol',
@@ -169,7 +170,7 @@ import axios from 'axios';
               :class="[
                 'bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold py-3 px-2 text-sm uppercase tracking-wider border-b border-blue-700 shadow-sm',
                 i === 0 ? 'rounded-tl-xl' : '',
-                i === 10 ? 'rounded-tr-xl' : '',
+                i === 11 ? 'rounded-tr-xl' : '',
               ]"
             >
               {{ header }}
@@ -182,6 +183,7 @@ import axios from 'axios';
             :key="startIdx + idx"
             :class="{ 'bg-gray-50': idx % 2 === 1 }"
           >
+            <td>{{ startIdx + idx + 1 }}</td>
             <td>{{ pelanggan.customer.nama }}</td>
             <td>{{ pelanggan.customer.hp }}</td>
             <td>{{ pelanggan.no_pol }}</td>
@@ -241,7 +243,7 @@ import axios from 'axios';
             </td>
           </tr>
           <tr v-if="paginatedList.length === 0">
-            <td colspan="11" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
+            <td colspan="12" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
           </tr>
         </tbody>
       </table>

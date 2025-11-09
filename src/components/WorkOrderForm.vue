@@ -164,7 +164,7 @@
             <div class="info-card">
               <div class="flex-1 relative">
                 <select v-model="form.karyawan_id" class="modern-select peer" required>
-                  <option value="" disabled selected>-- Pilih Karyawan --</option>
+                  <option value="" disabled selected>-- Pilih Mekanik --</option>
                   <option
                     v-for="karyawanItem in karyawan"
                     :key="karyawanItem.id"
@@ -173,7 +173,7 @@
                     {{ karyawanItem.nama }}
                   </option>
                 </select>
-                <label class="modern-select-label">Karyawan</label>
+                <label class="modern-select-label">Mekanik</label>
               </div>
             </div>
             <div class="info-card">
@@ -290,20 +290,42 @@
               >
                 <div class="grid grid-cols-15 gap-1 mb-1">
                   <div class="relative col-span-3">
-                    <select
-                      v-model="item.product_id"
-                      class="modern-select peer"
-                      @change="getProductsId(item)"
+                    <input
+                      v-model="productSearchQuery"
+                      type="text"
+                      class="modern-input peer"
+                      placeholder="Ketik untuk mencari produk..."
+                      @input="onProductSearchInput"
+                      @focus="showProductSuggestions = true"
+                      @blur="hideProductSuggestions"
+                      @keydown="handleProductKeydown"
+                    />
+                    <div
+                      v-if="showProductSuggestions && filteredProducts.length > 0"
+                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
-                      <option value="" disabled selected>Pilih Product</option>
-                      <option
-                        v-for="productku in products"
-                        :key="productku.id"
-                        :value="productku.id"
+                      <div
+                        v-for="(product, index) in filteredProducts"
+                        :key="product.id"
+                        :class="[
+                          'px-4 py-2 cursor-pointer hover:bg-blue-50',
+                          index === activeProductIndex ? 'bg-blue-100' : '',
+                        ]"
+                        @mousedown="selectProduct(product)"
                       >
-                        {{ productku.name }}
-                      </option>
-                    </select>
+                        {{ product.name }}
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        showProductSuggestions &&
+                        filteredProducts.length === 0 &&
+                        productSearchQuery
+                      "
+                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
+                    >
+                      Tidak ada produk ditemukan
+                    </div>
                   </div>
                   <input type="hidden" v-model="item.product_name" />
                   <div>
@@ -520,20 +542,42 @@
               >
                 <div class="grid grid-cols-14 gap-1 mb-1">
                   <div class="relative col-span-3">
-                    <select
-                      v-model="item.service_id"
-                      @change="getServicesId(item)"
-                      class="modern-select peer"
+                    <input
+                      v-model="serviceSearchQuery"
+                      type="text"
+                      class="modern-input peer"
+                      placeholder="Ketik untuk mencari service..."
+                      @input="onServiceSearchInput"
+                      @focus="showServiceSuggestions = true"
+                      @blur="hideServiceSuggestions"
+                      @keydown="handleServiceKeydown"
+                    />
+                    <div
+                      v-if="showServiceSuggestions && filteredServices.length > 0"
+                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
-                      <option value="" disabled selected>Pilih Service/Jasa</option>
-                      <option
-                        v-for="serviceku in services"
-                        :key="serviceku.id"
-                        :value="serviceku.id"
+                      <div
+                        v-for="(service, index) in filteredServices"
+                        :key="service.id"
+                        :class="[
+                          'px-4 py-2 cursor-pointer hover:bg-blue-50',
+                          index === activeServiceIndex ? 'bg-blue-100' : '',
+                        ]"
+                        @mousedown="selectService(service)"
                       >
-                        {{ serviceku.name }}
-                      </option>
-                    </select>
+                        {{ service.name }}
+                      </div>
+                    </div>
+                    <div
+                      v-if="
+                        showServiceSuggestions &&
+                        filteredServices.length === 0 &&
+                        serviceSearchQuery
+                      "
+                      class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
+                    >
+                      Tidak ada service ditemukan
+                    </div>
                   </div>
                   <div class="relative col-span-1">
                     <input
@@ -938,6 +982,13 @@ export default {
         price: 0,
         cost: 0,
       },
+      // Search functionality
+      productSearchQuery: '',
+      serviceSearchQuery: '',
+      showProductSuggestions: false,
+      showServiceSuggestions: false,
+      activeProductIndex: -1,
+      activeServiceIndex: -1,
     }
   },
   computed: {
@@ -972,6 +1023,16 @@ export default {
     },
     totalPembayaran() {
       return this.calculatetotalPembayaran()
+    },
+    filteredProducts() {
+      if (!this.productSearchQuery) return this.products
+      const query = this.productSearchQuery.toLowerCase()
+      return this.products.filter((product) => product.name.toLowerCase().includes(query))
+    },
+    filteredServices() {
+      if (!this.serviceSearchQuery) return this.services
+      const query = this.serviceSearchQuery.toLowerCase()
+      return this.services.filter((service) => service.name.toLowerCase().includes(query))
     },
   },
   watch: {
@@ -1023,6 +1084,106 @@ export default {
       this.show_toast = false
       this.message_toast = ''
       window.location.reload()
+    },
+    // Product search methods
+    onProductSearchInput() {
+      this.activeProductIndex = -1
+      this.showProductSuggestions = true
+    },
+    hideProductSuggestions() {
+      setTimeout(() => {
+        this.showProductSuggestions = false
+        this.activeProductIndex = -1
+      }, 200)
+    },
+    handleProductKeydown(event) {
+      if (!this.showProductSuggestions || this.filteredProducts.length === 0) return
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault()
+          this.activeProductIndex = Math.min(
+            this.activeProductIndex + 1,
+            this.filteredProducts.length - 1,
+          )
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          this.activeProductIndex = Math.max(this.activeProductIndex - 1, -1)
+          break
+        case 'Enter':
+          event.preventDefault()
+          if (this.activeProductIndex >= 0) {
+            this.selectProduct(this.filteredProducts[this.activeProductIndex])
+          }
+          break
+        case 'Escape':
+          this.showProductSuggestions = false
+          this.activeProductIndex = -1
+          break
+      }
+    },
+    selectProduct(product) {
+      // Find the current product item being edited
+      const currentItem = this.form.product_ordered.find((item) => !item.product_id)
+      if (currentItem) {
+        currentItem.product_id = product.id
+        currentItem.product_name = product.name
+        this.getProductsId(currentItem)
+      }
+      this.productSearchQuery = ''
+      this.showProductSuggestions = false
+      this.activeProductIndex = -1
+    },
+    // Service search methods
+    onServiceSearchInput() {
+      this.activeServiceIndex = -1
+      this.showServiceSuggestions = true
+    },
+    hideServiceSuggestions() {
+      setTimeout(() => {
+        this.showServiceSuggestions = false
+        this.activeServiceIndex = -1
+      }, 200)
+    },
+    handleServiceKeydown(event) {
+      if (!this.showServiceSuggestions || this.filteredServices.length === 0) return
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault()
+          this.activeServiceIndex = Math.min(
+            this.activeServiceIndex + 1,
+            this.filteredServices.length - 1,
+          )
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          this.activeServiceIndex = Math.max(this.activeServiceIndex - 1, -1)
+          break
+        case 'Enter':
+          event.preventDefault()
+          if (this.activeServiceIndex >= 0) {
+            this.selectService(this.filteredServices[this.activeServiceIndex])
+          }
+          break
+        case 'Escape':
+          this.showServiceSuggestions = false
+          this.activeServiceIndex = -1
+          break
+      }
+    },
+    selectService(service) {
+      // Find the current service item being edited
+      const currentItem = this.form.service_ordered.find((item) => !item.service_id)
+      if (currentItem) {
+        currentItem.service_id = service.id
+        currentItem.service_name = service.name
+        this.getServicesId(currentItem)
+      }
+      this.serviceSearchQuery = ''
+      this.showServiceSuggestions = false
+      this.activeServiceIndex = -1
     },
 
     initializeNextServiceDate() {
