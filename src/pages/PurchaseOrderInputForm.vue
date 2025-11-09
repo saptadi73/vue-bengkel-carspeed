@@ -102,8 +102,10 @@
             v-model="form.date"
             type="date"
             id="deliveryDate"
+            required
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p v-if="dateError" class="mt-1 text-sm text-red-600">Tanggal harus diisi.</p>
         </div>
         <div>
           <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
@@ -259,6 +261,8 @@ export default {
       products: [],
       units: [],
       satuans: [],
+      isSubmitting: false, // prevent double submit
+      dateError: false, // show inline warning when date empty
       form: {
         supplier_id: '',
         poNumber: '',
@@ -320,6 +324,10 @@ export default {
     'form.dp_amount'(val) {
       // ensure numeric
       this.form.dp_amount = Number(val) || 0
+    },
+    // clear date error when user picks a date
+    'form.date'() {
+      this.dateError = false
     },
   },
   computed: {
@@ -420,6 +428,18 @@ export default {
     },
     async submitForm() {
       if (this.isSubmitting) return
+      // validate required date
+      if (!this.form.date) {
+        this.dateError = true
+        this.show_toast = true
+        this.message_toast = 'Tanggal harus diisi.'
+        // focus the date input if running in browser
+        this.$nextTick(() => {
+          const el = document.getElementById('deliveryDate')
+          if (el && typeof el.focus === 'function') el.focus()
+        })
+        return
+      }
       this.isSubmitting = true
       // prevent create with no lines
       const lines = (this.form.items || []).filter((i) => i.product_id)

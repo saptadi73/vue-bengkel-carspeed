@@ -291,7 +291,7 @@
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari produk..."
                       @input="onProductSearchInput(item)"
-                      @focus="item.showSuggestions = true"
+                      @focus="onProductSearchInput(item)"
                       @blur="hideProductSuggestions(item)"
                       @keydown="handleProductKeydown($event, item)"
                       :disabled="initialStatus === 'selesai'"
@@ -309,7 +309,7 @@
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
                           index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectProduct(product, item)"
+                        @click="selectProduct(product, item)"
                       >
                         {{ product.name }}
                       </div>
@@ -592,7 +592,7 @@
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari service..."
                       @input="onServiceSearchInput(item)"
-                      @focus="item.showSuggestions = true"
+                      @focus="onServiceSearchInput(item)"
                       @blur="hideServiceSuggestions(item)"
                       @keydown="handleServiceKeydown($event, item)"
                       :disabled="initialStatus === 'selesai'"
@@ -610,7 +610,7 @@
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
                           index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectService(service, item)"
+                        @click="selectService(service, item)"
                       >
                         {{ service.name }}
                       </div>
@@ -1136,13 +1136,6 @@ export default {
         cost: 0,
       },
       showPaymentModal: false,
-      // Search functionality
-      productSearchQuery: '',
-      serviceSearchQuery: '',
-      showProductSuggestions: false,
-      showServiceSuggestions: false,
-      activeProductIndex: -1,
-      activeServiceIndex: -1,
     }
   },
   computed: {
@@ -1194,16 +1187,6 @@ export default {
       const statusCompleted = this.initialStatus === 'selesai' || this.initialStatus === 'dibayar'
       const paymentLunas = this.form.status_pembayaran === 'lunas'
       return statusCompleted && paymentLunas
-    },
-    filteredProducts() {
-      if (!this.productSearchQuery) return this.products
-      const query = this.productSearchQuery.toLowerCase()
-      return this.products.filter((product) => product.name.toLowerCase().includes(query))
-    },
-    filteredServices() {
-      if (!this.serviceSearchQuery) return this.services
-      const query = this.serviceSearchQuery.toLowerCase()
-      return this.services.filter((service) => service.name.toLowerCase().includes(query))
     },
   },
   watch: {
@@ -1389,12 +1372,18 @@ export default {
           cost: item.cost || 0,
           isNew: false,
           isModified: false,
+          searchQuery: item.product_name || '',
+          showSuggestions: false,
+          activeIndex: -1,
         }))
         this.form.service_ordered = (this.dataWorkorder.service_ordered || []).map((item) => ({
           ...item,
           cost: item.cost || 0,
           isNew: false,
           isModified: false,
+          searchQuery: item.service_name || '',
+          showSuggestions: false,
+          activeIndex: -1,
         }))
         // Update cost from latest product/service data
         await Promise.all(
@@ -1515,6 +1504,7 @@ export default {
         searchQuery: '',
         showSuggestions: false,
         activeIndex: -1,
+        product_name: '',
       })
     },
     async removeProductOrder(idx) {
@@ -1547,6 +1537,7 @@ export default {
         searchQuery: '',
         showSuggestions: false,
         activeIndex: -1,
+        service_name: '',
       })
     },
     async removeServiceOrder(idx) {
@@ -2156,106 +2147,108 @@ export default {
       }
     },
     // Product search methods
-    onProductSearchInput() {
-      this.activeProductIndex = -1
-      this.showProductSuggestions = true
+    onProductSearchInput(item) {
+      item.activeIndex = -1
+      item.showSuggestions = true
     },
-    hideProductSuggestions() {
+    hideProductSuggestions(item) {
       setTimeout(() => {
-        this.showProductSuggestions = false
-        this.activeProductIndex = -1
-      }, 200)
+        item.showSuggestions = false
+        item.activeIndex = -1
+      }, 500)
     },
-    handleProductKeydown(event) {
-      if (!this.showProductSuggestions || this.filteredProducts.length === 0) return
+    handleProductKeydown(event, item) {
+      if (!item.showSuggestions || this.getFilteredProducts(item.searchQuery).length === 0) return
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
-          this.activeProductIndex = Math.min(
-            this.activeProductIndex + 1,
-            this.filteredProducts.length - 1,
+          item.activeIndex = Math.min(
+            item.activeIndex + 1,
+            this.getFilteredProducts(item.searchQuery).length - 1,
           )
           break
         case 'ArrowUp':
           event.preventDefault()
-          this.activeProductIndex = Math.max(this.activeProductIndex - 1, -1)
+          item.activeIndex = Math.max(item.activeIndex - 1, -1)
           break
         case 'Enter':
           event.preventDefault()
-          if (this.activeProductIndex >= 0) {
-            this.selectProduct(this.filteredProducts[this.activeProductIndex])
+          if (item.activeIndex >= 0) {
+            this.selectProduct(this.getFilteredProducts(item.searchQuery)[item.activeIndex], item)
           }
           break
         case 'Escape':
-          this.showProductSuggestions = false
-          this.activeProductIndex = -1
+          item.showSuggestions = false
+          item.activeIndex = -1
           break
       }
     },
-    selectProduct(product) {
-      // Find the current product item being edited
-      const currentItem = this.form.product_ordered.find((item) => !item.product_id)
-      if (currentItem) {
-        currentItem.product_id = product.id
-        currentItem.product_name = product.name
-        this.getProductsId(currentItem)
-        this.markProductModified(currentItem)
-      }
-      this.productSearchQuery = product.name
-      this.showProductSuggestions = false
-      this.activeProductIndex = -1
+    selectProduct(product, item) {
+      item.product_id = product.id
+      item.product_name = product.name
+      this.getProductsId(item)
+      this.markProductModified(item)
+      item.searchQuery = product.name
+      item.showSuggestions = false
+      item.activeIndex = -1
     },
     // Service search methods
-    onServiceSearchInput() {
-      this.activeServiceIndex = -1
-      this.showServiceSuggestions = true
+    onServiceSearchInput(item) {
+      item.activeIndex = -1
+      item.showSuggestions = true
     },
-    hideServiceSuggestions() {
+    hideServiceSuggestions(item) {
       setTimeout(() => {
-        this.showServiceSuggestions = false
-        this.activeServiceIndex = -1
-      }, 200)
+        item.showSuggestions = false
+        item.activeIndex = -1
+      }, 500)
     },
-    handleServiceKeydown(event) {
-      if (!this.showServiceSuggestions || this.filteredServices.length === 0) return
+    handleServiceKeydown(event, item) {
+      if (!item.showSuggestions || this.getFilteredServices(item.searchQuery).length === 0) return
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
-          this.activeServiceIndex = Math.min(
-            this.activeServiceIndex + 1,
-            this.filteredServices.length - 1,
+          item.activeIndex = Math.min(
+            item.activeIndex + 1,
+            this.getFilteredServices(item.searchQuery).length - 1,
           )
           break
         case 'ArrowUp':
           event.preventDefault()
-          this.activeServiceIndex = Math.max(this.activeServiceIndex - 1, -1)
+          item.activeIndex = Math.max(item.activeIndex - 1, -1)
           break
         case 'Enter':
           event.preventDefault()
-          if (this.activeServiceIndex >= 0) {
-            this.selectService(this.filteredServices[this.activeServiceIndex])
+          if (item.activeIndex >= 0) {
+            this.selectService(this.getFilteredServices(item.searchQuery)[item.activeIndex], item)
           }
           break
         case 'Escape':
-          this.showServiceSuggestions = false
-          this.activeServiceIndex = -1
+          item.showSuggestions = false
+          item.activeIndex = -1
           break
       }
     },
-    selectService(service) {
-      // Find the current service item being edited
-      const currentItem = this.form.service_ordered.find((item) => !item.service_id)
-      if (currentItem) {
-        currentItem.service_id = service.id
-        currentItem.service_name = service.name
-        this.getServicesId(currentItem)
-        this.markServiceModified(currentItem)
-      }
-      this.serviceSearchQuery = service.name
-      this.showServiceSuggestions = false
-      this.activeServiceIndex = -1
+    selectService(service, item) {
+      item.service_id = service.id
+      item.service_name = service.name
+      this.getServicesId(item)
+      this.markServiceModified(item)
+      item.searchQuery = service.name
+      item.showSuggestions = false
+      item.activeIndex = -1
+    },
+    getFilteredProducts(query) {
+      if (!query) return this.products
+      const searchQuery = query.toLowerCase()
+      return this.products.filter((product) => product.name.toLowerCase().includes(searchQuery))
+    },
+    getFilteredServices(query) {
+      if (!query) return this.services
+      const searchQuery = query.toLowerCase()
+      return this.services.filter((service) => service.name.toLowerCase().includes(searchQuery))
     },
     async getProductsId(item) {
       if (!item.product_id) return
