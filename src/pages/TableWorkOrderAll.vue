@@ -247,15 +247,6 @@
                   ><span class="material-symbols-outlined text-green-800">edit_document</span></a
                 >
                 <button
-                  @click="openConfirmModal('close', order)"
-                  id="close"
-                  title="Tutup Work Order"
-                  class="cursor-pointer"
-                >
-                  <span class="material-symbols-outlined text-blue-700">check_circle_unread</span>
-                </button>
-                &nbsp;&nbsp;
-                <button
                   @click="openConfirmModal('delete', order)"
                   title="Hapus Work Order"
                   class="cursor-pointer"
@@ -533,6 +524,7 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import api from '@/user/axios'
 
 export default {
   name: 'TableWorkOrderAll',
@@ -690,7 +682,7 @@ export default {
     async deleteWorkOrder() {
       try {
         this.loadingStore.show()
-        await axios.delete(`${BASE_URL}workorders/${this.selectedOrder.id}`)
+        await api.delete(`${BASE_URL}workorders/${this.selectedOrder.id}`)
         this.message_toast = 'Work Order berhasil dihapus'
         this.show_toast = true
         this.fetchWorkOrders()
