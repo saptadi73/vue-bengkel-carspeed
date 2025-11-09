@@ -291,36 +291,38 @@
                 <div class="grid grid-cols-15 gap-1 mb-1">
                   <div class="relative col-span-3">
                     <input
-                      v-model="productSearchQuery"
+                      v-model="item.searchQuery"
                       type="text"
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari produk..."
-                      @input="onProductSearchInput"
-                      @focus="showProductSuggestions = true"
-                      @blur="hideProductSuggestions"
-                      @keydown="handleProductKeydown"
+                      @input="onProductSearchInput(item)"
+                      @focus="item.showSuggestions = true"
+                      @blur="hideProductSuggestions(item)"
+                      @keydown="handleProductKeydown($event, item)"
                     />
                     <div
-                      v-if="showProductSuggestions && filteredProducts.length > 0"
+                      v-if="
+                        item.showSuggestions && getFilteredProducts(item.searchQuery).length > 0
+                      "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
                       <div
-                        v-for="(product, index) in filteredProducts"
+                        v-for="(product, index) in getFilteredProducts(item.searchQuery)"
                         :key="product.id"
                         :class="[
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
-                          index === activeProductIndex ? 'bg-blue-100' : '',
+                          index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectProduct(product)"
+                        @mousedown="selectProduct(product, item)"
                       >
                         {{ product.name }}
                       </div>
                     </div>
                     <div
                       v-if="
-                        showProductSuggestions &&
-                        filteredProducts.length === 0 &&
-                        productSearchQuery
+                        item.showSuggestions &&
+                        getFilteredProducts(item.searchQuery).length === 0 &&
+                        item.searchQuery
                       "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
                     >
@@ -543,36 +545,38 @@
                 <div class="grid grid-cols-14 gap-1 mb-1">
                   <div class="relative col-span-3">
                     <input
-                      v-model="serviceSearchQuery"
+                      v-model="item.searchQuery"
                       type="text"
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari service..."
-                      @input="onServiceSearchInput"
-                      @focus="showServiceSuggestions = true"
-                      @blur="hideServiceSuggestions"
-                      @keydown="handleServiceKeydown"
+                      @input="onServiceSearchInput(item)"
+                      @focus="item.showSuggestions = true"
+                      @blur="hideServiceSuggestions(item)"
+                      @keydown="handleServiceKeydown($event, item)"
                     />
                     <div
-                      v-if="showServiceSuggestions && filteredServices.length > 0"
+                      v-if="
+                        item.showSuggestions && getFilteredServices(item.searchQuery).length > 0
+                      "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
                       <div
-                        v-for="(service, index) in filteredServices"
+                        v-for="(service, index) in getFilteredServices(item.searchQuery)"
                         :key="service.id"
                         :class="[
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
-                          index === activeServiceIndex ? 'bg-blue-100' : '',
+                          index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectService(service)"
+                        @mousedown="selectService(service, item)"
                       >
                         {{ service.name }}
                       </div>
                     </div>
                     <div
                       v-if="
-                        showServiceSuggestions &&
-                        filteredServices.length === 0 &&
-                        serviceSearchQuery
+                        item.showSuggestions &&
+                        getFilteredServices(item.searchQuery).length === 0 &&
+                        item.searchQuery
                       "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
                     >
@@ -982,13 +986,7 @@ export default {
         price: 0,
         cost: 0,
       },
-      // Search functionality
-      productSearchQuery: '',
-      serviceSearchQuery: '',
-      showProductSuggestions: false,
-      showServiceSuggestions: false,
-      activeProductIndex: -1,
-      activeServiceIndex: -1,
+      // Search functionality removed - now per item
     }
   },
   computed: {
@@ -1024,16 +1022,7 @@ export default {
     totalPembayaran() {
       return this.calculatetotalPembayaran()
     },
-    filteredProducts() {
-      if (!this.productSearchQuery) return this.products
-      const query = this.productSearchQuery.toLowerCase()
-      return this.products.filter((product) => product.name.toLowerCase().includes(query))
-    },
-    filteredServices() {
-      if (!this.serviceSearchQuery) return this.services
-      const query = this.serviceSearchQuery.toLowerCase()
-      return this.services.filter((service) => service.name.toLowerCase().includes(query))
-    },
+    // Filtered products and services moved to methods
   },
   watch: {
     totalPembayaran(newVal) {
@@ -1083,107 +1072,104 @@ export default {
     tutupToast() {
       this.show_toast = false
       this.message_toast = ''
-      window.location.reload()
     },
     // Product search methods
-    onProductSearchInput() {
-      this.activeProductIndex = -1
-      this.showProductSuggestions = true
+    onProductSearchInput(item) {
+      item.activeIndex = -1
+      item.showSuggestions = true
     },
-    hideProductSuggestions() {
+    hideProductSuggestions(item) {
       setTimeout(() => {
-        this.showProductSuggestions = false
-        this.activeProductIndex = -1
+        item.showSuggestions = false
+        item.activeIndex = -1
       }, 200)
     },
-    handleProductKeydown(event) {
-      if (!this.showProductSuggestions || this.filteredProducts.length === 0) return
+    handleProductKeydown(event, item) {
+      const filtered = this.getFilteredProducts(item.searchQuery)
+      if (!item.showSuggestions || filtered.length === 0) return
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
-          this.activeProductIndex = Math.min(
-            this.activeProductIndex + 1,
-            this.filteredProducts.length - 1,
-          )
+          item.activeIndex = Math.min(item.activeIndex + 1, filtered.length - 1)
           break
         case 'ArrowUp':
           event.preventDefault()
-          this.activeProductIndex = Math.max(this.activeProductIndex - 1, -1)
+          item.activeIndex = Math.max(item.activeIndex - 1, -1)
           break
         case 'Enter':
           event.preventDefault()
-          if (this.activeProductIndex >= 0) {
-            this.selectProduct(this.filteredProducts[this.activeProductIndex])
+          if (item.activeIndex >= 0) {
+            this.selectProduct(filtered[item.activeIndex], item)
           }
           break
         case 'Escape':
-          this.showProductSuggestions = false
-          this.activeProductIndex = -1
+          item.showSuggestions = false
+          item.activeIndex = -1
           break
       }
     },
-    selectProduct(product) {
-      // Find the current product item being edited
-      const currentItem = this.form.product_ordered.find((item) => !item.product_id)
-      if (currentItem) {
-        currentItem.product_id = product.id
-        currentItem.product_name = product.name
-        this.getProductsId(currentItem)
-      }
-      this.productSearchQuery = product.name
-      this.showProductSuggestions = false
-      this.activeProductIndex = -1
+    selectProduct(product, item) {
+      item.product_id = product.id
+      item.product_name = product.name
+      this.getProductsId(item)
+      item.searchQuery = product.name
+      item.showSuggestions = false
+      item.activeIndex = -1
+    },
+    getFilteredProducts(query) {
+      if (!query) return this.products
+      const lowerQuery = query.toLowerCase()
+      return this.products.filter((product) => product.name.toLowerCase().includes(lowerQuery))
     },
     // Service search methods
-    onServiceSearchInput() {
-      this.activeServiceIndex = -1
-      this.showServiceSuggestions = true
+    onServiceSearchInput(item) {
+      item.activeIndex = -1
+      item.showSuggestions = true
     },
-    hideServiceSuggestions() {
+    hideServiceSuggestions(item) {
       setTimeout(() => {
-        this.showServiceSuggestions = false
-        this.activeServiceIndex = -1
+        item.showSuggestions = false
+        item.activeIndex = -1
       }, 200)
     },
-    handleServiceKeydown(event) {
-      if (!this.showServiceSuggestions || this.filteredServices.length === 0) return
+    handleServiceKeydown(event, item) {
+      const filtered = this.getFilteredServices(item.searchQuery)
+      if (!item.showSuggestions || filtered.length === 0) return
 
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault()
-          this.activeServiceIndex = Math.min(
-            this.activeServiceIndex + 1,
-            this.filteredServices.length - 1,
-          )
+          item.activeIndex = Math.min(item.activeIndex + 1, filtered.length - 1)
           break
         case 'ArrowUp':
           event.preventDefault()
-          this.activeServiceIndex = Math.max(this.activeServiceIndex - 1, -1)
+          item.activeIndex = Math.max(item.activeIndex - 1, -1)
           break
         case 'Enter':
           event.preventDefault()
-          if (this.activeServiceIndex >= 0) {
-            this.selectService(this.filteredServices[this.activeServiceIndex])
+          if (item.activeIndex >= 0) {
+            this.selectService(filtered[item.activeIndex], item)
           }
           break
         case 'Escape':
-          this.showServiceSuggestions = false
-          this.activeServiceIndex = -1
+          item.showSuggestions = false
+          item.activeIndex = -1
           break
       }
     },
-    selectService(service) {
-      // Find the current service item being edited
-      const currentItem = this.form.service_ordered.find((item) => !item.service_id)
-      if (currentItem) {
-        currentItem.service_id = service.id
-        currentItem.service_name = service.name
-        this.getServicesId(currentItem)
-      }
-      this.serviceSearchQuery = service.name
-      this.showServiceSuggestions = false
-      this.activeServiceIndex = -1
+    selectService(service, item) {
+      item.service_id = service.id
+      item.service_name = service.name
+      this.getServicesId(item)
+      item.searchQuery = service.name
+      item.showSuggestions = false
+      item.activeIndex = -1
+    },
+    getFilteredServices(query) {
+      if (!query) return this.services
+      const lowerQuery = query.toLowerCase()
+      return this.services.filter((service) => service.name.toLowerCase().includes(lowerQuery))
     },
 
     initializeNextServiceDate() {
@@ -1400,6 +1386,9 @@ export default {
         discount: 0,
         subtotal: 0,
         cost: 0,
+        searchQuery: '',
+        showSuggestions: false,
+        activeIndex: -1,
       })
     },
     removeProductOrder(idx) {
@@ -1413,6 +1402,9 @@ export default {
         discount: 0,
         subtotal: 0,
         cost: 0,
+        searchQuery: '',
+        showSuggestions: false,
+        activeIndex: -1,
       })
     },
     removeServiceOrder(idx) {
@@ -1530,6 +1522,7 @@ export default {
         this.message_toast = 'Gagal submit work order!'
       } finally {
         this.loadingStore.hide()
+        this.$router.push('/wo/all')
       }
 
       console.log('Form Data:', this.form)

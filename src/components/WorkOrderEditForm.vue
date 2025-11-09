@@ -286,37 +286,39 @@
                 <div class="grid grid-cols-17 gap-1 mb-1">
                   <div class="relative col-span-3">
                     <input
-                      v-model="productSearchQuery"
+                      v-model="item.searchQuery"
                       type="text"
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari produk..."
-                      @input="onProductSearchInput"
-                      @focus="showProductSuggestions = true"
-                      @blur="hideProductSuggestions"
-                      @keydown="handleProductKeydown"
+                      @input="onProductSearchInput(item)"
+                      @focus="item.showSuggestions = true"
+                      @blur="hideProductSuggestions(item)"
+                      @keydown="handleProductKeydown($event, item)"
                       :disabled="initialStatus === 'selesai'"
                     />
                     <div
-                      v-if="showProductSuggestions && filteredProducts.length > 0"
+                      v-if="
+                        item.showSuggestions && getFilteredProducts(item.searchQuery).length > 0
+                      "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
                       <div
-                        v-for="(product, index) in filteredProducts"
+                        v-for="(product, index) in getFilteredProducts(item.searchQuery)"
                         :key="product.id"
                         :class="[
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
-                          index === activeProductIndex ? 'bg-blue-100' : '',
+                          index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectProduct(product)"
+                        @mousedown="selectProduct(product, item)"
                       >
                         {{ product.name }}
                       </div>
                     </div>
                     <div
                       v-if="
-                        showProductSuggestions &&
-                        filteredProducts.length === 0 &&
-                        productSearchQuery
+                        item.showSuggestions &&
+                        getFilteredProducts(item.searchQuery).length === 0 &&
+                        item.searchQuery
                       "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
                     >
@@ -585,37 +587,39 @@
                 <div class="grid grid-cols-16 gap-1">
                   <div class="relative col-span-3">
                     <input
-                      v-model="serviceSearchQuery"
+                      v-model="item.searchQuery"
                       type="text"
                       class="modern-input peer"
                       placeholder="Ketik untuk mencari service..."
-                      @input="onServiceSearchInput"
-                      @focus="showServiceSuggestions = true"
-                      @blur="hideServiceSuggestions"
-                      @keydown="handleServiceKeydown"
+                      @input="onServiceSearchInput(item)"
+                      @focus="item.showSuggestions = true"
+                      @blur="hideServiceSuggestions(item)"
+                      @keydown="handleServiceKeydown($event, item)"
                       :disabled="initialStatus === 'selesai'"
                     />
                     <div
-                      v-if="showServiceSuggestions && filteredServices.length > 0"
+                      v-if="
+                        item.showSuggestions && getFilteredServices(item.searchQuery).length > 0
+                      "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
                     >
                       <div
-                        v-for="(service, index) in filteredServices"
+                        v-for="(service, index) in getFilteredServices(item.searchQuery)"
                         :key="service.id"
                         :class="[
                           'px-4 py-2 cursor-pointer hover:bg-blue-50',
-                          index === activeServiceIndex ? 'bg-blue-100' : '',
+                          index === item.activeIndex ? 'bg-blue-100' : '',
                         ]"
-                        @mousedown="selectService(service)"
+                        @mousedown="selectService(service, item)"
                       >
                         {{ service.name }}
                       </div>
                     </div>
                     <div
                       v-if="
-                        showServiceSuggestions &&
-                        filteredServices.length === 0 &&
-                        serviceSearchQuery
+                        item.showSuggestions &&
+                        getFilteredServices(item.searchQuery).length === 0 &&
+                        item.searchQuery
                       "
                       class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
                     >
@@ -1508,6 +1512,9 @@ export default {
         cost: 0,
         isNew: true,
         isModified: false,
+        searchQuery: '',
+        showSuggestions: false,
+        activeIndex: -1,
       })
     },
     async removeProductOrder(idx) {
@@ -1537,6 +1544,9 @@ export default {
         cost: 0,
         isNew: true,
         isModified: false,
+        searchQuery: '',
+        showSuggestions: false,
+        activeIndex: -1,
       })
     },
     async removeServiceOrder(idx) {
