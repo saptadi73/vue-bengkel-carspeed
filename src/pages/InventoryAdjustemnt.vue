@@ -13,20 +13,46 @@
         <!-- Product Name Input -->
         <div class="info-card">
           <div class="relative">
-            <select
-              v-model="formData.product_id"
-              @change="onProductChange"
-              id="productName"
-              class="modern-select peer"
-              placeholder="Masukkan Nama Produk"
+            <input
+              v-model="formData.searchQuery"
+              type="text"
+              class="modern-input peer"
+              placeholder="Ketik untuk mencari produk..."
+              @input="onProductSearchInput"
+              @focus="onProductSearchInput"
+              @blur="hideProductSuggestions"
+              @keydown="handleProductKeydown"
               required
+            />
+            <div
+              v-if="
+                formData.showSuggestions && getFilteredProducts(formData.searchQuery).length > 0
+              "
+              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
             >
-              <option value="" disabled selected>Pilih Produk</option>
-              <option v-for="item in inventoryList" :key="item.id" :value="item.id">
-                {{ item.name }}
-              </option>
-            </select>
-            <label for="productName" class="modern-select-label">Nama Produk</label>
+              <div
+                v-for="(product, index) in getFilteredProducts(formData.searchQuery)"
+                :key="product.id"
+                :class="[
+                  'px-4 py-2 cursor-pointer hover:bg-blue-50',
+                  index === formData.activeIndex ? 'bg-blue-100' : '',
+                ]"
+                @click="selectProduct(product)"
+              >
+                {{ product.name }}
+              </div>
+            </div>
+            <div
+              v-if="
+                formData.showSuggestions &&
+                getFilteredProducts(formData.searchQuery).length === 0 &&
+                formData.searchQuery
+              "
+              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
+            >
+              Tidak ada produk ditemukan
+            </div>
+            <label class="modern-label">Nama Produk</label>
           </div>
         </div>
 
@@ -196,6 +222,11 @@ export default {
         satuan_id: '',
         performed_by: localStorage.getItem('username') || '',
         timestamps: '',
+        searchQuery: '',
+        showSuggestions: false,
+        activeIndex: -1,
+        type: '',
+        notes: '',
       },
     }
   },
@@ -204,15 +235,63 @@ export default {
     this.getSatuans()
   },
   methods: {
-    onProductChange() {
-      const selected = this.inventoryList.find((item) => item.id === this.formData.product_id)
-      if (selected) {
-        this.formData.satuan_id = selected.satuan_id || ''
-        this.formData.previous_quantity = selected.total_stock || 0
-      } else {
-        this.formData.satuan_id = ''
-        this.formData.previous_quantity = 0
+    onProductSearchInput() {
+      this.formData.activeIndex = -1
+      this.formData.showSuggestions = true
+    },
+    hideProductSuggestions() {
+      setTimeout(() => {
+        this.formData.showSuggestions = false
+        this.formData.activeIndex = -1
+      }, 500)
+    },
+    handleProductKeydown(event) {
+      if (
+        !this.formData.showSuggestions ||
+        this.getFilteredProducts(this.formData.searchQuery).length === 0
+      )
+        return
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault()
+          this.formData.activeIndex = Math.min(
+            this.formData.activeIndex + 1,
+            this.getFilteredProducts(this.formData.searchQuery).length - 1,
+          )
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          this.formData.activeIndex = Math.max(this.formData.activeIndex - 1, -1)
+          break
+        case 'Enter':
+          event.preventDefault()
+          if (this.formData.activeIndex >= 0) {
+            this.selectProduct(
+              this.getFilteredProducts(this.formData.searchQuery)[this.formData.activeIndex],
+            )
+          }
+          break
+        case 'Escape':
+          this.formData.showSuggestions = false
+          this.formData.activeIndex = -1
+          break
       }
+    },
+    selectProduct(product) {
+      this.formData.product_id = product.id
+      this.formData.searchQuery = product.name
+      this.formData.satuan_id = product.satuan_id || ''
+      this.formData.previous_quantity = product.total_stock || 0
+      this.formData.showSuggestions = false
+      this.formData.activeIndex = -1
+    },
+    getFilteredProducts(query) {
+      if (!query) return this.inventoryList
+      const searchQuery = query.toLowerCase()
+      return this.inventoryList.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery),
+      )
     },
     async handleSubmit() {
       console.log('Inventory Adjustment Submitted', this.formData)

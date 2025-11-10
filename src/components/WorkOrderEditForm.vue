@@ -183,9 +183,9 @@
                   type="button"
                   class="modern-btn-info text-xs px-2 py-1"
                   @click="openDpPaymentModal"
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="initialStatus === 'selesai' || isProcessingPayment"
                 >
-                  Bayar DP
+                  {{ isProcessingPayment ? 'Memproses...' : 'Bayar DP' }}
                 </button>
                 <span
                   v-if="form.dp > 0 && form.dp_paid"
@@ -943,10 +943,16 @@
               type="button"
               class="modern-btn-payment flex items-center gap-2"
               @click="openPaymentModal"
-              :disabled="form.status !== 'selesai' || form.status_pembayaran === 'lunas'"
+              :disabled="
+                form.status !== 'selesai' ||
+                form.status_pembayaran === 'lunas' ||
+                isProcessingPayment
+              "
               :class="{
                 'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' || form.status_pembayaran === 'lunas',
+                  form.status !== 'selesai' ||
+                  form.status_pembayaran === 'lunas' ||
+                  isProcessingPayment,
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -957,7 +963,7 @@
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              Proses Pembayaran
+              {{ isProcessingPayment ? 'Memproses...' : 'Proses Pembayaran' }}
             </button>
             <button
               type="submit"
@@ -1121,6 +1127,7 @@ export default {
       karyawan: [],
       initialStatus: '', // Menyimpan status awal dari database
       workOrderUpdated: false, // Flag to track if work order has been updated
+      isProcessingPayment: false, // Flag to prevent double payment processing
       form: {
         customer_id: '',
         vehicle_id: '',
@@ -2131,6 +2138,13 @@ export default {
       this.showDpPaymentModal = false
     },
     async handlePaymentSubmit(paymentData) {
+      // Prevent double submission
+      if (this.isProcessingPayment) {
+        return
+      }
+
+      this.isProcessingPayment = true
+
       try {
         this.loadingStore.show()
 
@@ -2176,9 +2190,17 @@ export default {
         this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran!'
       } finally {
         this.loadingStore.hide()
+        this.isProcessingPayment = false
       }
     },
     async handleDpPaymentSubmit(paymentData) {
+      // Prevent double submission
+      if (this.isProcessingPayment) {
+        return
+      }
+
+      this.isProcessingPayment = true
+
       try {
         this.loadingStore.show()
 
@@ -2215,6 +2237,7 @@ export default {
         this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran DP!'
       } finally {
         this.loadingStore.hide()
+        this.isProcessingPayment = false
       }
     },
     validateQuantity(item) {
