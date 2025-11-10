@@ -343,6 +343,11 @@ const router = createRouter({
           name: 'coa',
           component: () => import('../pages/TableCoa.vue'),
         },
+        {
+          path: 'daily-report',
+          name: 'daily report',
+          component: () => import('../pages/DailyReport.vue'),
+        },
       ],
     },
   ],

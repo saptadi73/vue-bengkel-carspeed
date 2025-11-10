@@ -230,6 +230,10 @@ const navItems = reactive([
         text: 'Laporan Hutang Konsinyasi',
         url: '/finansial/consignment-payable-report',
       },
+      {
+        text: 'Daily Report',
+        url: '/finansial/daily-report',
+      },
     ],
   },
   {
