@@ -78,6 +78,7 @@ async function login() {
   localStorage.removeItem('token')
   localStorage.removeItem('username')
   localStorage.removeItem('email')
+  localStorage.removeItem('roles')
   const username = document.getElementById('username').value
   const password = document.getElementById('password').value
   const dataLogin = { username: username, password: password }
@@ -92,6 +93,8 @@ async function login() {
   localStorage.setItem('token', token)
   localStorage.setItem('username', response.data.data.user.username)
   localStorage.setItem('email', response.data.data.user.email)
+  localStorage.setItem('roles', JSON.stringify(response.data.data.user.roles))
+  console.log('Data Roles : ', JSON.stringify(response.data.data.user.roles))
 
   if (response.data.status == 'success') {
     const tokenku = localStorage.getItem('token')

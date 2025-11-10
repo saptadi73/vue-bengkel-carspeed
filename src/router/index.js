@@ -350,6 +350,23 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/users',
+      name: 'users',
+      component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      children: [
+        {
+          path: 'table',
+          name: 'users-table',
+          component: () => import('../pages/TableUsersWithRoles.vue'),
+        },
+        {
+          path: 'edit/:id',
+          name: 'edit-user',
+          component: () => import('../pages/EditUser.vue'),
+        },
+      ],
+    },
   ],
 })
 

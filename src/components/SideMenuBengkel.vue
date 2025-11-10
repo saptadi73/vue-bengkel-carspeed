@@ -245,6 +245,10 @@ const navItems = reactive([
     haschildren: true,
     children: [
       {
+        text: 'Daftar Users',
+        url: '/users/table',
+      },
+      {
         text: 'Login',
         url: '/login',
       },

@@ -1,10 +1,11 @@
-# TODO: Add Payment Column to ConsignmentPayableReport.vue
+# TODO: Create Table Users with Roles Page
 
-- [x] Import PaymentModal and ToastCard components
-- [x] Add PaymentModal and ToastCard to components list
-- [x] Add reactive data: showPaymentModal, selectedSupplier, isSubmitting
-- [x] Add methods: openPaymentModal, closePaymentModal, handlePaymentSubmit, showToast
-- [x] Add "Payment" column header to the table
-- [x] Add icon button in each table row for payment
-- [x] Add PaymentModal template with props and events
-- [x] Test the modal opening and payment submission
+- [x] Create src/pages/TableUsersWithRoles.vue: New page component for displaying users with roles table, including search and pagination.
+- [x] Update src/router/index.js: Add new route /users/table under LayoutDefaultBengkel.
+- [x] Update src/components/SideMenuBengkel.vue: Add "Daftar Users" child item under "Users" section.
+
+# TODO: Create Edit User Page
+
+- [x] Create src/pages/EditUser.vue: New page for viewing user details and editing roles.
+- [x] Update src/router/index.js: Add new route /users/edit/:id under LayoutDefaultBengkel.
+- [x] Update src/pages/TableUsersWithRoles.vue: Change edit button to navigate to /users/edit/:id.

@@ -157,9 +157,9 @@
               type="button"
               class="mt-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
               @click="openDpPaymentModal"
-              :disabled="isCompleted"
+              :disabled="isCompleted || isProcessingPayment"
             >
-              Bayar DP
+              {{ isProcessingPayment ? 'Memproses...' : 'Bayar DP' }}
             </button>
             <span
               v-if="form.dp_amount > 0 && form.dp_paid"
@@ -405,9 +405,13 @@
           v-if="serverStatus === 'diterima'"
           type="button"
           @click="openPaymentModal"
-          class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700"
+          :disabled="isProcessingPayment"
+          :class="[
+            'px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700',
+            { 'opacity-50 cursor-not-allowed': isProcessingPayment },
+          ]"
         >
-          Bayar Purchase Order
+          {{ isProcessingPayment ? 'Memproses...' : 'Bayar Purchase Order' }}
         </button>
       </div>
     </form>
@@ -486,6 +490,7 @@ export default {
       showPaymentModal: false,
       showDpPaymentModal: false,
       isSubmitting: false, // prevent double submit
+      isProcessingPayment: false, // Flag to prevent double payment processing
       form: {
         supplier_id: '',
         purchase_order_id: this.$route.params.id,
@@ -903,6 +908,13 @@ export default {
       this.showDpPaymentModal = false
     },
     async handlePaymentSubmit(paymentData) {
+      // Prevent double submission
+      if (this.isProcessingPayment) {
+        return
+      }
+
+      this.isProcessingPayment = true
+
       const form = {
         date: paymentData.date,
         memo: paymentData.description,
@@ -938,9 +950,17 @@ export default {
         console.log('Error: ', error)
       } finally {
         this.loadingStore.hide()
+        this.isProcessingPayment = false
       }
     },
     async handleDpPaymentSubmit(paymentData) {
+      // Prevent double submission
+      if (this.isProcessingPayment) {
+        return
+      }
+
+      this.isProcessingPayment = true
+
       const form = {
         date: paymentData.date,
         memo: paymentData.description,
@@ -969,6 +989,7 @@ export default {
         console.log('Error: ', error)
       } finally {
         this.loadingStore.hide()
+        this.isProcessingPayment = false
       }
     },
   },

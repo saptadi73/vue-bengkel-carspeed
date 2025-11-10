@@ -35,7 +35,13 @@
     <div class="info-card">
       <div class="relative"></div>
       <div class="relative">
-        <label for="cost" class="modern-label-label">Biaya</label>
+        <label for="cost" class="modern-label-label"
+          >Biaya
+          <span class="text-xs font-semibold font-lexend text-gray-500"
+            >(sebaiknya dibiarkan tetap 0 karena biaya jasa akan dikreditkan menjadi minus di
+            laporan biaya. Jarang dibutuhkan kecuali perhitungan Profit Jasa secara terpisah)</span
+          ></label
+        >
         <input
           v-model="form.cost"
           type="text"

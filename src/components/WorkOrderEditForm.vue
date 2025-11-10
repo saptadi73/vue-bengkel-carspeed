@@ -1065,7 +1065,14 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Cost</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Biaya
+            <span class="text-xs font-semibold font-lexend text-gray-500"
+              >(sebaiknya dibiarkan tetap 0 karena biaya jasa akan dikreditkan menjadi minus di
+              laporan biaya. Jarang dibutuhkan kecuali perhitungan Profit Jasa secara
+              terpisah)</span
+            ></label
+          >
           <input
             v-model.number="newService.cost"
             type="number"
