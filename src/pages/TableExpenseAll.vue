@@ -532,6 +532,7 @@ export default {
         kas_bank_code: paymentData.bankCode,
         amount: paymentData.amount,
         expense_id: paymentData.expenseId,
+        payment_no: `PAY-EXP-${this.selectedExpenseForPayment ? this.selectedExpenseForPayment.id : 'EXP'}-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
       }
       console.log('Form :', form)
       try {

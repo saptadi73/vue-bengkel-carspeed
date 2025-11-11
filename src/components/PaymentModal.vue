@@ -84,6 +84,24 @@
               </option>
             </select>
           </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Payment</label>
+            <input
+              v-model="form.paymentNo"
+              type="text"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              readonly
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Dibuat Oleh</label>
+            <input
+              v-model="form.createdBy"
+              type="text"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              readonly
+            />
+          </div>
           <div class="mb-6">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi</label>
             <textarea
@@ -154,6 +172,8 @@ const form = reactive({
   expenseId: '',
   date: '',
   paymentMethod: '',
+  createdBy: '',
+  paymentNo: '',
 })
 
 const paymentMethodLabels = {
@@ -178,6 +198,8 @@ watch(
       form.paymentMethod = ''
       form.description = `${props.expenseName} - ${props.expenseType}`
       form.date = new Date().toISOString().split('T')[0]
+      form.createdBy = localStorage.getItem('username') || ''
+      form.paymentNo = 'PAY-' + Math.random().toString(36).substr(2, 9).toUpperCase()
     }
   },
 )
@@ -216,7 +238,12 @@ const handleSubmit = () => {
     alert('Amount, Metode Pembayaran, Bank Code, dan Tanggal wajib diisi!')
     return
   }
-  emit('submit', { ...form, expenseId: form.expenseId })
+  emit('submit', {
+    ...form,
+    expenseId: form.expenseId,
+    createdBy: form.createdBy,
+    paymentNo: form.paymentNo,
+  })
   closeModal()
 }
 

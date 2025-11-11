@@ -270,7 +270,7 @@ const cashInForm = reactive({
   credit_account_code: '',
   amount: 0,
   memo: '',
-  created_by: 'system',
+  created_by: '',
 })
 const cashOutForm = reactive({
   entry_no: '',
@@ -279,7 +279,7 @@ const cashOutForm = reactive({
   debit_account_code: '',
   amount: 0,
   memo: '',
-  created_by: 'system',
+  created_by: '',
 })
 
 onMounted(async () => {
@@ -366,7 +366,7 @@ function openCashInModal() {
   cashInForm.credit_account_code = ''
   cashInForm.amount = 0
   cashInForm.memo = ''
-  cashInForm.created_by = 'system'
+  cashInForm.created_by = localStorage.getItem('username') || ''
 }
 
 function closeCashInModal() {
@@ -421,7 +421,7 @@ function openCashOutModal() {
   cashOutForm.debit_account_code = ''
   cashOutForm.amount = 0
   cashOutForm.memo = ''
-  cashOutForm.created_by = 'system'
+  cashOutForm.created_by = localStorage.getItem('username') || ''
 }
 
 function closeCashOutModal() {

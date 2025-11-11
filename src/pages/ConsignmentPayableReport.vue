@@ -190,8 +190,10 @@ async function handlePaymentSubmit(paymentData) {
   isSubmitting.value = true
 
   try {
+    const dateStr = paymentData.date.replace(/-/g, '')
+    const payment_no = `PAY-CON-${dateStr}-001`
     const payload = {
-      entry_no: null,
+      payment_no: payment_no,
       tanggal: paymentData.date,
       supplier_id: selectedSupplier.value.supplier_id,
       amount: paymentData.amount,

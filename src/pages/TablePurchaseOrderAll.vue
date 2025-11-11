@@ -7,7 +7,10 @@
       <h1 class="text-3xl md:text-4xl font-bold text-blue-500 mb-2 font-lexend">
         Daftar Purchase Order
       </h1>
-      <p class="text-gray-600 text-lg">Total Purchase Order: {{ filteredOrders.length }}</p>
+      <p class="text-gray-600 text-lg">
+        Total Purchase Order: {{ filteredOrders.length }} | Menampilkan
+        {{ paginatedOrders.length }} dari {{ filteredOrders.length }}
+      </p>
     </div>
 
     <!-- Search and Filter Section -->
@@ -143,12 +146,12 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             <tr
-              v-for="(order, index) in filteredOrders"
+              v-for="(order, index) in paginatedOrders"
               :key="order.id"
               class="hover:bg-blue-50 transition-colors"
             >
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ index + 1 }}
+                {{ (currentPage - 1) * itemsPerPage + index + 1 }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 {{ order.po_no }}
@@ -227,12 +230,14 @@
     <!-- Mobile Card View -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:hidden">
       <div
-        v-for="(order, index) in filteredOrders"
+        v-for="(order, index) in paginatedOrders"
         :key="order.id"
         class="bg-white p-6 rounded-lg shadow-md"
       >
         <div class="flex items-center justify-between mb-4">
-          <div class="font-semibold text-gray-900">#{{ index + 1 }}</div>
+          <div class="font-semibold text-gray-900">
+            #{{ (currentPage - 1) * itemsPerPage + index + 1 }}
+          </div>
           <span
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
             :class="getStatusClass(order.status)"
@@ -327,6 +332,36 @@
           </a>
         </div>
       </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2 mt-8">
+      <button
+        @click="currentPage = Math.max(1, currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
+      <span class="text-sm text-gray-700"> Halaman {{ currentPage }} dari {{ totalPages }} </span>
+
+      <button
+        @click="currentPage = Math.min(totalPages, currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
     </div>
   </div>
 
@@ -425,6 +460,8 @@ export default {
       purchaseOrders: [],
       showPaymentModal: false,
       selectedOrderForPayment: null,
+      currentPage: 1,
+      itemsPerPage: 10,
     }
   },
   computed: {
@@ -447,6 +484,14 @@ export default {
       }
 
       return filtered
+    },
+    paginatedOrders() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      const end = start + this.itemsPerPage
+      return this.filteredOrders.slice(start, end)
+    },
+    totalPages() {
+      return Math.ceil(this.filteredOrders.length / this.itemsPerPage)
     },
     draftCount() {
       return this.purchaseOrders.filter((order) => order.status === 'draft').length
@@ -522,6 +567,10 @@ export default {
         this.message_toast = 'Purchase Order berhasil dihapus'
         this.show_toast = true
         this.fetchPurchaseOrders()
+        // Reset to first page if current page becomes empty
+        if (this.paginatedOrders.length === 0 && this.currentPage > 1) {
+          this.currentPage = 1
+        }
       } catch (error) {
         console.error('Error deleting purchase order:', error)
         this.message_toast = 'Gagal menghapus Purchase Order'

@@ -120,7 +120,6 @@
             <option value="draft">Draft</option>
             <option value="dijalankan">Dijalankan</option>
             <option value="diterima">Diterima</option>
-            <option value="dibayarkan">Dibayarkan</option>
           </select>
         </div>
       </div>
@@ -135,6 +134,7 @@
             v-model="form.status_pembayaran"
             id="status_pembayaran"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled
           >
             <option value="" disabled selected>Pilih Status Pembayaran</option>
             <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
@@ -157,7 +157,11 @@
               type="button"
               class="mt-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600"
               @click="openDpPaymentModal"
-              :disabled="isCompleted || isProcessingPayment"
+              :disabled="
+                isCompleted ||
+                isProcessingPayment ||
+                (serverStatus === 'dibayarkan' && form.status_pembayaran === 'lunas')
+              "
             >
               {{ isProcessingPayment ? 'Memproses...' : 'Bayar DP' }}
             </button>
@@ -923,6 +927,7 @@ export default {
         amount: paymentData.amount,
         kas_bank_code: paymentData.bankCode,
         hutang_code: '3001',
+        payment_no: `PAY-PUR-${this.form.po_no || 'PO'}-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
       }
 
       console.log('Formdata: ', form)
@@ -969,6 +974,7 @@ export default {
         amount: paymentData.amount,
         kas_bank_code: paymentData.bankCode,
         hutang_code: '3001',
+        payment_no: `PAY-PUR-${this.form.po_no || 'PO'}-DP-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
       }
 
       console.log('DP Payment Formdata: ', form)

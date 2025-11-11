@@ -89,6 +89,18 @@
             </div>
           </div>
         </div>
+
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+          <div class="text-xs text-slate-500">Total Purchases</div>
+          <div class="mt-2">
+            <div class="text-lg font-semibold text-slate-800">
+              {{ formatCurrency(report.purchase_orders.total_purchases || 0) }}
+            </div>
+            <div class="text-sm text-slate-500">
+              Qty: {{ report.purchase_orders.total_quantity || 0 }}
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Cash Books detailed -->
@@ -172,6 +184,44 @@
               </table>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Purchase Orders -->
+      <section class="bg-white rounded-lg shadow border p-4">
+        <h3 class="font-semibold text-slate-800 mb-3">Purchase Orders</h3>
+        <div class="overflow-auto">
+          <table class="w-full text-sm">
+            <thead class="text-xs text-slate-500">
+              <tr>
+                <th class="px-3 py-2 text-left">PO</th>
+                <th class="px-3 py-2 text-left">Date</th>
+                <th class="px-3 py-2 text-left">Supplier</th>
+                <th class="px-3 py-2 text-left">Product</th>
+                <th class="px-3 py-2 text-right">Qty</th>
+                <th class="px-3 py-2 text-right">Price</th>
+                <th class="px-3 py-2 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(it, i) in report.purchase_orders.items"
+                :key="i"
+                class="even:bg-slate-50 hover:bg-slate-100"
+              >
+                <td class="px-3 py-2">{{ it.po_no }}</td>
+                <td class="px-3 py-2">{{ formatDate(it.po_date) }}</td>
+                <td class="px-3 py-2">{{ it.supplier_name }}</td>
+                <td class="px-3 py-2">{{ it.product_name }}</td>
+                <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
+                <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
+                <td class="px-3 py-2 text-right">{{ formatCurrency(it.subtotal) }}</td>
+              </tr>
+              <tr v-if="!report.purchase_orders.items?.length">
+                <td colspan="7" class="px-3 py-6 text-center text-slate-400">No purchase orders</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -432,6 +482,14 @@ export default {
           data.work_orders.items = Array.isArray(data.work_orders.items)
             ? data.work_orders.items
             : []
+          data.purchase_orders = data.purchase_orders || {
+            total_quantity: 0,
+            total_purchases: 0,
+            items: [],
+          }
+          data.purchase_orders.items = Array.isArray(data.purchase_orders.items)
+            ? data.purchase_orders.items
+            : []
         }
 
         report.value = data
@@ -468,6 +526,8 @@ export default {
           ['Total Product Qty', report.value.product_sales?.total_quantity || 0],
           ['Total Service Sales', report.value.service_sales?.total_sales || 0],
           ['Total Service Qty', report.value.service_sales?.total_quantity || 0],
+          ['Total Purchases', report.value.purchase_orders?.total_purchases || 0],
+          ['Total Purchase Qty', report.value.purchase_orders?.total_quantity || 0],
           ['Total Revenue', report.value.profit_loss?.total_revenue || 0],
           ['Total Expenses', report.value.profit_loss?.total_expenses || 0],
           ['Net Profit', report.value.profit_loss?.net_profit || 0],
@@ -488,6 +548,29 @@ export default {
           const name = `Cash_${acct.account_code || acct.account_name || 'acct'}`.slice(0, 31)
           XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), name)
         })
+
+        // Purchase Orders
+        const poRows = []
+        poRows.push(['PO', 'Date', 'Supplier', 'Product', 'Qty', 'Price', 'Discount', 'Subtotal'])
+        let poSubtotalTotal = 0
+        ;(report.value.purchase_orders?.items || []).forEach((it) => {
+          const subtotal =
+            Number(it.quantity || 0) * Number(it.price || 0) - Number(it.discount || 0)
+          poRows.push([
+            it.po_no,
+            it.po_date,
+            it.supplier_name,
+            it.product_name,
+            it.quantity,
+            it.price,
+            it.discount ?? 0,
+            subtotal,
+          ])
+          poSubtotalTotal += subtotal
+        })
+        poRows.push([])
+        poRows.push(['', '', '', '', '', '', 'TOTAL', poSubtotalTotal])
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(poRows), 'Purchase Orders')
 
         // Product sales
         const prodRows = []

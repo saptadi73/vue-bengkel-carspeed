@@ -183,7 +183,11 @@
                   type="button"
                   class="modern-btn-info text-xs px-2 py-1"
                   @click="openDpPaymentModal"
-                  :disabled="initialStatus === 'selesai' || isProcessingPayment"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    isProcessingPayment ||
+                    (form.status === 'dibayar' && form.status_pembayaran === 'lunas')
+                  "
                 >
                   {{ isProcessingPayment ? 'Memproses...' : 'Bayar DP' }}
                 </button>
@@ -2164,6 +2168,7 @@ export default {
           amount: paymentData.amount,
           kas_bank_code: paymentData.bankCode,
           piutang_code: '2001',
+          payment_no: `PAY-SAL-${this.form.no_wo}-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
         }
 
         console.log('Payment Data:', paymentPayload)
@@ -2220,6 +2225,7 @@ export default {
           amount: paymentData.amount,
           kas_bank_code: paymentData.bankCode,
           piutang_code: '2001',
+          payment_no: `PAY-SAL-${this.form.no_wo}-DP-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
         }
 
         console.log('DP Payment Data:', paymentPayload)
