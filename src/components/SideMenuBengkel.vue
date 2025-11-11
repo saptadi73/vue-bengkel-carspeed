@@ -113,6 +113,10 @@ const navItems = reactive([
         url: '/wo/laporan/jasa',
       },
       {
+        text: 'Laporan Kerja Mekanik',
+        url: '/wo/laporan/mekanik',
+      },
+      {
         text: 'Paket Order',
         url: '/wo/paket',
       },

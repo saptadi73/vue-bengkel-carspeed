@@ -148,6 +148,11 @@ const router = createRouter({
           component: () => import('../pages/LaporanJasaBengkel.vue'),
         },
         {
+          path: 'laporan/mekanik',
+          name: 'Laporan Kerja Mekanik',
+          component: () => import('../pages/LaporanKerjaMekanik.vue'),
+        },
+        {
           path: 'paket',
           name: 'paket',
           component: () => import('../components/PaketOrderForm.vue'),
