@@ -32,6 +32,18 @@
           <input type="date" v-model="endDate" class="w-full border rounded-xl px-3 py-2" />
         </div>
         <div>
+          <label class="block text-sm text-gray-600 mb-1">Atau Pilih Bulan dan Tahun</label>
+          <input
+            type="month"
+            v-model="selectedMonth"
+            @change="setDateRange"
+            class="w-full border rounded-xl px-3 py-2"
+          />
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div class="md:col-span-2"></div>
+        <div>
           <label class="block text-sm text-gray-600 mb-1">Account</label>
           <select v-model="selectedAccount" class="w-full border rounded-xl px-3 py-2">
             <option value="">Pilih Account</option>
@@ -255,6 +267,7 @@ import api from '@/user/axios'
 
 const startDate = ref('')
 const endDate = ref('')
+const selectedMonth = ref('')
 const selectedAccount = ref('')
 const accounts = ref([])
 const equityCodes = ref([])
@@ -355,7 +368,20 @@ function formatDate(dateStr) {
   if (!dateStr) return '-'
   const d = new Date(dateStr)
   if (isNaN(d)) return dateStr
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}-${month}-${year}`
+}
+
+function setDateRange() {
+  if (selectedMonth.value) {
+    const [year, month] = selectedMonth.value.split('-')
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month, 0)
+    startDate.value = start.toISOString().split('T')[0]
+    endDate.value = end.toISOString().split('T')[0]
+  }
 }
 
 function openCashInModal() {

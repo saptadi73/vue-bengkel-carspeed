@@ -8,7 +8,7 @@
     <!-- Parameter Input -->
     <div class="bg-white rounded-2xl shadow p-6">
       <h2 class="text-lg font-semibold mb-4">Parameter Laporan</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Tanggal Awal</label>
           <input type="date" v-model="startDate" class="w-full border rounded-xl px-3 py-2" />
@@ -16,6 +16,15 @@
         <div>
           <label class="block text-sm text-gray-600 mb-1">Tanggal Akhir</label>
           <input type="date" v-model="endDate" class="w-full border rounded-xl px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Atau Pilih Bulan dan Tahun</label>
+          <input
+            type="month"
+            v-model="selectedMonth"
+            @change="setDateRange"
+            class="w-full border rounded-xl px-3 py-2"
+          />
         </div>
       </div>
       <div class="mt-4">
@@ -131,6 +140,7 @@ import { BASE_URL } from '@/base.utils.url'
 
 const startDate = ref('')
 const endDate = ref('')
+const selectedMonth = ref('')
 const searchProduct = ref('')
 const searchType = ref('')
 const searchPerformedBy = ref('')
@@ -198,6 +208,16 @@ function formatDateTime(dateStr) {
     minute: '2-digit',
     second: '2-digit',
   })
+}
+
+function setDateRange() {
+  if (selectedMonth.value) {
+    const [year, month] = selectedMonth.value.split('-')
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month, 0)
+    startDate.value = start.toISOString().split('T')[0]
+    endDate.value = end.toISOString().split('T')[0]
+  }
 }
 </script>
 
