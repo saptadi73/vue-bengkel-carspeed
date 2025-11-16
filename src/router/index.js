@@ -261,6 +261,11 @@ const router = createRouter({
           name: 'consignment adjusment',
           component: () => import('../pages/InventoryConsignmentAdjustment.vue'),
         },
+        {
+          path: 'consignment/receipt',
+          name: 'consignment receipt',
+          component: () => import('../pages/ConsignmentReceiptForm.vue'),
+        },
       ],
     },
     {

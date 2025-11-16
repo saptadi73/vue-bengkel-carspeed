@@ -63,12 +63,10 @@ import axios from 'axios';
           <span
             :class="[
               'inline-block px-2 py-1 rounded text-xs font-semibold',
-              isLewat(pelanggan.kunjunganTerakhir)
-                ? 'bg-red-100 text-red-700 border border-red-300'
-                : 'bg-green-100 text-green-700 border border-green-300',
+              getStatusClass(pelanggan.last_visit_date),
             ]"
           >
-            {{ isLewat(pelanggan.kunjunganTerakhir) ? 'Lewat' : 'Aman' }}
+            {{ getStatusText(pelanggan.last_visit_date) }}
           </span>
         </div>
         <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-sm mb-2">
@@ -89,31 +87,52 @@ import axios from 'axios';
           <div class="text-gray-500">Next Service</div>
           <div>{{ estimasiService(pelanggan.last_visit_date) }}</div>
         </div>
-        <div class="flex gap-2 mt-2">
+        <div class="flex gap-2 mt-2 justify-center">
           <button
-            class="bg-blue-500 text-white px-2 py-1 rounded flex-1"
+            class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            title="Create Work Order"
             @click="createWO(pelanggan)"
           >
-            Create WO
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
           </button>
           <button
-            class="bg-yellow-400 text-black px-2 py-1 rounded flex-1"
+            class="bg-yellow-400 text-black p-2 rounded hover:bg-yellow-500"
+            title="Edit Pelanggan"
             @click="editPelanggan(pelanggan)"
           >
-            Edit
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
           </button>
           <button
-            class="bg-gray-200 text-blue-700 px-2 py-1 rounded flex-1 flex items-center justify-center hover:bg-gray-300"
+            class="bg-green-500 text-white p-2 rounded hover:bg-green-600"
+            title="Kirim WhatsApp"
+            @click="sendWhatsApp(pelanggan)"
+          >
+            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"
+              />
+            </svg>
+          </button>
+          <button
+            class="bg-gray-200 text-blue-700 p-2 rounded hover:bg-gray-300"
             title="History Service"
             @click="showHistory(pelanggan)"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-4 w-4 mr-1"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -121,7 +140,6 @@ import axios from 'axios';
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            History
           </button>
         </div>
       </div>
@@ -197,49 +215,69 @@ import axios from 'axios';
               <span
                 :class="[
                   'inline-block px-2 py-1 rounded text-xs font-semibold',
-                  isLewat(pelanggan.last_visit_date)
-                    ? 'bg-red-100 text-red-700 border border-red-300'
-                    : 'bg-green-100 text-green-700 border border-green-300',
+                  getStatusClass(pelanggan.last_visit_date),
                 ]"
               >
-                {{ isLewat(pelanggan.last_visit_date) ? 'Lewat' : 'Aman' }}
+                {{ getStatusText(pelanggan.last_visit_date) }}
               </span>
             </td>
             <td>
-              <button
-                class="bg-blue-500 text-white px-2 py-1 rounded mr-2"
-                @click="createWO(pelanggan.id)"
-              >
-                Create WO
-              </button>
-              <button
-                class="bg-yellow-400 text-black px-2 py-1 rounded mr-2"
-                @click="editPelanggan(pelanggan)"
-              >
-                Edit
-              </button>
-              <a
-                class="bg-gray-200 text-blue-700 px-2 py-1 rounded flex items-center hover:bg-gray-300"
-                :href="`${BASE_URL2}pelanggan/history/${pelanggan.id}`"
-                target="_blank"
-                title="History Service"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              <div class="flex gap-1 justify-center">
+                <button
+                  class="bg-blue-500 text-white p-1 rounded hover:bg-blue-600"
+                  title="Create Work Order"
+                  @click="createWO(pelanggan.id)"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                History
-              </a>
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="bg-yellow-400 text-black p-1 rounded hover:bg-yellow-500"
+                  title="Edit Pelanggan"
+                  @click="editPelanggan(pelanggan)"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="bg-green-500 text-white p-1 rounded hover:bg-green-600"
+                  title="Kirim WhatsApp"
+                  @click="sendWhatsApp(pelanggan)"
+                >
+                  <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"
+                    />
+                  </svg>
+                </button>
+                <a
+                  class="bg-gray-200 text-blue-700 p-1 rounded hover:bg-gray-300 inline-block"
+                  :href="`${BASE_URL2}pelanggan/history/${pelanggan.id}`"
+                  target="_blank"
+                  title="History Service"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </a>
+              </div>
             </td>
           </tr>
           <tr v-if="paginatedList.length === 0">
@@ -339,6 +377,43 @@ export default {
       nextService.setMonth(nextService.getMonth() + 3)
       return new Date() > nextService
     },
+    getStatusClass(dateStr) {
+      if (!dateStr) return 'bg-gray-100 text-gray-700 border border-gray-300'
+
+      const nextService = new Date(dateStr)
+      nextService.setMonth(nextService.getMonth() + 3)
+      const now = new Date()
+      const diffTime = nextService - now
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays < 0) {
+        // Lewat
+        return 'bg-red-100 text-red-700 border border-red-300'
+      } else if (diffDays <= 7) {
+        // 7 hari lagi - kuning
+        return 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+      } else {
+        // Aman
+        return 'bg-green-100 text-green-700 border border-green-300'
+      }
+    },
+    getStatusText(dateStr) {
+      if (!dateStr) return 'Tidak Ada Data'
+
+      const nextService = new Date(dateStr)
+      nextService.setMonth(nextService.getMonth() + 3)
+      const now = new Date()
+      const diffTime = nextService - now
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+      if (diffDays < 0) {
+        return 'Lewat'
+      } else if (diffDays <= 7) {
+        return 'Segera'
+      } else {
+        return 'Aman'
+      }
+    },
     createWO(id) {
       this.$emit('create-wo', id)
       this.$router.push(`/wo/new/form/${id}`)
@@ -351,6 +426,39 @@ export default {
     },
     prevPage() {
       if (this.page > 1) this.page--
+    },
+    sendWhatsApp(pelanggan) {
+      if (!pelanggan.customer.hp) {
+        alert('Nomor HP tidak tersedia')
+        return
+      }
+      // Replace leading 0 with 62
+      let phoneNumber = pelanggan.customer.hp.replace(/^0/, '62')
+      // Remove any non-numeric characters
+      phoneNumber = phoneNumber.replace(/\D/g, '')
+
+      // Calculate next service date (3 months from last visit)
+      let nextServiceDate = '-'
+      if (pelanggan.last_visit_date) {
+        const lastVisit = new Date(pelanggan.last_visit_date)
+        lastVisit.setMonth(lastVisit.getMonth() + 3)
+        const day = String(lastVisit.getDate()).padStart(2, '0')
+        const month = String(lastVisit.getMonth() + 1).padStart(2, '0')
+        const year = lastVisit.getFullYear()
+        nextServiceDate = `${day}-${month}-${year}`
+      }
+
+      // Create message
+      const message = `Jadwal Service Rutin kendaraan anda ${pelanggan.model} dengan nomor polisi ${pelanggan.no_pol} akan segera tiba pada tanggal ${nextServiceDate}`
+
+      // Encode message for URL
+      const encodedMessage = encodeURIComponent(message)
+
+      // Create WhatsApp URL
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
+
+      // Open in new tab
+      window.open(whatsappUrl, '_blank')
     },
     async getTablePelanggan() {
       const loadingStore = useLoadingStore()

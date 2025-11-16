@@ -526,12 +526,26 @@ export default {
     },
     async handlePaymentSubmit(paymentData) {
       console.log('PaymentData :', paymentData)
+      const expenseTypeToCode = {
+        umum: '6010',
+        lain_lain: '6010',
+        listrik: '6011',
+        gaji: '6012',
+        air: '6013',
+        internet: '6014',
+        transportasi: '6015',
+        komunikasi: '6016',
+        konsumsi: '6017',
+        entertaint: '6018',
+      }
+      const expense_code = expenseTypeToCode[this.selectedExpenseForPayment.expense_type] || '6010'
       const form = {
         date: paymentData.date,
         memo: paymentData.description,
         kas_bank_code: paymentData.bankCode,
         amount: paymentData.amount,
         expense_id: paymentData.expenseId,
+        expense_code: expense_code,
         payment_no: `PAY-EXP-${this.selectedExpenseForPayment ? this.selectedExpenseForPayment.id : 'EXP'}-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
       }
       console.log('Form :', form)

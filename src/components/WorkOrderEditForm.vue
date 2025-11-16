@@ -96,7 +96,11 @@
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                   @input="updateNextServiceKm"
                 />
                 <label class="modern-label">Kilometer</label>
@@ -110,7 +114,11 @@
                   min="0"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                   readonly
                 />
                 <label class="modern-label">Service Berikutnya KM</label>
@@ -119,11 +127,15 @@
             <div class="info-card">
               <div class="relative">
                 <input
-                  v-model="form.next_service_date"
-                  type="date"
+                  :value="formatDate(form.next_service_date)"
+                  type="text"
                   class="modern-input peer"
                   placeholder=" "
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                   readonly
                 />
                 <label class="modern-label">Service Berikutnya Tanggal</label>
@@ -135,7 +147,11 @@
                   v-model="form.karyawan_id"
                   class="modern-select peer"
                   required
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                 >
                   <option value="" disabled selected>-- Pilih Karyawan --</option>
                   <option
@@ -155,7 +171,11 @@
                   v-model="form.status_pembayaran"
                   id="status_pembayaran"
                   class="modern-select peer"
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                 >
                   <option value="" disabled selected>Pilih Status Pembayaran</option>
                   <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
@@ -174,7 +194,11 @@
                     min="0"
                     class="modern-input peer"
                     placeholder=" "
-                    :disabled="initialStatus === 'selesai'"
+                    :disabled="
+                      initialStatus === 'selesai' ||
+                      workOrderStatus === 'selesai' ||
+                      workOrderStatus === 'dibayar'
+                    "
                   />
                   <label class="modern-label">DP Amount</label>
                 </div>
@@ -184,9 +208,7 @@
                   class="modern-btn-info text-xs px-2 py-1"
                   @click="openDpPaymentModal"
                   :disabled="
-                    initialStatus === 'selesai' ||
-                    isProcessingPayment ||
-                    (form.status === 'dibayar' && form.status_pembayaran === 'lunas')
+                    initialStatus === 'selesai' || isProcessingPayment || paymentStatus === 'lunas'
                   "
                 >
                   {{ isProcessingPayment ? 'Memproses...' : 'Bayar DP' }}
@@ -205,7 +227,11 @@
                   v-model="form.status"
                   id="status"
                   class="modern-select peer"
-                  :disabled="initialStatus === 'selesai'"
+                  :disabled="
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar'
+                  "
                 >
                   <option value="" disabled selected>Pilih Status</option>
                   <option value="draft">draft</option>
@@ -228,7 +254,11 @@
                 class="modern-textarea peer"
                 placeholder=" "
                 rows="4"
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               ></textarea>
               <label class="modern-textarea-label">Keluhan</label>
             </div>
@@ -239,7 +269,11 @@
                 class="modern-textarea peer"
                 placeholder=" "
                 rows="4"
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               ></textarea>
               <label class="modern-textarea-label">Saran</label>
             </div>
@@ -270,7 +304,11 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="addProductOrder"
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -315,7 +353,11 @@
                       @focus="onProductSearchInput(item)"
                       @blur="hideProductSuggestions(item)"
                       @keydown="handleProductKeydown($event, item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                     <div
                       v-if="
@@ -355,7 +397,11 @@
                       min="0"
                       class="modern-input peer text-sm"
                       placeholder=" "
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="relative col-span-1">
@@ -368,7 +414,11 @@
                       placeholder=" "
                       @change="markProductModified(item)"
                       @input="validateQuantity(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="hidden relative col-span-1">
@@ -376,7 +426,11 @@
                       id="satuan_id"
                       v-model="item.satuan_id"
                       class="modern-select peer"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       <option value="" disabled selected>Pilih Satuan</option>
                       <option v-for="value in satuans" :key="value.id" :value="value.id">
@@ -391,7 +445,11 @@
                       min="0"
                       class="modern-input peer text-sm"
                       placeholder=" "
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -402,7 +460,11 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -413,7 +475,11 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markProductModified(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="hidden col-span-2">
@@ -445,7 +511,11 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmAddProduct(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       Confirm Add
                     </button>
@@ -454,7 +524,11 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmUpdateProduct(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       Confirm Update
                     </button>
@@ -462,7 +536,11 @@
                       type="button"
                       class="delete-btn"
                       @click="removeProductOrder(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
@@ -558,7 +636,11 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="openAddServiceModal"
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -574,7 +656,11 @@
                 type="button"
                 class="modern-btn-primary flex items-center gap-2"
                 @click="addServiceOrder"
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               >
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -616,7 +702,11 @@
                       @focus="onServiceSearchInput(item)"
                       @blur="hideServiceSuggestions(item)"
                       @keydown="handleServiceKeydown($event, item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                     <div
                       v-if="
@@ -657,7 +747,11 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
 
@@ -668,7 +762,11 @@
                       min="0"
                       class="modern-input peer"
                       placeholder=" "
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
 
@@ -680,7 +778,11 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="relative col-span-2">
@@ -691,7 +793,11 @@
                       class="modern-input peer"
                       placeholder=" "
                       @change="markServiceModified(item)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     />
                   </div>
                   <div class="hidden">
@@ -722,7 +828,11 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmAddService(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       Confirm Add
                     </button>
@@ -731,7 +841,11 @@
                       type="button"
                       class="modern-btn-info"
                       @click="confirmUpdateService(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       Confirm Update
                     </button>
@@ -739,7 +853,11 @@
                       type="button"
                       class="delete-btn"
                       @click="removeServiceOrder(idx)"
-                      :disabled="initialStatus === 'selesai'"
+                      :disabled="
+                        initialStatus === 'selesai' ||
+                        workOrderStatus === 'selesai' ||
+                        workOrderStatus === 'dibayar'
+                      "
                     >
                       <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path
@@ -827,7 +945,11 @@
               id="useTax"
               v-model="isUseTax"
               class="mr-2"
-              :disabled="initialStatus === 'selesai'"
+              :disabled="
+                initialStatus === 'selesai' ||
+                workOrderStatus === 'selesai' ||
+                workOrderStatus === 'dibayar'
+              "
             />
             <label for="useTax" class="text-sm font-semibold">Gunakan Pajak 11%</label>
           </div>
@@ -924,7 +1046,11 @@
                 v-model="form.keterangan"
                 class="modern-input peer"
                 placeholder=" "
-                :disabled="initialStatus === 'selesai'"
+                :disabled="
+                  initialStatus === 'selesai' ||
+                  workOrderStatus === 'selesai' ||
+                  workOrderStatus === 'dibayar'
+                "
               />
               <label class="modern-label">Keterangan</label>
             </div>
@@ -948,15 +1074,11 @@
               class="modern-btn-payment flex items-center gap-2"
               @click="openPaymentModal"
               :disabled="
-                form.status !== 'selesai' ||
-                form.status_pembayaran === 'lunas' ||
-                isProcessingPayment
+                form.status !== 'selesai' || paymentStatus === 'lunas' || isProcessingPayment
               "
               :class="{
                 'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' ||
-                  form.status_pembayaran === 'lunas' ||
-                  isProcessingPayment,
+                  form.status !== 'selesai' || paymentStatus === 'lunas' || isProcessingPayment,
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -971,12 +1093,20 @@
             </button>
             <button
               type="submit"
-              :disabled="hasUnconfirmedChanges || initialStatus === 'selesai'"
+              :disabled="
+                hasUnconfirmedChanges ||
+                initialStatus === 'selesai' ||
+                workOrderStatus === 'selesai' ||
+                workOrderStatus === 'dibayar'
+              "
               :class="[
                 'modern-btn-success flex items-center gap-2',
                 {
                   'opacity-50 cursor-not-allowed':
-                    hasUnconfirmedChanges || initialStatus === 'selesai',
+                    hasUnconfirmedChanges ||
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar',
                 },
               ]"
             >
@@ -1184,6 +1314,8 @@ export default {
       },
       showPaymentModal: false,
       showDpPaymentModal: false,
+      paymentStatus: null,
+      workOrderStatus: null,
     }
   },
   computed: {
@@ -1414,6 +1546,8 @@ export default {
         this.form.status_pembayaran = this.dataWorkorder.status_pembayaran || 'belum_ada_pembayaran'
         this.form.dp = this.dataWorkorder.dp || 0
         this.form.dp_paid = this.dataWorkorder.dp_paid || false
+        await this.checkPaymentStatus()
+        await this.checkWorkOrderStatus()
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -2137,7 +2271,7 @@ export default {
       }
     },
     openDpPaymentModal() {
-      if (this.form.dp > 0) {
+      if (this.form.dp > 0 && this.paymentStatus !== 'lunas') {
         this.showDpPaymentModal = true
       }
     },
@@ -2195,6 +2329,7 @@ export default {
 
         // Refresh data
         await this.getWorkOrderData()
+        await this.checkPaymentStatus()
       } catch (error) {
         console.error('Error processing payment:', error)
         this.show_toast = true
@@ -2243,6 +2378,7 @@ export default {
 
         // Refresh data
         await this.getWorkOrderData()
+        await this.checkPaymentStatus()
       } catch (error) {
         console.error('Error processing DP payment:', error)
         this.show_toast = true
@@ -2397,6 +2533,28 @@ export default {
         console.log('error: ', error)
       } finally {
         this.loadingStore.hide()
+      }
+    },
+    async checkPaymentStatus() {
+      try {
+        const response = await axios.get(
+          `${BASE_URL}workorders/${this.$route.params.id}/status-pembayaran`,
+        )
+        this.paymentStatus = response.data.data.status_pembayaran
+        console.log('Payment Status:', this.paymentStatus)
+      } catch (error) {
+        console.error('Error fetching payment status:', error)
+        this.paymentStatus = null
+      }
+    },
+    async checkWorkOrderStatus() {
+      try {
+        const response = await axios.get(`${BASE_URL}workorders/${this.$route.params.id}/status`)
+        this.workOrderStatus = response.data.data.status
+        console.log('Work Order Status:', this.workOrderStatus)
+      } catch (error) {
+        console.error('Error fetching work order status:', error)
+        this.workOrderStatus = null
       }
     },
   },

@@ -4,7 +4,7 @@
     <!-- Card view for mobile -->
     <div class="sm:hidden">
       <div
-        v-for="(item, idx) in filteredList"
+        v-for="(item, idx) in paginatedList"
         :key="'card-' + idx"
         class="bg-white rounded-xl shadow p-4 mb-4 border border-gray-200"
       >
@@ -38,6 +38,24 @@
           <div>{{ item.min_stock }}</div>
         </div>
       </div>
+      <!-- Pagination for mobile -->
+      <div v-if="totalPages > 1" class="mt-4 flex justify-center items-center space-x-2">
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 bg-white"
+        >
+          Previous
+        </button>
+        <span class="text-sm"> Page {{ currentPage }} of {{ totalPages }} </span>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 bg-white"
+        >
+          Next
+        </button>
+      </div>
       <div v-if="filteredList.length === 0" class="text-center text-gray-400 py-4">
         Tidak ada data ditemukan
       </div>
@@ -51,10 +69,17 @@
           placeholder="Cari produk..."
           class="border px-2 py-1 rounded w-full sm:w-64"
         />
-        <select v-model="selectedCategory" class="border px-2 py-1 rounded w-full sm:w-48">
-          <option value="">Semua Kategori</option>
-          <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-        </select>
+        <div class="flex gap-2">
+          <select v-model="selectedCategory" class="border px-2 py-1 rounded w-full sm:w-48">
+            <option value="">Semua Kategori</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+          <select v-model="selectedStatus" class="border px-2 py-1 rounded w-full sm:w-48">
+            <option value="">Semua Status</option>
+            <option value="aman">Aman</option>
+            <option value="segera_beli">Segera Beli</option>
+          </select>
+        </div>
       </div>
       <table class="table-auto w-full border-collapse">
         <thead>
@@ -84,7 +109,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="(item, idx) in filteredList"
+            v-for="(item, idx) in paginatedList"
             :key="idx"
             :class="{ 'bg-gray-50': idx % 2 === 1 }"
             @click="openModal(item)"
@@ -111,11 +136,29 @@
               </span>
             </td>
           </tr>
-          <tr v-if="filteredList.length === 0">
+          <tr v-if="paginatedList.length === 0">
             <td colspan="10" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
           </tr>
         </tbody>
       </table>
+      <!-- Pagination for desktop -->
+      <div v-if="totalPages > 1" class="mt-4 flex justify-center items-center space-x-2">
+        <button
+          @click="goToPage(currentPage - 1)"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 bg-white"
+        >
+          Previous
+        </button>
+        <span class="text-sm"> Page {{ currentPage }} of {{ totalPages }} </span>
+        <button
+          @click="goToPage(currentPage + 1)"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 bg-white"
+        >
+          Next
+        </button>
+      </div>
     </div>
     <div
       v-if="showModal"
@@ -192,9 +235,12 @@ export default {
     return {
       searchQuery: '',
       selectedCategory: '',
+      selectedStatus: '',
       showModal: false,
       selectedProduct: null,
       inventoryList: [],
+      currentPage: 1,
+      itemsPerPage: 10,
     }
   },
   computed: {
@@ -207,6 +253,13 @@ export default {
       if (this.selectedCategory) {
         list = list.filter((i) => i.category_name === this.selectedCategory)
       }
+      if (this.selectedStatus) {
+        if (this.selectedStatus === 'aman') {
+          list = list.filter((i) => i.total_stock > i.min_stock)
+        } else if (this.selectedStatus === 'segera_beli') {
+          list = list.filter((i) => i.total_stock <= i.min_stock)
+        }
+      }
       if (this.searchQuery) {
         const q = this.searchQuery.toLowerCase()
         list = list.filter(
@@ -218,6 +271,14 @@ export default {
         )
       }
       return list
+    },
+    paginatedList() {
+      const start = (this.currentPage - 1) * this.itemsPerPage
+      const end = start + this.itemsPerPage
+      return this.filteredList.slice(start, end)
+    },
+    totalPages() {
+      return Math.ceil(this.filteredList.length / this.itemsPerPage)
     },
   },
   methods: {
@@ -247,6 +308,14 @@ export default {
       this.showModal = false
       this.selectedProduct = null
     },
+    resetPagination() {
+      this.currentPage = 1
+    },
+    goToPage(page) {
+      if (page >= 1 && page <= this.totalPages) {
+        this.currentPage = page
+      }
+    },
   },
   setup() {
     const loadingStore = useLoadingStore()
@@ -264,6 +333,17 @@ export default {
       message_toast,
       tutupToast,
     }
+  },
+  watch: {
+    searchQuery() {
+      this.resetPagination()
+    },
+    selectedCategory() {
+      this.resetPagination()
+    },
+    selectedStatus() {
+      this.resetPagination()
+    },
   },
   created() {
     this.fetchInventory()

@@ -196,9 +196,13 @@ const navItems = reactive([
         url: '/inventory/adjust/loss',
         text: 'Kehilangan Barang',
       },
+      // {
+      //   url: '/inventory/adjust/consignment',
+      //   text: 'Konsinyasi',
+      // },
       {
-        url: '/inventory/adjust/consignment',
-        text: 'Konsinyasi',
+        url: '/inventory/consignment/receipt',
+        text: 'Penerimaan Konsinyasi',
       },
     ],
   },

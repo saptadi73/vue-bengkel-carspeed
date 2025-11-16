@@ -1,26 +1,26 @@
 <template>
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
     <h2 class="text-2xl font-semibold text-gray-800 text-center mb-6">
-      {{ isEdit ? 'Edit Expenses Form' : 'Expenses Input Form' }}
+      {{ isEdit ? 'Edit Form Pengeluaran' : 'Form Input Pengeluaran' }}
     </h2>
 
     <form @submit.prevent="submitForm" class="space-y-6">
       <!-- Expense Details -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+          <label for="name" class="block text-sm font-medium text-gray-700">Nama</label>
           <input
             v-model="form.name"
             type="text"
             id="name"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter expense name"
+            placeholder="Masukkan nama pengeluaran"
             required
           />
         </div>
         <div>
           <label for="expense_type" class="block text-sm font-medium text-gray-700"
-            >Expense Type</label
+            >Jenis Pengeluaran</label
           >
           <select
             v-model="form.expense_type"
@@ -28,7 +28,7 @@
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           >
-            <option value="">Select Expense Type</option>
+            <option value="">Pilih Jenis Pengeluaran</option>
             <option value="listrik">Listrik</option>
             <option value="gaji">Gaji</option>
             <option value="air">Air</option>
@@ -42,7 +42,7 @@
           </select>
         </div>
         <div>
-          <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+          <label for="amount" class="block text-sm font-medium text-gray-700">Jumlah</label>
           <input
             v-model.number="form.amount"
             type="number"
@@ -50,12 +50,12 @@
             min="0"
             step="0.01"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter amount"
+            placeholder="Masukkan jumlah"
             required
           />
         </div>
         <div>
-          <label for="date" class="block text-sm font-medium text-gray-700">Date</label>
+          <label for="date" class="block text-sm font-medium text-gray-700">Tanggal</label>
           <input
             v-model="form.date"
             type="date"
@@ -68,13 +68,13 @@
 
       <!-- Description -->
       <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+        <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
         <textarea
           v-model="form.description"
           id="description"
           rows="4"
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Enter description"
+          placeholder="Masukkan deskripsi"
         ></textarea>
       </div>
 
@@ -103,10 +103,24 @@
       </div>
 
       <!-- Submit Button -->
-      <div class="text-center">
-        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-          {{ isEdit ? 'Update Expense' : 'Submit Expense' }}
+      <div class="text-center space-y-4">
+        <button
+          type="submit"
+          :disabled="expenseStatus === 'dibayarkan'"
+          class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {{ isEdit ? 'Update Pengeluaran' : 'Submit Pengeluaran' }}
         </button>
+        <div class="flex justify-center">
+          <button
+            type="button"
+            @click="openPaymentModal"
+            :disabled="expenseStatus === 'dibayarkan' || !isEdit"
+            class="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            Bayar Pengeluaran
+          </button>
+        </div>
       </div>
     </form>
 
@@ -135,6 +149,15 @@
 
     <loading-overlay />
     <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+    <payment-modal
+      :is-open="showPaymentModal"
+      :initial-amount="form.amount"
+      :expense-id="form.id"
+      :expense-name="form.name"
+      :expense-type="form.expense_type"
+      @close="closePaymentModal"
+      @submit="handlePaymentSubmit"
+    />
   </div>
 </template>
 
@@ -143,18 +166,22 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL } from '../base.utils.url'
 
 export default {
   name: 'ExpensesInputForm',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, PaymentModal },
   data() {
     return {
       showModal: false,
       modalUrl: '',
+      showPaymentModal: false,
+      expenseStatus: null,
       form: {
+        id: null,
         name: '',
         description: '',
         expense_type: '',
@@ -189,10 +216,12 @@ export default {
         this.form = {
           ...this.form,
           ...expenseData,
+          id: expenseData.id,
         }
         console.log('Expense Data:', expenseData)
         this.show_toast = true
         this.message_toast = response.data.message
+        await this.checkExpenseStatus()
       } catch (error) {
         console.log('Error: ', error)
         this.show_toast = true
@@ -217,15 +246,17 @@ export default {
           formData.append('bukti_transfer', this.form.bukti_transfer)
         }
 
+        let response
         if (this.isEdit) {
-          await api.put(`${BASE_URL}expenses/${this.$route.params.id}`, formData, {
+          response = await api.put(`${BASE_URL}expenses/${this.$route.params.id}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
           })
-          this.message_toast = 'Expense berhasil diupdate'
+          this.message_toast = response.data.message || 'Expense berhasil diupdate'
+          await this.checkExpenseStatus()
         } else {
-          await api.post(`${BASE_URL}expenses/create`, formData, {
+          response = await api.post(`${BASE_URL}expenses/create`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
@@ -233,6 +264,7 @@ export default {
           this.message_toast = 'Expense berhasil dibuat'
           // Reset form
           this.form = {
+            id: null,
             name: '',
             description: '',
             expense_type: '',
@@ -240,6 +272,7 @@ export default {
             date: '',
             bukti_transfer: null,
           }
+          this.expenseStatus = null
           // Reset file input
           document.getElementById('bukti_transfer').value = ''
         }
@@ -263,8 +296,73 @@ export default {
       this.showModal = false
       this.modalUrl = ''
     },
+    async checkExpenseStatus() {
+      if (!this.form.id) return
+      try {
+        const response = await axios.get(`${BASE_URL}expenses/${this.form.id}/status`)
+        this.expenseStatus = response.data.data.status
+        console.log('Expense Status:', this.expenseStatus)
+      } catch (error) {
+        console.error('Error fetching expense status:', error)
+        this.expenseStatus = null
+      }
+    },
     isImage(url) {
       return /\.(jpeg|jpg|png)$/i.test(url)
+    },
+    openPaymentModal() {
+      this.showPaymentModal = true
+    },
+    closePaymentModal() {
+      this.showPaymentModal = false
+    },
+    async handlePaymentSubmit(paymentData) {
+      console.log('PaymentData :', paymentData)
+      const expenseTypeToCode = {
+        umum: '6010',
+        lain_lain: '6010',
+        listrik: '6011',
+        gaji: '6012',
+        air: '6013',
+        internet: '6014',
+        transportasi: '6015',
+        komunikasi: '6016',
+        konsumsi: '6017',
+        entertaint: '6018',
+      }
+      const expense_code = expenseTypeToCode[this.form.expense_type] || '6010'
+      const form = {
+        date: paymentData.date,
+        memo: paymentData.description,
+        kas_bank_code: paymentData.bankCode,
+        amount: paymentData.amount,
+        expense_id: paymentData.expenseId,
+        expense_code: expense_code,
+        payment_no: `PAY-EXP-${this.form.id || 'EXP'}-${paymentData.date.replace(/-/g, '')}-${Math.random().toString(36).substr(2, 3).toUpperCase()}`,
+      }
+      console.log('Form :', form)
+      try {
+        this.loadingStore.show()
+        const response = await api.post(`${BASE_URL}accounting/expense-payment-journal`, form)
+        this.message_toast = response.data.message || 'Pembayaran Expense berhasil!'
+        this.show_toast = true
+        await this.checkExpenseStatus()
+        // Optionally refresh or redirect after payment
+      } catch (error) {
+        console.error('Error processing payment:', error)
+        this.message_toast = 'Gagal memproses pembayaran'
+        this.show_toast = true
+      } finally {
+        this.loadingStore.hide()
+      }
+    },
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      const day = String(date.getDate()).padStart(2, '0')
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}-${month}-${year}`
     },
   },
 }

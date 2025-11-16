@@ -97,14 +97,15 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="deliveryDate" class="block text-sm font-medium text-gray-700"
-            >Expected Delivery Date</label
+            >Tanggal Pengiriman</label
           >
           <input
-            v-model="form.date"
-            type="date"
+            :value="formatDate(form.date)"
+            type="text"
             id="deliveryDate"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             :disabled="isCompleted"
+            readonly
           />
         </div>
         <div>
@@ -409,10 +410,10 @@
           v-if="serverStatus === 'diterima'"
           type="button"
           @click="openPaymentModal"
-          :disabled="isProcessingPayment"
+          :disabled="isProcessingPayment || isCompleted"
           :class="[
             'px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700',
-            { 'opacity-50 cursor-not-allowed': isProcessingPayment },
+            { 'opacity-50 cursor-not-allowed': isProcessingPayment || isCompleted },
           ]"
         >
           {{ isProcessingPayment ? 'Memproses...' : 'Bayar Purchase Order' }}
@@ -495,6 +496,7 @@ export default {
       showDpPaymentModal: false,
       isSubmitting: false, // prevent double submit
       isProcessingPayment: false, // Flag to prevent double payment processing
+      paymentStatus: null, // Track payment status from server
       form: {
         supplier_id: '',
         purchase_order_id: this.$route.params.id,
@@ -540,6 +542,7 @@ export default {
     await this.fetchUnits()
     await this.getSatuans()
     await this.getPurchaseOrder()
+    await this.checkPaymentStatus()
   },
   watch: {
     'form.supplier_id'(newVal) {
@@ -599,7 +602,7 @@ export default {
       )
     },
     isCompleted() {
-      return this.serverStatus === 'diterima' || this.serverStatus === 'dibayarkan'
+      return this.serverStatus === 'diterima' || this.paymentStatus === 'dibayarkan'
     },
   },
   methods: {
@@ -952,6 +955,7 @@ export default {
           )
           this.show_toast = true
           this.message_toast = statusResponse.data.message + ' purchase_id: ' + form.purchase_id
+          await this.checkPaymentStatus() // Refresh payment status
         } else {
           this.show_toast = true
           this.message_toast = response.data.message
@@ -996,6 +1000,7 @@ export default {
 
         this.show_toast = true
         this.message_toast = response.data.message || 'Pembayaran DP berhasil diproses!'
+        await this.checkPaymentStatus() // Refresh payment status
       } catch (error) {
         console.error('Error processing DP payment:', error)
         this.message_toast = 'Gagal memproses pembayaran DP'
@@ -1004,6 +1009,18 @@ export default {
       } finally {
         this.loadingStore.hide()
         this.isProcessingPayment = false
+      }
+    },
+    async checkPaymentStatus() {
+      try {
+        const response = await axios.get(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}/status-pembayaran`,
+        )
+        this.paymentStatus = response.data.data.status_pembayaran
+        console.log('Payment Status:', this.paymentStatus)
+      } catch (error) {
+        console.error('Error fetching payment status:', error)
+        this.paymentStatus = null
       }
     },
   },

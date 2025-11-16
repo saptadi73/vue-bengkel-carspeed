@@ -152,8 +152,8 @@
             <div class="info-card">
               <div class="relative">
                 <input
-                  v-model="form.next_service_date"
-                  type="date"
+                  :value="formatDate(form.next_service_date)"
+                  type="text"
                   class="modern-input peer"
                   placeholder=" "
                   readonly
