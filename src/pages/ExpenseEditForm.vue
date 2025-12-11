@@ -59,7 +59,6 @@
             type="date"
             id="date"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           />
         </div>
       </div>
@@ -241,7 +240,10 @@ export default {
         formData.append('description', this.form.description)
         formData.append('expense_type', this.form.expense_type)
         formData.append('amount', this.form.amount.toString())
-        formData.append('date', this.form.date)
+        // Don't send date field if it's empty or default value
+        if (this.form.date && this.form.date !== '' && this.form.date !== '1970-01-01') {
+          formData.append('date', this.form.date)
+        }
         if (this.form.bukti_transfer_file) {
           formData.append('bukti_transfer', this.form.bukti_transfer_file)
         }

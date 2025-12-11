@@ -10,7 +10,7 @@
 
     <!-- Search and Filter Section -->
     <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <!-- Search Bar -->
         <div class="relative md:col-span-2">
           <label for="search" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -63,6 +63,23 @@
             <option value="entertaint">Entertaint</option>
             <option value="umum">Umum</option>
             <option value="lain_lain">Lain-lain</option>
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <label for="statusFilter" class="block text-sm font-semibold text-gray-700 mb-2">
+            🏷️ Filter Status
+          </label>
+          <select
+            v-model="statusFilter"
+            id="statusFilter"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          >
+            <option value="">Semua Status</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="dibayarkan">Dibayarkan</option>
           </select>
         </div>
       </div>
@@ -407,6 +424,7 @@ export default {
     return {
       searchQuery: '',
       typeFilter: '',
+      statusFilter: '',
       showConfirmModal: false,
       selectedExpense: null,
       expenses: [],
@@ -431,6 +449,11 @@ export default {
       // Filter by type
       if (this.typeFilter) {
         filtered = filtered.filter((expense) => expense.expense_type === this.typeFilter)
+      }
+
+      // Filter by status
+      if (this.statusFilter) {
+        filtered = filtered.filter((expense) => expense.status === this.statusFilter)
       }
 
       return filtered
@@ -482,6 +505,7 @@ export default {
       const classes = {
         open: 'bg-gray-100 text-gray-800',
         closed: 'bg-green-100 text-green-800',
+        dibayarkan: 'bg-blue-100 text-blue-800',
       }
       return classes[status] || 'bg-gray-100 text-gray-800'
     },

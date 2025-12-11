@@ -1,17 +1,38 @@
 <template>
   <div class="p-6 space-y-6">
-    <!-- Form Header -->
-    <div class="flex justify-center items-center mb-8">
-      <h1 class="text-4xl font-semibold text-blue-600 font-montserrat">
-        Inventory Adjustment Form
-      </h1>
+    <div
+      class="rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-xl p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+    >
+      <div>
+        <p class="text-sm opacity-90">Inventory · Penyesuaian Stok</p>
+        <h1 class="text-3xl font-semibold">Inventory Adjustment</h1>
+        <p class="text-sm opacity-80 mt-1">
+          Lacak perubahan stok dengan cepat dan aman. Pilih produk, atur quantity, lalu simpan.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 text-sm">
+        <div class="px-3 py-2 rounded-xl bg-white/15 border border-white/20 shadow-sm">
+          <div class="text-xs opacity-80">Tipe pergerakan</div>
+          <div class="font-semibold">Income / Outcome</div>
+        </div>
+        <div class="px-3 py-2 rounded-xl bg-white/15 border border-white/20 shadow-sm">
+          <div class="text-xs opacity-80">Auto log user</div>
+          <div class="font-semibold">{{ formData.performed_by || '—' }}</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Inventory Adjustment Form Section -->
     <form @submit.prevent="handleSubmit" class="space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-        <!-- Product Name Input -->
-        <div class="info-card">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="section-card xl:col-span-1">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <p class="text-sm text-gray-500">Langkah 1</p>
+              <h2 class="text-lg font-semibold text-gray-800">Pilih Produk</h2>
+            </div>
+            <span class="badge">Search & pilih</span>
+          </div>
+
           <div class="relative">
             <input
               v-model="formData.searchQuery"
@@ -28,152 +49,147 @@
               v-if="
                 formData.showSuggestions && getFilteredProducts(formData.searchQuery).length > 0
               "
-              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1"
+              class="suggestion-panel"
             >
-              <div
+              <button
                 v-for="(product, index) in getFilteredProducts(formData.searchQuery)"
                 :key="product.id"
+                type="button"
                 :class="[
-                  'px-4 py-2 cursor-pointer hover:bg-blue-50',
-                  index === formData.activeIndex ? 'bg-blue-100' : '',
+                  'suggestion-item',
+                  index === formData.activeIndex ? 'bg-blue-50 border-blue-200' : '',
                 ]"
                 @click="selectProduct(product)"
               >
-                {{ product.name }}
-              </div>
+                <div class="flex items-center justify-between">
+                  <span class="font-medium text-gray-800">{{ product.name }}</span>
+                  <span class="text-xs text-gray-500">Stock: {{ product.total_stock || 0 }}</span>
+                </div>
+                <div class="text-xs text-gray-500 flex items-center gap-2">
+                  <span>Cost {{ formatCurrency(product.cost) }}</span>
+                  <span>•</span>
+                  <span>{{ product.satuan_name || '—' }}</span>
+                </div>
+              </button>
             </div>
+
             <div
               v-if="
                 formData.showSuggestions &&
                 getFilteredProducts(formData.searchQuery).length === 0 &&
                 formData.searchQuery
               "
-              class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 px-4 py-2 text-gray-500"
+              class="suggestion-empty"
             >
               Tidak ada produk ditemukan
             </div>
+
             <label class="modern-label">Nama Produk</label>
           </div>
-        </div>
 
-        <!-- Quantity Terhitung Manual -->
-        <div class="info-card">
-          <div class="relative">
-            <label for="manualQuantity" class="modern-label-label"
-              >Quantity yang ingin dikoreksi (income/outcome)</label
-            >
-            <input
-              v-model="formData.quantity"
-              id="manualQuantity"
-              type="number"
-              min="0"
-              class="modern-input"
-              placeholder="Masukkan Quantity Manual"
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-        <!-- Quantity Tercatat di Sistem -->
-        <div class="info-card">
-          <div class="relative">
-            <label for="systemQuantity" class="modern-label-label"
-              >Quantity Tercatat di Sistem sebelumnya</label
-            >
-            <input
-              v-model="formData.previous_quantity"
-              id="systemQuantity"
-              type="number"
-              min="0"
-              class="modern-input"
-              placeholder="Masukkan Quantity Tercatat"
-              required
-            />
+          <div class="grid grid-cols-2 gap-3 mt-4" v-if="formData.product_id">
+            <div class="mini-stat">
+              <p class="mini-label">Stock Tersedia</p>
+              <p class="mini-value">{{ formData.previous_quantity }}</p>
+            </div>
+            <div class="mini-stat">
+              <p class="mini-label">Satuan</p>
+              <p class="mini-value">{{ selectedSatuanName || '—' }}</p>
+            </div>
           </div>
         </div>
 
-        <!-- UoM (Unit, Liter, M) -->
-        <div class="info-card">
-          <div class="relative">
-            <select v-model="formData.satuan_id" id="uom" class="modern-select peer" required>
-              <option value="" disabled selected>Pilih Satuan</option>
-              <option v-for="satuanku in satuans" :key="satuanku.id" :value="satuanku.id">
-                {{ satuanku.name }}
-              </option>
-            </select>
-            <label for="uom" class="modern-select-label">Satuan</label>
+        <div class="section-card xl:col-span-2 space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="field-block">
+              <label for="adjustmentDate" class="field-label">Tanggal Adjustment</label>
+              <input
+                v-model="formData.timestamps"
+                id="adjustmentDate"
+                type="datetime-local"
+                class="modern-input"
+                required
+              />
+            </div>
+            <div class="field-block">
+              <label for="responsiblePerson" class="field-label">Penanggung Jawab</label>
+              <input
+                v-model="formData.performed_by"
+                id="responsiblePerson"
+                type="text"
+                class="modern-input"
+                required
+              />
+            </div>
+            <div class="field-block">
+              <label for="uom" class="field-label">Satuan</label>
+              <select v-model="formData.satuan_id" id="uom" class="modern-select" required>
+                <option value="" disabled>Pilih Satuan</option>
+                <option v-for="satuanku in satuans" :key="satuanku.id" :value="satuanku.id">
+                  {{ satuanku.name }}
+                </option>
+              </select>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-        <!-- Penanggung Jawab -->
-        <div class="info-card">
-          <div class="relative">
-            <label for="responsiblePerson" class="modern-label-label">Penanggung Jawab</label>
-            <input
-              v-model="formData.performed_by"
-              id="responsiblePerson"
-              type="text"
-              class="modern-input peer"
-              required
-            />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="field-block">
+              <label for="manualQuantity" class="field-label">Quantity yang ingin dikoreksi</label>
+              <input
+                v-model="formData.quantity"
+                id="manualQuantity"
+                type="number"
+                min="0"
+                class="modern-input"
+                placeholder="Masukkan quantity"
+                required
+              />
+            </div>
+            <div class="field-block">
+              <label for="systemQuantity" class="field-label">Quantity tercatat sebelumnya</label>
+              <input
+                v-model="formData.previous_quantity"
+                id="systemQuantity"
+                type="number"
+                min="0"
+                class="modern-input"
+                placeholder="Masukkan quantity tercatat"
+                required
+              />
+            </div>
           </div>
-        </div>
 
-        <!-- Tanggal Adjustment -->
-        <div class="info-card">
-          <div class="relative">
-            <label for="adjustmentDate" class="modern-label-label">Tanggal Adjustment</label>
-            <input
-              v-model="formData.timestamps"
-              id="adjustmentDate"
-              type="datetime-local"
-              class="modern-input peer"
-              required
-            />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="field-block">
+              <label for="movementType" class="field-label">Type Pergerakan</label>
+              <select v-model="formData.type" id="movementType" class="modern-select" required>
+                <option value="" disabled>Pilih Type</option>
+                <option value="income">Income (stok masuk)</option>
+                <option value="outcome">Outcome (stok keluar)</option>
+              </select>
+            </div>
+            <div class="field-block">
+              <label for="finalNotes" class="field-label">Keterangan</label>
+              <input
+                v-model="formData.notes"
+                id="finalNotes"
+                type="text"
+                class="modern-input"
+                placeholder="Catatan perubahan"
+              />
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
-        <!-- UoM (Unit, Liter, M) -->
-        <div class="info-card">
-          <div class="relative">
-            <select v-model="formData.type" id="uom" class="modern-select peer" required>
-              <option value="" disabled selected>Pilih Type</option>
-              <option value="income">income</option>
-              <option value="outcome">outcome</option>
-            </select>
-            <label for="uom" class="modern-select-label">Type Pergerakan</label>
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <p class="text-sm text-gray-500">
+              Pastikan quantity sesuai dengan hasil pengecekan fisik. Sistem akan otomatis mencatat
+              riwayat.
+            </p>
+            <button type="submit" class="modern-btn-success w-full md:w-auto justify-center">
+              Simpan Penyesuaian
+            </button>
           </div>
         </div>
-        <div class="info-card">
-          <div class="relative">
-            <!-- Stock Akhir -->
-            <label for="finalNotes" class="modern-label-label">Keterangan</label>
-            <input
-              v-model="formData.notes"
-              id="finalNotes"
-              type="text"
-              min="0"
-              class="modern-input peer"
-              placeholder="Masukkan Stock Akhir"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Submit Button -->
-      <div class="mt-6">
-        <button
-          type="submit"
-          class="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-        >
-          Submit
-        </button>
       </div>
     </form>
   </div>
@@ -230,11 +246,22 @@ export default {
       },
     }
   },
+  computed: {
+    selectedSatuanName() {
+      if (!this.formData.satuan_id) return ''
+      const satuan = this.satuans.find((item) => item.id === this.formData.satuan_id)
+      return satuan ? satuan.name : ''
+    },
+  },
   created() {
     this.fetchInventory()
     this.getSatuans()
   },
   methods: {
+    formatCurrency(val) {
+      if (val == null || val === '') return '-'
+      return Number(val).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })
+    },
     onProductSearchInput() {
       this.formData.activeIndex = -1
       this.formData.showSuggestions = true
@@ -340,6 +367,105 @@ export default {
 </script>
 
 <style scoped>
+.section-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.08),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.field-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.suggestion-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 15px 30px -10px rgba(0, 0, 0, 0.15),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-height: 15rem;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.suggestion-item {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  transition:
+    background 0.2s ease,
+    border 0.2s ease;
+}
+
+.suggestion-item:hover {
+  background: #f8fafc;
+}
+
+.suggestion-empty {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow:
+    0 15px 30px -10px rgba(0, 0, 0, 0.15),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 0.9rem 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+  z-index: 20;
+}
+
+.mini-stat {
+  background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+  border: 1px solid #dbeafe;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.mini-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.mini-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
 /* Custom Gradient Classes */
 .gradient-header {
   background: linear-gradient(to right, #2563eb, #1e40af);

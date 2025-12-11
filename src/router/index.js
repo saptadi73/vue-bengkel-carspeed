@@ -266,6 +266,11 @@ const router = createRouter({
           name: 'consignment receipt',
           component: () => import('../pages/ConsignmentReceiptForm.vue'),
         },
+        {
+          path: 'internal-consumption',
+          name: 'internal consumption',
+          component: () => import('../pages/InternalConsumption.vue'),
+        },
       ],
     },
     {

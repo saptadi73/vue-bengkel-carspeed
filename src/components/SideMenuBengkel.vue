@@ -168,22 +168,7 @@ const navItems = reactive([
         text: 'Registrasi Barang/Produk',
         url: '/inventory/product/new',
       },
-      {
-        text: 'Daftar Supplier',
-        url: '/finansial/supplier',
-      },
-      {
-        text: 'Daftar Purchase Order',
-        url: '/finansial/purchase/all',
-      },
-      {
-        text: 'Input Supplier Baru',
-        url: '/finansial/supplier/baru',
-      },
-      {
-        text: 'Purchase Order Baru',
-        url: '/finansial/purchase',
-      },
+
       {
         text: 'Laporan Pergerakan',
         url: '/inventory/product-movement-report',
@@ -203,6 +188,36 @@ const navItems = reactive([
       {
         url: '/inventory/consignment/receipt',
         text: 'Penerimaan Konsinyasi',
+      },
+      {
+        text: 'Pemakaian Internal',
+        url: '/inventory/internal-consumption',
+      },
+    ],
+  },
+  {
+    text: 'Purchase',
+    url: '/purchase',
+    icon: 'fa-solid fa-cart-shopping',
+    open: false,
+    title: false,
+    haschildren: true,
+    children: [
+      {
+        text: 'Daftar Supplier',
+        url: '/finansial/supplier',
+      },
+      {
+        text: 'Daftar Purchase Order',
+        url: '/finansial/purchase/all',
+      },
+      {
+        text: 'Input Supplier Baru',
+        url: '/finansial/supplier/baru',
+      },
+      {
+        text: 'Purchase Order Baru',
+        url: '/finansial/purchase',
       },
     ],
   },
@@ -231,11 +246,11 @@ const navItems = reactive([
         url: '/finansial/profit-loss',
       },
       {
-        text: 'Table Hutang-Piutang Mitra',
+        text: 'Hutang-Piutang',
         url: '/finansial/hutang-piutang',
       },
       {
-        text: 'Laporan Hutang Konsinyasi',
+        text: 'Hutang Konsinyasi',
         url: '/finansial/consignment-payable-report',
       },
       {

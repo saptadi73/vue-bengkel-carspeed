@@ -174,6 +174,20 @@
       </div>
     </div>
 
+    <!-- Internal Consumption Section -->
+    <div class="info-card mt-3">
+      <div class="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="is_internal_consumption"
+          v-model="form.is_internal_consumption"
+        />
+        <label for="is_internal_consumption" class="modern-label-label"
+          >Produk Konsumsi Internal</label
+        >
+      </div>
+    </div>
+
     <!-- Modal Add Supplier -->
     <div
       v-if="showSupplierModal"
@@ -398,6 +412,7 @@ export default {
         supplier_id: '',
         is_consignment: false,
         consignment_commission: '',
+        is_internal_consumption: false,
       },
 
       units: [],
@@ -614,6 +629,7 @@ export default {
           consignment_commission: this.form.is_consignment
             ? this.form.consignment_commission || null
             : null,
+          is_internal_consumption: !!this.form.is_internal_consumption,
         }
         const response = await api.post(`${BASE_URL}products/create/new`, payload)
         console.log('Form Data: ', payload)

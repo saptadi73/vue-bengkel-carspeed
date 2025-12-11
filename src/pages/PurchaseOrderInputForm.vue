@@ -96,15 +96,14 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label for="deliveryDate" class="block text-sm font-medium text-gray-700"
-            >Tanggal Pengiriman</label
+            >Expected Delivery Date</label
           >
           <input
-            :value="formatDate(form.date)"
-            type="text"
+            v-model="form.date"
+            type="date"
             id="deliveryDate"
             required
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            readonly
           />
           <p v-if="dateError" class="mt-1 text-sm text-red-600">Tanggal harus diisi.</p>
         </div>

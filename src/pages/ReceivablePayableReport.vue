@@ -415,10 +415,18 @@ function formatDateTime(dateStr) {
 function setDateRange() {
   if (selectedMonth.value) {
     const [year, month] = selectedMonth.value.split('-')
-    const start = new Date(year, month - 1, 1)
-    const end = new Date(year, month, 0)
-    startDate.value = start.toISOString().split('T')[0]
-    endDate.value = end.toISOString().split('T')[0]
+    // Tanggal 1 di awal bulan yang dipilih
+    const startYear = parseInt(year)
+    const startMonth = parseInt(month)
+    const startDay = 1
+
+    // Tanggal terakhir di bulan yang dipilih
+    const lastDateOfMonth = new Date(startYear, startMonth, 0)
+    const endDay = lastDateOfMonth.getDate()
+
+    // Format YYYY-MM-DD
+    startDate.value = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`
+    endDate.value = `${startYear}-${String(startMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`
   }
 }
 </script>
