@@ -66,6 +66,11 @@ const router = createRouter({
           component: () => import('../pages/TableReminderservice.vue'),
         },
         {
+          path: 'manual-whatsapp',
+          name: 'manual-whatsapp',
+          component: () => import('../pages/ManualWhatsAppTable.vue'),
+        },
+        {
           path: 'history/:id',
           name: 'history',
           component: () => import('../components/TableHistoryOrders.vue'),

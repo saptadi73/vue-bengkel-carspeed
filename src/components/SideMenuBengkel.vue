@@ -78,6 +78,10 @@ const navItems = reactive([
         text: 'Service Reminder',
         url: '/pelanggan/reminder',
       },
+      {
+        text: 'Manual WhatsApp',
+        url: '/pelanggan/manual-whatsapp',
+      },
     ],
   },
   {
