@@ -45,15 +45,11 @@ const $emitter = inject('$emitter')
 
 // Role-based access control
 const userRole = computed(() => {
-  const role = localStorage.getItem('role') || 'guest'
-  console.log('Current role from localStorage:', role)
-  return role
+  return localStorage.getItem('role') || 'guest'
 })
 
 const isAdmin = computed(() => {
-  const isAdminUser = userRole.value.toLowerCase() === 'admin'
-  console.log('isAdmin computed:', isAdminUser, 'userRole:', userRole.value)
-  return isAdminUser
+  return userRole.value.toLowerCase() === 'admin'
 })
 
 import { useScreenSize } from '@/composables/useScreenSize.js'
@@ -228,7 +224,6 @@ const navItems = reactive([
     open: false,
     title: false,
     haschildren: true,
-    requiresRole: 'admin',
     children: [
       {
         text: 'Daftar Supplier',
@@ -255,7 +250,6 @@ const navItems = reactive([
     open: false,
     title: false,
     haschildren: true,
-    requiresRole: 'admin',
     children: [
       {
         text: 'Cash',
@@ -298,12 +292,10 @@ const navItems = reactive([
       {
         text: 'Daftar Users',
         url: '/users/table',
-        requiresRole: 'admin',
       },
       {
         text: 'Kelola Role',
         url: '/users/roles',
-        requiresRole: 'admin',
       },
       {
         text: 'Login',

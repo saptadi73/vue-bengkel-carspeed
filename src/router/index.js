@@ -342,7 +342,7 @@ const router = createRouter({
         },
         {
           path: 'biaya/:id',
-          name: 'edit iaya',
+          name: 'edit biaya',
           component: () => import('../pages/ExpenseEditForm.vue'),
         },
         {
@@ -400,6 +400,12 @@ const router = createRouter({
 // Navigation guard untuk proteksi route
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
+  const publicPaths = ['/booking']
+
+  if (publicPaths.some((path) => to.path.startsWith(path))) {
+    next()
+    return
+  }
 
   // Jika route memerlukan autentikasi
   if (to.meta.requiresAuth && !token) {

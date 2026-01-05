@@ -128,7 +128,8 @@
               <h3 class="text-sm font-medium text-gray-700 mb-2">Tambah Role:</h3>
               <!-- Debug info -->
               <div class="text-xs text-gray-500 mb-2">
-                Debug: allRoles count = {{ allRoles.length }}, availableRolesToAssign count = {{ availableRolesToAssign.length }}
+                Debug: allRoles count = {{ allRoles.length }}, availableRolesToAssign count =
+                {{ availableRolesToAssign.length }}
               </div>
               <div class="flex gap-2">
                 <select

@@ -91,12 +91,6 @@ async function login() {
   const token = response.data.data.access_token
   const userRole = response.data.data.user.roles[0]?.name || 'user'
 
-  // DEBUG: Log untuk melihat struktur response
-  console.log('Login Response:', response.data)
-  console.log('User roles array:', response.data.data.user.roles)
-  console.log('Extracted role:', userRole)
-  console.log('Role yang akan disimpan ke localStorage:', userRole)
-
   localStorage.setItem('token', token)
   localStorage.setItem('username', response.data.data.user.username)
   localStorage.setItem('email', response.data.data.user.email)
