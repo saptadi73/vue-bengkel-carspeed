@@ -311,8 +311,8 @@
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
-                <div class="gap-3 flex justify-end">
-                  <div class="flex gap-2" style="display: none">
+                <div v-if="isAdmin" class="gap-3 flex justify-end">
+                  <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
                       v-model.number="item.cost"
@@ -322,7 +322,7 @@
                       placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">Subtotal HPP</label>
                     <div class="text-xs font-bold">
                       {{ formatCurrency(productSubtotalHPP(item)) }}
@@ -486,8 +486,8 @@
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
-                <div class="flex justify-end">
-                  <div class="flex gap-2" style="display: none">
+                <div v-if="isAdmin" class="flex justify-end">
+                  <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
                       v-model.number="item.cost"
@@ -497,7 +497,7 @@
                       placeholder=" "
                     />
                   </div>
-                  <div class="flex gap-2" style="display: none">
+                  <div class="flex gap-2">
                     <label class="text-xs">Subtotal HPP</label>
                     <div class="text-xs font-bold">
                       {{ formatCurrency(serviceSubtotalHPP(item)) }}
@@ -611,7 +611,7 @@
                 </div>
               </div>
             </div>
-            <div class="mt-2 text-xs text-gray-500 text-center">
+            <div v-if="isAdmin" class="mt-2 text-xs text-gray-500 text-center">
               HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
               {{ formatCurrency(totalServiceCost) }}
             </div>
@@ -807,6 +807,9 @@ export default {
     totalPembayaran() {
       const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
       return subtotal + this.pajakAmount
+    },
+    isAdmin() {
+      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
     },
   },
   watch: {

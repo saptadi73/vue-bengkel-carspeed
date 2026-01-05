@@ -326,11 +326,11 @@
               <div>Stock</div>
               <div>Quantity</div>
               <div class="hidden">Satuan</div>
-              <div class="col-span-2">HPP</div>
+              <div v-if="isAdmin" class="col-span-2">HPP</div>
 
               <div class="col-span-2">Harga</div>
               <div class="col-span-2">Discount</div>
-              <div>Sub HPP</div>
+              <div v-if="isAdmin">Sub HPP</div>
               <div class="col-span-2">Sub Total</div>
               <div class="col-span-2">Aksi</div>
             </div>
@@ -437,7 +437,7 @@
                       </option>
                     </select>
                   </div>
-                  <div class="col-span-2">
+                  <div v-if="isAdmin" class="col-span-2">
                     <input
                       v-model.number="item.cost"
                       type="number"
@@ -489,7 +489,10 @@
                       class="modern-input peer text-sm"
                     />
                   </div>
-                  <div class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200">
+                  <div
+                    v-if="isAdmin"
+                    class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200"
+                  >
                     {{ formatCurrency(productSubtotalHPP(item)) }}
                   </div>
                   <div class="relative col-span-2">
@@ -676,10 +679,10 @@
             <div class="grid grid-cols-16 gap-1 p-1">
               <div class="col-span-3">Service/Jasa</div>
               <div>Quantity</div>
-              <div class="col-span-2">HPP</div>
+              <div v-if="isAdmin" class="col-span-2">HPP</div>
               <div class="col-span-2">Harga</div>
               <div class="col-span-2">Discount</div>
-              <div class="">Sub HPP</div>
+              <div v-if="isAdmin" class="">Sub HPP</div>
               <div class="col-span-2">Sub Total</div>
               <div class="col-span-2">Aksi</div>
             </div>
@@ -754,7 +757,7 @@
                     />
                   </div>
 
-                  <div class="col-span-2">
+                  <div v-if="isAdmin" class="col-span-2">
                     <input
                       v-model.number="item.cost"
                       type="number"
@@ -807,7 +810,10 @@
                       min="0"
                     />
                   </div>
-                  <div class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200">
+                  <div
+                    v-if="isAdmin"
+                    class="text-xs font-bold border-1 p-1 text-slate-500 bg-slate-200"
+                  >
                     {{ formatCurrency(serviceSubtotalHPP(item)) }}
                   </div>
 
@@ -1017,7 +1023,7 @@
                 </div>
               </div>
             </div>
-            <div class="mt-2 text-xs text-gray-500 text-center">
+            <div v-if="isAdmin" class="mt-2 text-xs text-gray-500 text-center">
               HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
               {{ formatCurrency(totalServiceCost) }}
             </div>
@@ -1366,6 +1372,9 @@ export default {
       const statusCompleted = this.initialStatus === 'selesai' || this.initialStatus === 'dibayar'
       const paymentLunas = this.form.status_pembayaran === 'lunas'
       return statusCompleted && paymentLunas
+    },
+    isAdmin() {
+      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
     },
   },
   watch: {

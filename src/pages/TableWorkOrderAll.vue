@@ -127,6 +127,7 @@
                 HP
               </th>
               <th
+                v-if="isAdmin"
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
                 Total
@@ -224,7 +225,7 @@
                   {{ order.customer_hp }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap">
+              <td v-if="isAdmin" class="px-6 py-4 whitespace-nowrap">
                 {{ formatCurrency(order.total_biaya) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -615,6 +616,9 @@ export default {
     }
   },
   computed: {
+    isAdmin() {
+      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
+    },
     filteredOrders() {
       let filtered = this.workOrders
 

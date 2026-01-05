@@ -88,22 +88,26 @@ async function login() {
     },
   })
 
-  // console.log(response.data.data.level.nama);
   const token = response.data.data.access_token
+  const userRole = response.data.data.user.roles[0]?.name || 'user'
+
+  // DEBUG: Log untuk melihat struktur response
+  console.log('Login Response:', response.data)
+  console.log('User roles array:', response.data.data.user.roles)
+  console.log('Extracted role:', userRole)
+  console.log('Role yang akan disimpan ke localStorage:', userRole)
+
   localStorage.setItem('token', token)
   localStorage.setItem('username', response.data.data.user.username)
   localStorage.setItem('email', response.data.data.user.email)
+  localStorage.setItem('role', userRole)
   localStorage.setItem('roles', JSON.stringify(response.data.data.user.roles))
-  console.log('Data Roles : ', JSON.stringify(response.data.data.user.roles))
 
   if (response.data.status == 'success') {
-    const tokenku = localStorage.getItem('token')
-    console.log('datanya token Login', tokenku)
-    router.push('/')
+    router.push('/dashboard')
   } else {
     showToast.value = true
     toastMessage.value = response.data.message
-    console.log(response.data)
   }
 }
 

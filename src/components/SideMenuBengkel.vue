@@ -1,6 +1,10 @@
 <template>
   <ul class="space-y-1">
-    <li v-for="(item, index) in navItems" :key="item">
+    <li
+      v-for="(item, index) in navItems"
+      :key="item"
+      v-show="!item.requiresRole || (item.requiresRole === 'admin' ? isAdmin : true)"
+    >
       <div @click="!item.title && haddleSubMenu(index)">
         <span
           v-if="item.title === true"
@@ -20,7 +24,12 @@
         v-if="item.haschildren === true"
         class="max-h-0 overflow-hidden transition-all duration-300"
       >
-        <li v-for="subItem in item.children" :key="subItem" class="mt-1">
+        <li
+          v-for="subItem in item.children"
+          :key="subItem"
+          class="mt-1"
+          v-show="!subItem.requiresRole || (subItem.requiresRole === 'admin' ? isAdmin : true)"
+        >
           <SideMenuSubItem :subItem="subItem"></SideMenuSubItem>
         </li>
       </ul>
@@ -31,8 +40,21 @@
 <script setup>
 import SideMenuParentItem from '../components/SideMenuParentItem.vue'
 import SideMenuSubItem from '../components/SideMenuSubItem.vue'
-import { reactive, inject } from 'vue'
+import { reactive, inject, computed } from 'vue'
 const $emitter = inject('$emitter')
+
+// Role-based access control
+const userRole = computed(() => {
+  const role = localStorage.getItem('role') || 'guest'
+  console.log('Current role from localStorage:', role)
+  return role
+})
+
+const isAdmin = computed(() => {
+  const isAdminUser = userRole.value.toLowerCase() === 'admin'
+  console.log('isAdmin computed:', isAdminUser, 'userRole:', userRole.value)
+  return isAdminUser
+})
 
 import { useScreenSize } from '@/composables/useScreenSize.js'
 const { isMobile } = useScreenSize()
@@ -206,6 +228,7 @@ const navItems = reactive([
     open: false,
     title: false,
     haschildren: true,
+    requiresRole: 'admin',
     children: [
       {
         text: 'Daftar Supplier',
@@ -232,6 +255,7 @@ const navItems = reactive([
     open: false,
     title: false,
     haschildren: true,
+    requiresRole: 'admin',
     children: [
       {
         text: 'Cash',
@@ -274,6 +298,12 @@ const navItems = reactive([
       {
         text: 'Daftar Users',
         url: '/users/table',
+        requiresRole: 'admin',
+      },
+      {
+        text: 'Kelola Role',
+        url: '/users/roles',
+        requiresRole: 'admin',
       },
       {
         text: 'Login',

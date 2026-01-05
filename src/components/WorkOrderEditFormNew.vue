@@ -1016,6 +1016,9 @@ export default {
       const subtotal = Math.max(0, this.grandTotalHarga - this.grandTotalDiscount)
       return subtotal + this.pajakAmount
     },
+    isAdmin() {
+      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
+    },
   },
   watch: {
     totalPembayaran(newVal) {

@@ -76,6 +76,9 @@
                   <PopoverPanel
                     class="absolute right-0 top-full mt-2 w-40 rounded-md bg-white shadow-md ring-1 ring-gray-200 focus:outline-none"
                   >
+                    <div class="px-4 py-2 text-xs font-semibold text-gray-600 border-b">
+                      {{ username || 'User' }}
+                    </div>
                     <a
                       href="#"
                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
@@ -86,11 +89,12 @@
                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
                       >Settings</a
                     >
-                    <a
-                      href="#"
-                      class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200"
-                      >Sign out</a
+                    <button
+                      @click="logout"
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 border-t"
                     >
+                      <i class="fas fa-sign-out-alt mr-2"></i>Sign out
+                    </button>
                   </PopoverPanel>
                 </transition>
               </Popover>
@@ -105,8 +109,27 @@
 <script setup>
 import { Popover, PopoverButton, PopoverGroup, PopoverPanel } from '@headlessui/vue'
 import HeaderSearchBengkel from '../components/HeaderSearchBengkel.vue'
+import router from '../router'
 
-import { inject } from 'vue'
+import { inject, ref, onMounted } from 'vue'
 
 const $emitter = inject('$emitter')
+const username = ref('')
+
+const logout = () => {
+  if (confirm('Yakin ingin logout?')) {
+    // Clear localStorage
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    localStorage.removeItem('email')
+    localStorage.removeItem('roles')
+
+    // Redirect ke login
+    router.push('/')
+  }
+}
+
+onMounted(() => {
+  username.value = localStorage.getItem('username') || ''
+})
 </script>

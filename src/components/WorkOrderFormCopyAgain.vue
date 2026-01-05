@@ -315,7 +315,7 @@
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
-                <div class="gap-3 flex justify-end">
+                <div v-if="isAdmin" class="gap-3 flex justify-end">
                   <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
@@ -337,7 +337,7 @@
                       {{ formatCurrency(productSubtotalHPP(item)) }}
                     </div>
                   </div>
-                  <button type="button" class="delete-btn" @click="removeProductOrder(idx)">
+                  <button type="button" class="delete-btn" @click="removeProductOrder(idx)\">
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path
                         stroke-linecap="round"
@@ -515,7 +515,7 @@
                     <label class="subtotal-label">Subtotal</label>
                   </div>
                 </div>
-                <div class="flex justify-end">
+                <div v-if="isAdmin" class="flex justify-end">
                   <div class="flex gap-2">
                     <label class="text-xs">HPP</label>
                     <input
@@ -677,7 +677,7 @@
                 </div>
               </div>
             </div>
-            <div class="mt-2 text-xs text-gray-500 text-center">
+            <div v-if="isAdmin" class="mt-2 text-xs text-gray-500 text-center">
               HPP Product: {{ formatCurrency(totalProductCost) }} | HPP Service:
               {{ formatCurrency(totalServiceCost) }}
             </div>
@@ -881,6 +881,9 @@ export default {
     },
     totalPembayaran() {
       return this.calculatetotalPembayaran()
+    },
+    isAdmin() {
+      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
     },
   },
   watch: {

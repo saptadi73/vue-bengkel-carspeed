@@ -1,8 +1,32 @@
 <template>
   <div class="p-8 space-y-8">
     <!-- Main Title Section -->
-    <div class="flex justify-center items-center mb-8">
+    <div class="flex justify-center items-center mb-6">
       <h1 class="text-4xl font-semibold text-gray-800 font-montserrat">Dashboard Bengkel Mobil</h1>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+      <div class="flex items-center gap-2 text-sm text-gray-700">
+        <label for="months" class="text-gray-600">Rentang bulan</label>
+        <input
+          id="months"
+          v-model.number="months"
+          type="number"
+          min="1"
+          max="24"
+          class="border rounded px-3 py-2 w-28"
+          @change="handleRefresh"
+        />
+        <button
+          class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700"
+          :disabled="loading"
+          @click="handleRefresh"
+        >
+          {{ loading ? 'Memuat...' : 'Refresh' }}
+        </button>
+      </div>
+      <div class="text-sm text-red-600" v-if="errorMessage">{{ errorMessage }}</div>
+      <div class="text-sm text-gray-500" v-else-if="loading">Memuat data dashboard...</div>
     </div>
 
     <!-- Summary Section -->
@@ -68,7 +92,6 @@
 
 <script>
 import { Pie, Line, Bar } from 'vue-chartjs'
-import { reactive } from 'vue'
 import {
   Chart as ChartJS,
   Title,
@@ -82,8 +105,8 @@ import {
   LineElement,
   Filler,
 } from 'chart.js'
+import api from '@/user/axios'
 
-// Register the necessary chart elements for Bar and Line
 ChartJS.register(
   Title,
   Tooltip,
@@ -102,80 +125,158 @@ export default {
   components: {
     PieChart: Pie,
     LineChart: Line,
-    MixedChart: Bar, // Mixed Bar Chart for Purchases, Expenses vs Sales
+    MixedChart: Bar,
   },
   data() {
     return {
-      totalWorkOrders: 120,
-      completedWorkOrders: 80,
-      pendingWorkOrders: 40,
-      totalEmployeesPresent: 15,
-      pieChartData: reactive({
+      months: 6,
+      loading: false,
+      errorMessage: '',
+      totalWorkOrders: 0,
+      completedWorkOrders: 0,
+      pendingWorkOrders: 0,
+      totalEmployeesPresent: 0,
+      pieChartData: {
         labels: ['Completed', 'Pending'],
         datasets: [
           {
             label: 'Work Orders Status',
-            data: [80, 40],
-            backgroundColor: ['#36A2EB', '#FF5733'],
-            hoverOffset: 4,
+            data: [0, 0],
+            backgroundColor: ['#3b82f6', '#ef4444'],
+            hoverOffset: 6,
           },
         ],
-      }),
-      salesData: reactive({
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      },
+      salesData: {
+        labels: [],
         datasets: [
           {
             label: 'Sales',
-            data: [50, 75, 100, 125, 150, 175],
-            borderColor: '#4CAF50',
-            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            data: [],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.15)',
             fill: true,
+            tension: 0.35,
           },
         ],
-      }),
-      purchasesData: reactive({
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+      },
+      purchasesData: {
+        labels: [],
         datasets: [
           {
-            label: 'Purchases',
-            data: [30, 50, 70, 90, 110, 130],
-            borderColor: '#FF9800',
-            backgroundColor: 'rgba(255, 152, 0, 0.2)',
+            label: 'Purchase',
+            data: [],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.15)',
             fill: true,
+            tension: 0.35,
           },
         ],
-      }),
-      mixedChartData: reactive({
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // Data for months
+      },
+      mixedChartData: {
+        labels: [],
         datasets: [
           {
-            label: 'Purchases', // Dataset for Purchases (Bar)
-            data: [30, 50, 70, 90, 110, 130], // Purchases data
-            backgroundColor: 'rgba(255, 152, 0, 0.6)', // Orange for Purchases
-            fill: true, // Enable filling for stacking
-            stack: 'stack1', // Stack with Expenses
-            type: 'bar', // Set type as 'bar' for Bar chart
+            label: 'Purchase',
+            data: [],
+            backgroundColor: 'rgba(245, 158, 11, 0.65)',
+            stack: 'stack1',
+            type: 'bar',
           },
           {
-            label: 'Expenses', // Dataset for Expenses (Bar)
-            data: [20, 40, 60, 80, 100, 120], // Expenses data
-            backgroundColor: 'rgba(255, 87, 51, 0.6)', // Red for Expenses
-            fill: true, // Enable filling for stacking
-            stack: 'stack1', // Stack with Purchases
-            type: 'bar', // Set type as 'bar' for Bar chart
+            label: 'Expenses',
+            data: [],
+            backgroundColor: 'rgba(239, 68, 68, 0.65)',
+            stack: 'stack1',
+            type: 'bar',
           },
           {
-            label: 'Sales', // Dataset for Sales (Line)
-            data: [100, 120, 140, 190, 220, 270], // Sales data
-            borderColor: '#36A2EB', // Color for Sales (Blue)
-            backgroundColor: 'rgba(54, 162, 235, 0.2)', // Light Blue for Sales
-            fill: false, // No fill for line chart
-            tension: 0.4, // Smooth the line
-            type: 'line', // Set type as 'line' for Line chart
+            label: 'Sales',
+            data: [],
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            type: 'line',
+            tension: 0.35,
+            fill: false,
           },
         ],
-      }),
+      },
     }
+  },
+  created() {
+    this.fetchAll()
+  },
+  methods: {
+    async fetchAll() {
+      this.loading = true
+      this.errorMessage = ''
+      try {
+        await Promise.all([
+          this.fetchSummary(),
+          this.fetchWorkordersPie(),
+          this.fetchSales(),
+          this.fetchPurchase(),
+          this.fetchCombined(),
+        ])
+      } catch (error) {
+        console.error('Dashboard fetch error:', error)
+        this.errorMessage = 'Gagal memuat dashboard. Coba lagi.'
+      } finally {
+        this.loading = false
+      }
+    },
+    async fetchSummary() {
+      const { data } = await api.get('dashboard/summary')
+      const payload = data?.data ?? data
+      this.totalWorkOrders = payload?.workorders_today ?? 0
+      this.completedWorkOrders = payload?.workorders_finished ?? 0
+      this.pendingWorkOrders = payload?.workorders_pending ?? 0
+      this.totalEmployeesPresent = payload?.employees_present ?? 0
+    },
+    async fetchWorkordersPie() {
+      const { data } = await api.get('dashboard/workorders-pie')
+      const payload = data?.data ?? data
+      const completed = payload?.completed ?? 0
+      const pending = payload?.pending ?? 0
+      this.pieChartData.datasets[0].data = [completed, pending]
+    },
+    async fetchSales() {
+      const { data } = await api.get('dashboard/sales-monthly', {
+        params: { months: this.months },
+      })
+      const payload = data?.data ?? data ?? []
+      const labels = payload.map((item) => item.month)
+      const values = payload.map((item) => item.total ?? 0)
+      this.salesData.labels = labels
+      this.salesData.datasets[0].data = values
+    },
+    async fetchPurchase() {
+      const { data } = await api.get('dashboard/purchase-monthly', {
+        params: { months: this.months },
+      })
+      const payload = data?.data ?? data ?? []
+      const labels = payload.map((item) => item.month)
+      const values = payload.map((item) => item.total ?? 0)
+      this.purchasesData.labels = labels
+      this.purchasesData.datasets[0].data = values
+    },
+    async fetchCombined() {
+      const { data } = await api.get('dashboard/combined-monthly', {
+        params: { months: this.months },
+      })
+      const payload = data?.data ?? data ?? []
+      const labels = payload.map((item) => item.month)
+      const sales = payload.map((item) => item.sales ?? 0)
+      const purchase = payload.map((item) => item.purchase ?? 0)
+      const expenses = payload.map((item) => item.expenses ?? 0)
+      this.mixedChartData.labels = labels
+      this.mixedChartData.datasets[0].data = purchase
+      this.mixedChartData.datasets[1].data = expenses
+      this.mixedChartData.datasets[2].data = sales
+    },
+    handleRefresh() {
+      this.fetchAll()
+    },
   },
 }
 </script>

@@ -118,7 +118,7 @@ import axios from 'axios';
           </button>
           <button
             class="bg-green-500 text-white p-2 rounded hover:bg-green-600"
-            title="Kirim WhatsApp"
+            title="Kirim Pengingat Service via WhatsApp"
             @click="sendWhatsApp(pelanggan)"
           >
             <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -138,6 +138,26 @@ import axios from 'axios';
                 stroke-linejoin="round"
                 stroke-width="2"
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+          <button
+            class="bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600"
+            title="Lihat WhatsApp Report"
+            @click="openReportModal(pelanggan)"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 17v-2a2 2 0 012-2h8m-6 4h6m-6-4h6m-6-4h6M9 9V7a2 2 0 012-2h8"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 7h4v10H4a2 2 0 01-2-2V9a2 2 0 012-2z"
               />
             </svg>
           </button>
@@ -253,7 +273,7 @@ import axios from 'axios';
                 </button>
                 <button
                   class="bg-green-500 text-white p-1 rounded hover:bg-green-600"
-                  title="Kirim WhatsApp"
+                  title="Kirim Pengingat Service via WhatsApp"
                   @click="sendWhatsApp(pelanggan)"
                 >
                   <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -277,6 +297,26 @@ import axios from 'axios';
                     />
                   </svg>
                 </a>
+                <button
+                  class="bg-indigo-500 text-white p-1 rounded hover:bg-indigo-600"
+                  title="Lihat WhatsApp Report"
+                  @click="openReportModal(pelanggan)"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 17v-2a2 2 0 012-2h8m-6 4h6m-6-4h6m-6-4h6M9 9V7a2 2 0 012-2h8"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 7h4v10H4a2 2 0 01-2-2V9a2 2 0 012-2z"
+                    />
+                  </svg>
+                </button>
               </div>
             </td>
           </tr>
@@ -304,6 +344,108 @@ import axios from 'axios';
       </div>
     </div>
     <!-- Modal and related code removed -->
+    <transition name="fade">
+      <div
+        v-if="showReportModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4"
+      >
+        <div class="bg-white w-full max-w-3xl rounded-lg shadow-xl p-6 space-y-4">
+          <div class="flex items-start justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">WhatsApp Report</h3>
+              <p class="text-sm text-gray-500">
+                Filter berdasar customer, kendaraan, tanggal terakhir, atau frequency.
+              </p>
+            </div>
+            <button class="text-gray-500 hover:text-gray-800" @click="closeReportModal">✕</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label class="text-xs text-gray-500">Customer ID</label>
+              <input
+                v-model="reportFilters.customer_id"
+                type="text"
+                class="w-full border rounded px-2 py-1 text-sm"
+                placeholder="customer_id"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Vehicle ID</label>
+              <input
+                v-model="reportFilters.vehicle_id"
+                type="text"
+                class="w-full border rounded px-2 py-1 text-sm"
+                placeholder="vehicle_id"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Last Message Date</label>
+              <input
+                v-model="reportFilters.last_message_date"
+                type="date"
+                class="w-full border rounded px-2 py-1 text-sm"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-gray-500">Frequency ≥</label>
+              <input
+                v-model="reportFilters.frequency"
+                type="number"
+                min="0"
+                class="w-full border rounded px-2 py-1 text-sm"
+                placeholder="Jumlah kirim"
+              />
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button
+              class="px-3 py-2 text-sm rounded border text-gray-600 hover:bg-gray-50"
+              @click="closeReportModal"
+            >
+              Tutup
+            </button>
+            <button
+              class="px-3 py-2 text-sm rounded bg-indigo-600 text-white hover:bg-indigo-700"
+              :disabled="reportLoading"
+              @click="fetchWhatsAppReport"
+            >
+              {{ reportLoading ? 'Memuat...' : 'Cari Report' }}
+            </button>
+          </div>
+
+          <div v-if="reportError" class="text-sm text-red-600">{{ reportError }}</div>
+
+          <div v-if="reportLoading" class="text-center text-sm text-gray-500">
+            Memuat data report...
+          </div>
+
+          <div v-if="!reportLoading && reportRows.length" class="border rounded">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-100 text-left">
+                <tr>
+                  <th class="px-3 py-2">Customer ID</th>
+                  <th class="px-3 py-2">Vehicle ID</th>
+                  <th class="px-3 py-2">Last Message</th>
+                  <th class="px-3 py-2">Frequency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, i) in reportRows" :key="row.id || i" class="border-t">
+                  <td class="px-3 py-2">{{ row.customer_id || row.customerId || '-' }}</td>
+                  <td class="px-3 py-2">{{ row.vehicle_id || row.vehicleId || '-' }}</td>
+                  <td class="px-3 py-2">
+                    {{ formatDate(row.last_message_date || row.lastMessageDate) }}
+                  </td>
+                  <td class="px-3 py-2">{{ row.frequency || row.frequency_count || 0 }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </transition>
     <loading-overlay />
   </div>
 </template>
@@ -323,6 +465,16 @@ export default {
       page: 1,
       perPage: 10,
       dummyList: [],
+      showReportModal: false,
+      reportFilters: {
+        customer_id: '',
+        vehicle_id: '',
+        last_message_date: '',
+        frequency: '',
+      },
+      reportLoading: false,
+      reportError: '',
+      reportRows: [],
     }
   },
   setup() {
@@ -433,17 +585,21 @@ export default {
     prevPage() {
       if (this.page > 1) this.page--
     },
-    sendWhatsApp(pelanggan) {
-      if (!pelanggan.customer.hp) {
+    async sendWhatsApp(pelanggan) {
+      if (!pelanggan?.customer?.hp) {
         alert('Nomor HP tidak tersedia')
         return
       }
-      // Replace leading 0 with 62
-      let phoneNumber = pelanggan.customer.hp.replace(/^0/, '62')
-      // Remove any non-numeric characters
-      phoneNumber = phoneNumber.replace(/\D/g, '')
 
-      // Calculate next service date (3 months from last visit)
+      // Normalisasi nomor telepon ke format 62xxxxxxxxx
+      let phoneNumber = pelanggan.customer.hp.trim().replace(/\D/g, '')
+      if (phoneNumber.startsWith('0')) {
+        phoneNumber = `62${phoneNumber.slice(1)}`
+      } else if (!phoneNumber.startsWith('62')) {
+        phoneNumber = `62${phoneNumber}`
+      }
+
+      // Hitung jadwal service berikutnya (3 bulan setelah kunjungan terakhir)
       let nextServiceDate = '-'
       if (pelanggan.last_visit_date) {
         const lastVisit = new Date(pelanggan.last_visit_date)
@@ -454,17 +610,25 @@ export default {
         nextServiceDate = `${day}-${month}-${year}`
       }
 
-      // Create message
-      const message = `Jadwal Service Rutin kendaraan anda ${pelanggan.model} dengan nomor polisi ${pelanggan.no_pol} akan segera tiba pada tanggal ${nextServiceDate}`
+      const customerName = pelanggan.customer.nama || 'Pelanggan'
+      const message = `Bapak/Ibu ${customerName} untuk nomor kendaraan ${pelanggan.no_pol} sebentar lagi tiba saat pemeliharaan rutin pada tanggal ${nextServiceDate}, daftarkan segera melalui nomor pelayanan kami 08551000727`
 
-      // Encode message for URL
-      const encodedMessage = encodeURIComponent(message)
-
-      // Create WhatsApp URL
-      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`
-
-      // Open in new tab
-      window.open(whatsappUrl, '_blank')
+      const loadingStore = useLoadingStore()
+      try {
+        loadingStore.show()
+        await axios.post(`${BASE_URL}whatsapp/send-simple`, null, {
+          params: {
+            phone: phoneNumber,
+            message,
+          },
+        })
+        alert('Pengingat service berhasil dikirim lewat WhatsApp gateway')
+      } catch (error) {
+        console.error('Error sending WhatsApp reminder:', error)
+        alert('Gagal mengirim pengingat service. Silakan coba lagi.')
+      } finally {
+        loadingStore.hide()
+      }
     },
     async getTablePelanggan() {
       const loadingStore = useLoadingStore()
@@ -481,6 +645,51 @@ export default {
         .finally(() => {
           loadingStore.hide()
         })
+    },
+    openReportModal(pelanggan) {
+      this.reportError = ''
+      const customerId = pelanggan?.customer?.id || pelanggan?.customer_id || ''
+      const vehicleId = pelanggan?.id || pelanggan?.vehicle_id || ''
+      this.reportFilters = {
+        customer_id: customerId,
+        vehicle_id: vehicleId,
+        last_message_date: '',
+        frequency: '',
+      }
+      this.reportRows = []
+      this.showReportModal = true
+      if (customerId || vehicleId) {
+        this.fetchWhatsAppReport()
+      }
+    },
+    closeReportModal() {
+      this.showReportModal = false
+      this.reportRows = []
+      this.reportError = ''
+    },
+    async fetchWhatsAppReport() {
+      const params = {}
+      if (this.reportFilters.customer_id) params.customer_id = this.reportFilters.customer_id
+      if (this.reportFilters.vehicle_id) params.vehicle_id = this.reportFilters.vehicle_id
+      if (this.reportFilters.last_message_date)
+        params.last_message_date = this.reportFilters.last_message_date
+      if (this.reportFilters.frequency) params.frequency = this.reportFilters.frequency
+
+      this.reportLoading = true
+      this.reportError = ''
+      try {
+        const { data } = await axios.get(`${BASE_URL}whatsapp-report`, { params })
+        const payload = data?.data ?? data
+        this.reportRows = Array.isArray(payload) ? payload : (payload?.items ?? [])
+        if (!this.reportRows.length) {
+          this.reportError = 'Report tidak ditemukan untuk filter ini.'
+        }
+      } catch (error) {
+        console.error('Error fetching WhatsApp report:', error)
+        this.reportError = 'Gagal memuat report WhatsApp. Coba ulang.'
+      } finally {
+        this.reportLoading = false
+      }
     },
   },
   created() {

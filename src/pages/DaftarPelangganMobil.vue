@@ -4,7 +4,7 @@
     <div class="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-5 text-white shadow-lg">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 class="text-2xl font-bold tracking-tight">Daftar Pelanggan & Servis</h2>
+          <h2 class="text-2xl font-bold tracking-tight">Daftar Pelanggan & Servis Rutin</h2>
           <p class="text-white/90 text-sm">
             Pantau riwayat dan jadwal servis berikutnya secara cepat.
           </p>

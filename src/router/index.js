@@ -5,13 +5,15 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: () => import('../layouts/LayoutDashboard.vue'),
-    },
-    {
-      path: '/login',
       name: 'login',
       component: () => import('../user/loginUser.vue'),
+      alias: '/login',
+    },
+    {
+      path: '/dashboard',
+      name: 'home',
+      component: () => import('../layouts/LayoutDashboard.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/register',
@@ -381,6 +383,11 @@ const router = createRouter({
           component: () => import('../pages/TableUsersWithRoles.vue'),
         },
         {
+          path: 'roles',
+          name: 'role-management',
+          component: () => import('../pages/RoleManagement.vue'),
+        },
+        {
           path: 'edit/:id',
           name: 'edit-user',
           component: () => import('../pages/EditUser.vue'),
@@ -388,6 +395,22 @@ const router = createRouter({
       ],
     },
   ],
+})
+
+// Navigation guard untuk proteksi route
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+
+  // Jika route memerlukan autentikasi
+  if (to.meta.requiresAuth && !token) {
+    // Redirect ke login jika belum login
+    next('/')
+  } else if ((to.path === '/' || to.path === '/login') && token) {
+    // Jika sudah login dan mencoba akses login, redirect ke dashboard
+    next('/dashboard')
+  } else {
+    next()
+  }
 })
 
 export default router
