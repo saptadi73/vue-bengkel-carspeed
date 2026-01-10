@@ -1063,7 +1063,11 @@
 
           <!-- Submit Button -->
           <div class="flex justify-end gap-4">
-            <button type="button" class="modern-btn-info flex items-center gap-2" @click="printPDF">
+            <button
+              type="button"
+              class="modern-btn-info flex items-center gap-2"
+              @click="openPdfPreview"
+            >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   stroke-linecap="round"
@@ -1072,7 +1076,7 @@
                   d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
                 />
               </svg>
-              Print PDF
+              Preview PDF
             </button>
             <button
               type="button"
@@ -1154,6 +1158,60 @@
     @close="closeDpPaymentModal"
     @submit="handleDpPaymentSubmit"
   />
+
+  <!-- PDF Preview Modal -->
+  <div
+    v-if="showPdfPreview"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 overflow-hidden">
+      <div class="flex items-center justify-between px-4 py-2 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">Preview Work Order PDF</h3>
+        <button @click="closePdfPreview" class="text-gray-500 hover:text-gray-700">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="h-[70vh] bg-gray-100">
+        <iframe
+          v-if="pdfPreviewUrl"
+          ref="pdfIframe"
+          :src="pdfPreviewUrl"
+          class="w-full h-full"
+          title="PDF Preview"
+        ></iframe>
+      </div>
+      <div class="flex justify-end gap-3 px-4 py-3 border-t bg-gray-50">
+        <button
+          type="button"
+          class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100"
+          @click="closePdfPreview"
+        >
+          Tutup
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          @click="downloadPdf"
+        >
+          Download
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          @click="printPdf"
+        >
+          Print
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Add Service Modal -->
   <div
@@ -1321,6 +1379,9 @@ export default {
       showDpPaymentModal: false,
       paymentStatus: null,
       workOrderStatus: null,
+      showPdfPreview: false,
+      pdfPreviewUrl: '',
+      pdfFileName: 'workorder.pdf',
     }
   },
   computed: {
@@ -1374,7 +1435,24 @@ export default {
       return statusCompleted && paymentLunas
     },
     isAdmin() {
-      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
+      const rawRole =
+        localStorage.getItem('role') ||
+        localStorage.getItem('role_name') ||
+        localStorage.getItem('user') ||
+        localStorage.getItem('userData')
+      let roleText = ''
+
+      if (rawRole) {
+        try {
+          const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
+          roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
+        } catch (e) {
+          roleText = rawRole.toString() + e.message
+        }
+      }
+
+      roleText = roleText.toLowerCase().trim()
+      return roleText.includes('admin')
     },
   },
   watch: {
@@ -1949,7 +2027,7 @@ export default {
 
       console.log('Form Data:', this.form)
     },
-    printPDF() {
+    buildPdfDocument() {
       const doc = new jsPDF('p', 'mm', 'a4')
 
       const primaryColor = [0, 0, 0]
@@ -2237,7 +2315,41 @@ export default {
       doc.rect(5, 5, 200, 287, 'S') // Outer frame with stroke only
       doc.setGState(new doc.GState({ opacity: 1 })) // Reset opacity
 
-      doc.save('workorder.pdf')
+      return doc
+    },
+
+    openPdfPreview() {
+      const doc = this.buildPdfDocument()
+      const blob = doc.output('blob')
+      if (this.pdfPreviewUrl) {
+        URL.revokeObjectURL(this.pdfPreviewUrl)
+      }
+      this.pdfFileName = `workorder-${this.form.no_pol || this.form.nama || 'wo'}.pdf`
+      this.pdfPreviewUrl = URL.createObjectURL(blob)
+      this.showPdfPreview = true
+    },
+    downloadPdf() {
+      const doc = this.buildPdfDocument()
+      doc.save(this.pdfFileName || 'workorder.pdf')
+    },
+    printPdf() {
+      const iframeWindow = this.$refs.pdfIframe?.contentWindow
+      if (iframeWindow && this.pdfPreviewUrl) {
+        iframeWindow.focus()
+        iframeWindow.print()
+        return
+      }
+
+      const doc = this.buildPdfDocument()
+      doc.autoPrint?.()
+      doc.output('dataurlnewwindow')
+    },
+    closePdfPreview() {
+      if (this.pdfPreviewUrl) {
+        URL.revokeObjectURL(this.pdfPreviewUrl)
+      }
+      this.pdfPreviewUrl = ''
+      this.showPdfPreview = false
     },
 
     openAddServiceModal() {
@@ -3090,7 +3202,7 @@ h3 {
     0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Bikin input “telanjang” */
+/* Bikin input GǣtelanjangGǥ */
 .naked-input {
   border: none;
   outline: none;

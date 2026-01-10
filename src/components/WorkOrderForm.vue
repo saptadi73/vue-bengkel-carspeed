@@ -204,18 +204,6 @@
                 <label class="modern-label">DP Amount</label>
               </div>
             </div>
-            <div class="info-card">
-              <div class="relative">
-                <select v-model="form.status" id="status" class="modern-select peer">
-                  <option value="" disabled selected>Pilih Status</option>
-                  <option value="draft">draft</option>
-                  <option value="dikerjakan">dikerjakan</option>
-                  <option value="selesai">selesai</option>
-                  <option value="dibayar">dibayar</option>
-                </select>
-                <label class="modern-select-label">Status</label>
-              </div>
-            </div>
           </div>
         </div>
         <form @submit.prevent="submitForm">
@@ -1003,7 +991,24 @@ export default {
   },
   computed: {
     isAdmin() {
-      return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
+      const rawRole =
+        localStorage.getItem('role') ||
+        localStorage.getItem('role_name') ||
+        localStorage.getItem('user') ||
+        localStorage.getItem('userData')
+      let roleText = ''
+
+      if (rawRole) {
+        try {
+          const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
+          roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
+        } catch (e) {
+          roleText = rawRole.toString()
+        }
+      }
+
+      roleText = roleText.toLowerCase().trim()
+      return roleText.includes('admin')
     },
     totalProductDiscount() {
       // Discount as percentage
@@ -1316,7 +1321,7 @@ export default {
     async getStock(item) {
       if (!item.product_id) return
       try {
-        this.loadingStore.show()
+        // Loading store removed - this function is called from other functions that already have loading
         const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
         const data = response.data.data
         // Simpan stok di item
@@ -1327,8 +1332,6 @@ export default {
       } catch (error) {
         console.log('error: ', error)
         item.stockku = 0
-      } finally {
-        this.loadingStore.hide()
       }
     },
     async getBookingData() {
@@ -1431,8 +1434,8 @@ export default {
       const discount = Number(item.discount) || 0
       item.subtotal = Math.max(0, quantity * price - discount)
       item.productSubtotalHPP = this.productSubtotalHPP(item)
-      // Cek stok setiap kali subtotal dihitung
-      this.getStock(item)
+      // Stock check removed from here to prevent repeated loading
+      // Stock will be checked when product is selected or quantity changes
       return item.subtotal
     },
     serviceSubtotal(item) {

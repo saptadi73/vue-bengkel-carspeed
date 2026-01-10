@@ -903,7 +903,7 @@ export default {
     async getStock(item) {
       if (!item.product_id) return
       try {
-        this.loadingStore.show()
+        // Loading store removed - this function is called from other functions that already have loading
         const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
         const data = response.data.data
         // Simpan stok di item
@@ -920,8 +920,6 @@ export default {
       } catch (error) {
         console.log('error: ', error)
         item.stockku = 0
-      } finally {
-        this.loadingStore.hide()
       }
     },
     async getBookingData() {
@@ -1034,8 +1032,8 @@ export default {
       const price = Number(item.price) || 0
       const discount = Number(item.discount) || 0
       item.subtotal = Math.max(0, quantity * price - quantity * price * (discount / 100))
-      // Cek stok setiap kali subtotal dihitung
-      this.getStock(item)
+      // Stock check removed from here to prevent repeated loading
+      // Stock will be checked when product is selected or quantity changes
     },
     serviceSubtotal(item) {
       const quantity = Number(item.quantity) || 0
