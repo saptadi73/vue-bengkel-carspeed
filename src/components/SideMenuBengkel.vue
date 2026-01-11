@@ -119,6 +119,10 @@ const navItems = reactive([
         },
       },
       {
+        text: 'Daftar Jasa',
+        url: '/wo/jasa/list',
+      },
+      {
         text: 'Daftar Booking',
         url: '/wo/booking',
       },

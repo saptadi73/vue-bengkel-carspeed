@@ -115,6 +115,11 @@ const router = createRouter({
           component: () => import('../pages/CreateJasa.vue'),
         },
         {
+          path: 'jasa/list',
+          name: 'service list',
+          component: () => import('../pages/ServiceList.vue'),
+        },
+        {
           path: 'sales/new',
           name: 'new sales order',
           component: () => import('../pages/CreateSalesOrder.vue'),
