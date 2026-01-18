@@ -6,9 +6,18 @@
           <h2 class="text-2xl font-semibold text-gray-800">Daftar Jasa Bengkel</h2>
           <p class="text-sm text-gray-600">Kelola layanan dengan pencarian dan pagination.</p>
         </div>
-        <button type="button" class="modern-btn-primary flex items-center gap-2" @click="openCreate">
+        <button
+          type="button"
+          class="modern-btn-primary flex items-center gap-2"
+          @click="openCreate"
+        >
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Tambah Jasa
         </button>
@@ -20,7 +29,12 @@
           <label class="modern-label">Cari jasa</label>
           <span class="absolute right-3 top-3 text-gray-400">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
+              />
             </svg>
           </span>
         </div>
@@ -44,7 +58,9 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Nama</th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">Deskripsi</th>
             <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600">Harga</th>
-            <th v-if="isAdmin" class="px-4 py-3 text-right text-xs font-semibold text-gray-600">HPP</th>
+            <th v-if="isAdmin" class="px-4 py-3 text-right text-xs font-semibold text-gray-600">
+              HPP
+            </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600">Aksi</th>
           </tr>
         </thead>
@@ -52,14 +68,26 @@
           <tr v-for="item in paginatedServices" :key="item.id" class="hover:bg-gray-50">
             <td class="px-4 py-3 text-sm text-gray-800">{{ item.name }}</td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ item.description || '-' }}</td>
-            <td class="px-4 py-3 text-sm text-right text-gray-800">{{ formatCurrency(item.price) }}</td>
-            <td v-if="isAdmin" class="px-4 py-3 text-sm text-right text-gray-800">{{ formatCurrency(item.cost) }}</td>
+            <td class="px-4 py-3 text-sm text-right text-gray-800">
+              {{ formatCurrency(item.price) }}
+            </td>
+            <td v-if="isAdmin" class="px-4 py-3 text-sm text-right text-gray-800">
+              {{ formatCurrency(item.cost) }}
+            </td>
             <td class="px-4 py-3 text-sm text-center">
               <div class="flex items-center justify-center gap-2">
-                <button type="button" class="modern-btn-info px-3 py-1 text-sm" @click="openEdit(item)">
+                <button
+                  type="button"
+                  class="modern-btn-info px-3 py-1 text-sm"
+                  @click="openEdit(item)"
+                >
                   Edit
                 </button>
-                <button type="button" class="modern-btn-danger px-3 py-1 text-sm" @click="openDelete(item)">
+                <button
+                  type="button"
+                  class="modern-btn-danger px-3 py-1 text-sm"
+                  @click="openDelete(item)"
+                >
                   Hapus
                 </button>
               </div>
@@ -79,10 +107,20 @@
     <div class="flex items-center justify-between mt-4 text-sm text-gray-700">
       <div>Halaman {{ currentPage }} dari {{ totalPages || 1 }}</div>
       <div class="flex items-center gap-2">
-        <button type="button" class="px-3 py-1 border rounded-md disabled:opacity-50" :disabled="currentPage === 1" @click="currentPage--">
+        <button
+          type="button"
+          class="px-3 py-1 border rounded-md disabled:opacity-50"
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+        >
           Sebelumnya
         </button>
-        <button type="button" class="px-3 py-1 border rounded-md disabled:opacity-50" :disabled="currentPage >= totalPages" @click="currentPage++">
+        <button
+          type="button"
+          class="px-3 py-1 border rounded-md disabled:opacity-50"
+          :disabled="currentPage >= totalPages"
+          @click="currentPage++"
+        >
           Selanjutnya
         </button>
       </div>
@@ -93,10 +131,17 @@
   <div v-if="showForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 border-b">
-        <h3 class="text-lg font-semibold text-gray-800">{{ isEditing ? 'Edit Jasa' : 'Tambah Jasa' }}</h3>
+        <h3 class="text-lg font-semibold text-gray-800">
+          {{ isEditing ? 'Edit Jasa' : 'Tambah Jasa' }}
+        </h3>
         <button @click="closeForm" class="text-gray-500 hover:text-gray-700">
           <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -112,20 +157,41 @@
           <label class="modern-label">Nama Jasa</label>
         </div>
         <div class="relative">
-          <input v-model.number="form.price" type="number" min="0" class="modern-input peer" placeholder=" " />
+          <input
+            v-model.number="form.price"
+            type="number"
+            min="0"
+            class="modern-input peer"
+            placeholder=" "
+          />
           <label class="modern-label">Harga</label>
         </div>
         <div class="relative">
-          <input v-model.number="form.cost" type="number" min="0" class="modern-input peer" placeholder=" " />
+          <input
+            v-model.number="form.cost"
+            type="number"
+            min="0"
+            class="modern-input peer"
+            placeholder=" "
+          />
           <label class="modern-label">HPP (Cost)</label>
         </div>
         <div class="relative">
-          <textarea v-model="form.description" rows="3" class="modern-textarea peer" placeholder=" "></textarea>
+          <textarea
+            v-model="form.description"
+            rows="3"
+            class="modern-textarea peer"
+            placeholder=" "
+          ></textarea>
           <label class="modern-textarea-label">Deskripsi</label>
         </div>
       </div>
       <div class="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50">
-        <button type="button" class="px-4 py-2 border border-gray-300 rounded-md" @click="closeForm">
+        <button
+          type="button"
+          class="px-4 py-2 border border-gray-300 rounded-md"
+          @click="closeForm"
+        >
           Batal
         </button>
         <button type="button" class="modern-btn-primary" @click="saveService">
@@ -140,9 +206,87 @@
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
       <div class="px-4 py-4 space-y-3">
         <h3 class="text-lg font-semibold text-gray-800">Hapus Jasa</h3>
-        <p class="text-sm text-gray-600">Anda yakin ingin menghapus jasa "{{ selectedService?.name }}"?</p>
+        <p class="text-sm text-gray-600">
+          Anda yakin ingin menghapus jasa "{{ selectedService?.name }}"?
+        </p>
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" class="px-4 py-2 border border-gray-300 rounded-md" @click="closeDelete">
+          <button
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-md"
+            @click="closeDelete"
+          
+        </button>
+      </div>
+      <div class="px-4 py-4 space-y-4">
+        <div class="relative">
+          <input
+            :value="form.name"
+            @input="onNameInput($event.target.value)"
+            type="text"
+            class="modern-input peer"
+            placeholder=" "
+          />
+          <label class="modern-label">Nama Jasa</label>
+        </div>
+        <div class="relative">
+          <input
+            v-model.number="form.price"
+            type="number"
+            min="0"
+            class="modern-input peer"
+            placeholder=" "
+          />
+          <label class="modern-label">Harga</label>
+        </div>
+        <div class="relative">
+          <input
+            v-model.number="form.cost"
+            type="number"
+            min="0"
+            class="modern-input peer"
+            placeholder=" "
+          />
+          <label class="modern-label">HPP (Cost)</label>
+        </div>
+        <div class="relative">
+          <textarea
+            v-model="form.description"
+            rows="3"
+            class="modern-textarea peer"
+            placeholder=" "
+          ></textarea>
+          <label class="modern-textarea-label">Deskripsi</label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50">
+        <button
+          type="button"
+          class="px-4 py-2 border border-gray-300 rounded-md"
+          @click="closeForm"
+        >
+          Batal
+        </button>
+        <button type="button" class="modern-btn-primary" @click="saveService">
+          {{ isEditing ? 'Update' : 'Simpan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div v-if="showDelete" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 overflow-hidden">
+      <div class="px-4 py-4 space-y-3">
+        <h3 class="text-lg font-semibold text-gray-800">Hapus Jasa</h3>
+        <p class="text-sm text-gray-600">
+          Anda yakin ingin menghapus jasa "{{ selectedService?.name }}"?
+        </p>
+        <div class="flex justify-end gap-2 pt-2">
+          <button
+            type="button"
+            class="px-4 py-2 border border-gray-300 rounded-md"
+            @click="closeDelete"
+          >
             Batal
           </button>
           <button type="button" class="modern-btn-danger" @click="deleteService">Hapus</button>

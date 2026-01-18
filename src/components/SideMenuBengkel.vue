@@ -14,7 +14,7 @@
         <SideMenuParentItem
           v-else
           :item="item"
-          active-class="bg-warning bg-opacity-5 hover:text-opacity-100"
+          active-class="bg-blue-600 bg-opacity-80 text-white text-opacity-100"
           class="w-full flex items-center text-left rounded-md px-4 py-2 text-sm font-normal text-white text-opacity-60 hover:text-opacity-100 hover:bg-gray-400 hover:bg-opacity-50 transform duration-200"
         ></SideMenuParentItem>
       </div>
@@ -40,7 +40,10 @@
 <script setup>
 import SideMenuParentItem from '../components/SideMenuParentItem.vue'
 import SideMenuSubItem from '../components/SideMenuSubItem.vue'
-import { reactive, inject, computed } from 'vue'
+import { reactive, inject, computed, ref, onMounted } from 'vue'
+import axios from 'axios'
+import { BASE_URL } from '../base.utils.url'
+
 const $emitter = inject('$emitter')
 
 // Role-based access control
@@ -54,6 +57,28 @@ const isAdmin = computed(() => {
 
 import { useScreenSize } from '@/composables/useScreenSize.js'
 const { isMobile } = useScreenSize()
+
+// Pending work order count
+const pendingWoCount = ref(0)
+
+// Fetch pending work orders
+const fetchPendingWoCount = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}workorders/all`)
+    const workOrders = response.data.data || []
+    // Count work orders that are not 'selesai' or 'dibayar'
+    pendingWoCount.value = workOrders.filter(
+      (wo) => wo.status !== 'selesai' && wo.status !== 'dibayar',
+    ).length
+  } catch (error) {
+    console.error('Error fetching pending work orders:', error)
+    pendingWoCount.value = 0
+  }
+}
+
+onMounted(() => {
+  fetchPendingWoCount()
+})
 
 const navItems = reactive([
   {
@@ -114,7 +139,7 @@ const navItems = reactive([
         text: 'Daftar WO',
         url: '/wo/all',
         badge: {
-          text: 20,
+          text: pendingWoCount,
           style: '',
         },
       },
