@@ -1003,7 +1003,7 @@ export default {
           const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
           roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
         } catch (e) {
-          roleText = rawRole.toString()
+          roleText = rawRole.toString() + e.message
         }
       }
 
@@ -1077,6 +1077,33 @@ export default {
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   created() {
+    // Load customer vehicle data from localStorage if available
+    const savedData = localStorage.getItem('newWorkOrderCustomerVehicle')
+    if (savedData) {
+      try {
+        const data = JSON.parse(savedData)
+        // Populate form with saved customer vehicle data
+        this.form.nama = data.nama || ''
+        this.form.hp = data.hp || ''
+        this.form.email = data.email || ''
+        this.form.alamat = data.alamat || ''
+        this.form.no_pol = data.no_pol || ''
+        this.form.brand = data.brand || ''
+        this.form.type = data.type || ''
+        this.form.model = data.model || ''
+        this.form.warna = data.warna || ''
+        this.form.tahun = data.tahun || ''
+        this.form.kapasitas = data.kapasitas || ''
+        this.form.vehicle_id = data.vehicle_id || ''
+        this.form.customer_id = data.customer_id || ''
+
+        // Clear the localStorage after using it
+        localStorage.removeItem('newWorkOrderCustomerVehicle')
+      } catch (error) {
+        console.error('Error loading customer vehicle data:', error)
+      }
+    }
+
     this.getProduct()
     this.getService()
     this.getPacketOrders()
@@ -1360,11 +1387,13 @@ export default {
     async getPacketOrders() {
       try {
         this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}packetorders/all`)
+        // use authenticated client; some endpoints return 400 without token
+        const response = await api.get(`${BASE_URL}packetorders/all`)
         console.log('Packet Orders: ', response.data.data)
-        this.packetorders = response.data.data
+        this.packetorders = response.data.data || []
       } catch (error) {
         console.log('error: ', error)
+        this.packetorders = []
       } finally {
         this.loadingStore.hide()
       }

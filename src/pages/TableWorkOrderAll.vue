@@ -3,14 +3,30 @@
     class="w-[95vw] max-w-7xl mx-auto p-8 bg-gradient-to-br from-gray-50 to-white rounded-xl shadow-xl"
   >
     <!-- Header Section -->
-    <div class="text-center mb-8">
-      <h1 class="text-3xl md:text-4xl font-bold text-green-500 mb-2 font-lexend">
-        Daftar Work Order
-      </h1>
-      <p class="text-gray-600 text-lg">
-        Total Work Order: {{ filteredOrders.length }} | Progress: {{ progressCount }} | Selesai:
-        {{ completedCount }}
-      </p>
+    <div class="flex items-center justify-between mb-8">
+      <div class="text-left">
+        <h1 class="text-3xl md:text-4xl font-bold text-green-500 mb-2 font-lexend">
+          Daftar Work Order
+        </h1>
+        <p class="text-gray-600 text-lg">
+          Total Work Order: {{ filteredOrders.length }} | Progress: {{ progressCount }} | Selesai:
+          {{ completedCount }}
+        </p>
+      </div>
+      <button
+        @click="showSelectCustomerModal = true"
+        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 shadow-lg transition-all hover:shadow-xl"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 4v16m8-8H4"
+          />
+        </svg>
+        Create New Work Order
+      </button>
     </div>
 
     <!-- Search and Filter Section -->
@@ -119,18 +135,7 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
-                Teknisi
-              </th>
-              <th
-                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-              >
-                HP
-              </th>
-              <th
-                v-if="isAdmin"
-                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
-              >
-                Total
+                Teknisi<span v-if="isAdmin"> &amp; Total</span>
               </th>
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
@@ -214,19 +219,11 @@
                   </div>
                   <div class="ml-3">
                     <div class="text-sm font-medium text-gray-900">{{ order.karyawan_name }}</div>
+                    <div v-if="isAdmin" class="text-xs text-gray-500">
+                      {{ formatCurrency(order.total_biaya) }}
+                    </div>
                   </div>
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-                  :class="getServiceTypeClass(order.serviceType)"
-                >
-                  {{ order.customer_hp }}
-                </span>
-              </td>
-              <td v-if="isAdmin" class="px-6 py-4 whitespace-nowrap">
-                {{ formatCurrency(order.total_biaya) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span
@@ -393,7 +390,7 @@
                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
               />
             </svg>
-            <span class="text-sm"><strong>HP Customer:</strong> {{ order.customer_hp }}</span>
+            <span class="text-sm"><strong>Status:</strong> {{ order.status }}</span>
           </div>
 
           <div class="flex items-center">
@@ -583,6 +580,13 @@
 
   <loading-overlay />
   <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+
+  <!-- Select Customer Vehicle Modal -->
+  <select-customer-vehicle-modal
+    :isOpen="showSelectCustomerModal"
+    @close="showSelectCustomerModal = false"
+    @selected="handleSelectCustomerVehicle"
+  />
 </template>
 
 <script>
@@ -590,13 +594,14 @@ import { ref } from 'vue'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import SelectCustomerVehicleModal from '@/components/SelectCustomerVehicleModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import api from '@/user/axios'
 
 export default {
   name: 'TableWorkOrderAll',
-  components: { LoadingOverlay, ToastCard },
+  components: { LoadingOverlay, ToastCard, SelectCustomerVehicleModal },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -613,6 +618,7 @@ export default {
       workOrders: [],
       currentPage: 1,
       itemsPerPage: 10,
+      showSelectCustomerModal: false,
     }
   },
   computed: {
@@ -802,6 +808,30 @@ export default {
     },
     tutupToast() {
       this.show_toast = false
+    },
+    handleSelectCustomerVehicle(vehicle) {
+      // Navigate to WorkOrderForm with vehicle data
+      const vehicleData = {
+        vehicle_id: vehicle.id,
+        customer_id: vehicle.customer.id,
+        nama: vehicle.customer.nama,
+        hp: vehicle.customer.hp,
+        email: vehicle.customer.email,
+        alamat: vehicle.customer.alamat,
+        no_pol: vehicle.no_pol,
+        brand: vehicle.brand_name,
+        type: vehicle.type,
+        model: vehicle.model,
+        warna: vehicle.warna,
+        tahun: vehicle.tahun,
+        kapasitas: vehicle.kapasitas,
+      }
+
+      // Save to localStorage for WorkOrderForm to retrieve
+      localStorage.setItem('newWorkOrderCustomerVehicle', JSON.stringify(vehicleData))
+
+      // Navigate to new work order form (consistent with TablePelangganBengkel)
+      this.$router.push(`/wo/new/form/${vehicle.id}`)
     },
   },
 }

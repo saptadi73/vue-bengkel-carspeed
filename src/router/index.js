@@ -117,7 +117,7 @@ const router = createRouter({
         {
           path: 'jasa/list',
           name: 'service list',
-          component: () => import('../pages/ServiceList.vue'),
+          component: () => import('../pages/TableServiceBengkel.vue'),
         },
         {
           path: 'sales/new',
@@ -415,11 +415,12 @@ router.beforeEach((to, from, next) => {
   // Jika route memerlukan autentikasi
   if (to.meta.requiresAuth && !token) {
     // Redirect ke login jika belum login
-    next('/')
-  } else if ((to.path === '/' || to.path === '/login') && token) {
-    // Jika sudah login dan mencoba akses login, redirect ke dashboard
-    next('/dashboard')
+    next('/login')
+  } else if ((to.path === '/' || to.path === '/dashboard') && token) {
+    // Jika sudah login dan menuju root atau dashboard, arahkan ke daftar work order
+    next('/wo/all')
   } else {
+    // Izinkan akses ke /login meski token masih ada (agar bisa re-login)
     next()
   }
 })

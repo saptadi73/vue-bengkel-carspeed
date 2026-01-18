@@ -220,27 +220,6 @@
                 </span>
               </div>
             </div>
-            <div class="info-card">
-              <div class="relative">
-                <select
-                  v-model="form.status"
-                  id="status"
-                  class="modern-select peer"
-                  :disabled="
-                    initialStatus === 'selesai' ||
-                    workOrderStatus === 'selesai' ||
-                    workOrderStatus === 'dibayar'
-                  "
-                >
-                  <option value="" disabled selected>Pilih Status</option>
-                  <option value="draft">draft</option>
-                  <option value="dikerjakan">dikerjakan</option>
-                  <option value="selesai">selesai</option>
-                  <option value="dibayar">dibayar</option>
-                </select>
-                <label class="modern-select-label">Status</label>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1101,6 +1080,36 @@
               {{ isProcessingPayment ? 'Memproses...' : 'Proses Pembayaran' }}
             </button>
             <button
+              type="button"
+              :disabled="
+                hasUnconfirmedChanges ||
+                initialStatus === 'selesai' ||
+                workOrderStatus === 'selesai' ||
+                workOrderStatus === 'dibayar'
+              "
+              :class="[
+                'modern-btn-secondary flex items-center gap-2',
+                {
+                  'opacity-50 cursor-not-allowed':
+                    hasUnconfirmedChanges ||
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar',
+                },
+              ]"
+              @click="submitFormSelesai"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4"
+                />
+              </svg>
+              Selesai
+            </button>
+            <button
               type="submit"
               :disabled="
                 hasUnconfirmedChanges ||
@@ -1127,7 +1136,7 @@
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              Submit Work Order
+              Update (Dikerjakan)
             </button>
           </div>
         </form>
@@ -1965,6 +1974,13 @@ export default {
       return `${day}-${month}-${year}`
     },
     async submitForm() {
+      return this.submitFormWithStatus('dikerjakan')
+    },
+    async submitFormSelesai() {
+      return this.submitFormWithStatus('selesai')
+    },
+    async submitFormWithStatus(targetStatus) {
+      this.form.status = targetStatus
       // Tanggal masuk: set as Date object
       this.form.tanggal_masuk = new Date()
       // Set last_service to current date (YYYY-MM-DD format) if not already set
