@@ -107,21 +107,6 @@
             :disabled="isCompleted"
           />
         </div>
-        <div>
-          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-          <select
-            v-model="form.status"
-            id="status"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-            :disabled="isCompleted"
-          >
-            <option value="">Select Status</option>
-            <option value="draft">Draft</option>
-            <option value="dijalankan">Dijalankan</option>
-            <option value="diterima">Diterima</option>
-          </select>
-        </div>
       </div>
 
       <!-- Status Pembayaran -->
@@ -399,11 +384,21 @@
       <!-- Submit Button -->
       <div class="text-center space-x-4">
         <button
+          v-if="serverStatus !== 'diterima'"
           type="submit"
           :disabled="isSubmitting || isCompleted"
           class="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
           {{ isSubmitting ? 'Updating...' : 'Update Purchase Order' }}
+        </button>
+        <button
+          v-if="serverStatus !== 'diterima'"
+          type="button"
+          @click="markAsReceived"
+          :disabled="isProcessingPayment || isCompleted"
+          class="px-6 py-3 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {{ isProcessingPayment ? 'Memproses...' : 'Barang Diterima' }}
         </button>
         <button
           v-if="serverStatus === 'diterima'"
@@ -601,7 +596,7 @@ export default {
       )
     },
     isCompleted() {
-      return this.serverStatus === 'diterima' || this.paymentStatus === 'dibayarkan'
+      return this.paymentStatus === 'dibayarkan'
     },
   },
   methods: {
@@ -810,7 +805,7 @@ export default {
           total: this.grandTotal, // total before DP deduction
           pembayaran: this.dpValue, // DP as pembayaran
           dp: this.dpValue, // DP field
-          status: this.form.status,
+          status: 'dijalankan',
           status_pembayaran: this.form.status_pembayaran,
           lines: this.form.items.map((item) => ({
             id: item.id,
@@ -889,6 +884,60 @@ export default {
       } finally {
         this.loadingStore.hide()
         this.isSubmitting = false
+      }
+    },
+    async markAsReceived() {
+      if (this.isProcessingPayment) return
+      this.isProcessingPayment = true
+      try {
+        this.loadingStore.show()
+        const payload = {
+          supplier_id: this.form.supplier_id,
+          date: this.form.date,
+          pajak: this.form.includeTax ? this.tax : null,
+          total: this.grandTotal,
+          pembayaran: this.dpValue,
+          dp: this.dpValue,
+          status: 'diterima',
+          status_pembayaran: this.form.status_pembayaran,
+          lines: this.form.items.map((item) => ({
+            id: item.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            price: item.price,
+            discount: item.discount || 0,
+            subtotal: item.subtotal,
+          })),
+        }
+
+        const formData = new FormData()
+        formData.append('data', JSON.stringify(payload))
+        if (this.form.document) {
+          formData.append('bukti_transfer', this.form.document)
+        }
+
+        const response = await api.post(
+          `${BASE_URL}purchase-orders/${this.$route.params.id}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          },
+        )
+
+        console.log('Purchase Order marked as received:', response.data.data)
+        this.show_toast = true
+        this.message_toast = 'Barang berhasil ditandai sebagai diterima!'
+        this.serverStatus = 'diterima'
+        await this.checkPaymentStatus()
+      } catch (error) {
+        console.error('Error marking as received:', error)
+        this.show_toast = true
+        this.message_toast = error.response?.data?.message || 'Error marking as received'
+      } finally {
+        this.loadingStore.hide()
+        this.isProcessingPayment = false
       }
     },
     tutupToast() {

@@ -83,6 +83,36 @@
           </select>
         </div>
       </div>
+
+      <!-- Date Range Filter -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">🗓️ Periode Tanggal</label>
+          <div class="flex flex-wrap items-center gap-3">
+            <input
+              v-model="startDate"
+              type="date"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span class="text-gray-500">s/d</span>
+            <input
+              v-model="endDate"
+              type="date"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              @click="setToday"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Hari ini
+            </button>
+          </div>
+          <p v-if="dateWarning" class="mt-2 text-sm text-red-600">
+            Tanggal mulai tidak boleh melebihi tanggal akhir.
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -425,6 +455,9 @@ export default {
       searchQuery: '',
       typeFilter: '',
       statusFilter: '',
+      startDate: '',
+      endDate: '',
+      dateWarning: false,
       showConfirmModal: false,
       selectedExpense: null,
       expenses: [],
@@ -444,6 +477,22 @@ export default {
             (expense.name && expense.name.toLowerCase().includes(query)) ||
             (expense.description && expense.description.toLowerCase().includes(query)),
         )
+      }
+
+      // Filter by date range (inclusive)
+      if (this.startDate || this.endDate) {
+        const start = this.startDate || '0000-01-01'
+        const end = this.endDate || '9999-12-31'
+        filtered = filtered.filter((expense) => {
+          const raw = expense.date || ''
+          const d =
+            typeof raw === 'string' && raw.length >= 10
+              ? raw.slice(0, 10)
+              : raw
+                ? new Date(raw).toISOString().slice(0, 10)
+                : ''
+          return d >= start && d <= end
+        })
       }
 
       // Filter by type
@@ -469,9 +518,35 @@ export default {
     },
   },
   created() {
+    this.setToday()
     this.fetchExpenses()
   },
+  watch: {
+    startDate() {
+      this.validateDateRange()
+    },
+    endDate() {
+      this.validateDateRange()
+    },
+  },
   methods: {
+    setToday() {
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = String(today.getMonth() + 1).padStart(2, '0')
+      const d = String(today.getDate()).padStart(2, '0')
+      const s = `${y}-${m}-${d}`
+      this.startDate = s
+      this.endDate = s
+      this.dateWarning = false
+    },
+    validateDateRange() {
+      if (this.startDate && this.endDate) {
+        this.dateWarning = this.startDate > this.endDate
+      } else {
+        this.dateWarning = false
+      }
+    },
     async fetchExpenses() {
       try {
         this.loadingStore.show()

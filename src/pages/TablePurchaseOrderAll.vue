@@ -13,6 +13,18 @@
       </p>
     </div>
 
+    <!-- Actions -->
+    <div class="mb-4 flex justify-end">
+      <button
+        type="button"
+        @click="goToCreatePO"
+        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 shadow-lg transition-all hover:shadow-xl"
+      >
+        <span class="material-symbols-outlined">add_circle</span>
+        Add Purchase Order
+      </button>
+    </div>
+
     <!-- Search and Filter Section -->
     <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -62,6 +74,36 @@
             <option value="dijalankan">Dijalankan</option>
             <option value="diterima">Diterima</option>
           </select>
+        </div>
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">🗓️ Periode Tanggal</label>
+          <div class="flex flex-wrap items-center gap-3">
+            <input
+              v-model="startDate"
+              type="date"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span class="text-gray-500">s/d</span>
+            <input
+              v-model="endDate"
+              type="date"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              @click="setToday"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Hari ini
+            </button>
+          </div>
+          <p v-if="dateWarning" class="mt-2 text-sm text-red-600">
+            Tanggal mulai tidak boleh melebihi tanggal akhir.
+          </p>
         </div>
       </div>
     </div>
@@ -455,6 +497,9 @@ export default {
     return {
       searchQuery: '',
       statusFilter: '',
+      startDate: '',
+      endDate: '',
+      dateWarning: false,
       showConfirmModal: false,
       selectedOrder: null,
       purchaseOrders: [],
@@ -476,6 +521,20 @@ export default {
             (order.id && order.id.toString().includes(query)) ||
             (order.supplier_name && order.supplier_name.toLowerCase().includes(query)),
         )
+      }
+
+      // Filter by date range (inclusive)
+      if (this.startDate || this.endDate) {
+        const start = this.startDate || '0000-01-01'
+        const end = this.endDate || '9999-12-31'
+        filtered = filtered.filter((order) => {
+          const raw = order.date || ''
+          const d =
+            typeof raw === 'string' && raw.length >= 10
+              ? raw.slice(0, 10)
+              : new Date(raw).toISOString().slice(0, 10)
+          return d >= start && d <= end
+        })
       }
 
       // Filter by status
@@ -504,9 +563,47 @@ export default {
     },
   },
   created() {
+    this.setToday()
     this.fetchPurchaseOrders()
   },
+  watch: {
+    searchQuery() {
+      this.currentPage = 1
+    },
+    statusFilter() {
+      this.currentPage = 1
+    },
+    startDate() {
+      this.currentPage = 1
+      this.validateDateRange()
+    },
+    endDate() {
+      this.currentPage = 1
+      this.validateDateRange()
+    },
+  },
   methods: {
+    goToCreatePO() {
+      this.$router.push('/finansial/purchase')
+    },
+    validateDateRange() {
+      if (this.startDate && this.endDate) {
+        this.dateWarning = this.startDate > this.endDate
+      } else {
+        this.dateWarning = false
+      }
+    },
+    setToday() {
+      const today = new Date()
+      const y = today.getFullYear()
+      const m = String(today.getMonth() + 1).padStart(2, '0')
+      const d = String(today.getDate()).padStart(2, '0')
+      const s = `${y}-${m}-${d}`
+      this.startDate = s
+      this.endDate = s
+      this.currentPage = 1
+      this.dateWarning = false
+    },
     async fetchPurchaseOrders() {
       try {
         this.loadingStore.show()

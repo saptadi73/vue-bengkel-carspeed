@@ -107,19 +107,6 @@
           />
           <p v-if="dateError" class="mt-1 text-sm text-red-600">Tanggal harus diisi.</p>
         </div>
-        <div>
-          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-          <select
-            v-model="form.status"
-            id="status"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">Select Status</option>
-            <option value="draft">Draft</option>
-            <option value="dijalankan">Dijalankan</option>
-          </select>
-        </div>
       </div>
 
       <!-- Status Pembayaran -->
@@ -272,7 +259,7 @@ export default {
         hp: '',
         email: '',
         date: '',
-        status: '',
+        status: 'draft',
         includeTax: false,
         document: null,
         items: [
@@ -466,7 +453,7 @@ export default {
           total: this.grandTotal, // grand total (subtotal + tax - dp)
           pembayaran: this.dpValue, // DP as pembayaran
           dp: this.dpValue, // DP field
-          status: this.form.status,
+          status: 'draft',
           status_pembayaran: this.form.status_pembayaran,
           lines: lines.map((item) => ({
             id: item.id || undefined,
@@ -509,7 +496,7 @@ export default {
           perusahaan: '',
           toko: '',
           deliveryDate: '',
-          status: '',
+          status: 'draft',
           status_pembayaran: '',
           dp_amount: 0,
           includeTax: false,
