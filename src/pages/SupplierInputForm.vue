@@ -11,7 +11,9 @@
         <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
           <!-- Nama Input -->
           <div>
-            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Nama</label>
+            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2"
+              >Nama <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.nama"
               id="nama"
@@ -24,7 +26,9 @@
 
           <!-- HP Input -->
           <div class="mt-6">
-            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2">HP</label>
+            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2"
+              >HP <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.hp"
               id="hp"
@@ -37,13 +41,16 @@
 
           <!-- Alamat Input -->
           <div class="mt-6">
-            <label for="alamat" class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+            <label for="alamat" class="block text-sm font-medium text-gray-700 mb-2"
+              >Alamat <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.alamat"
               id="alamat"
               type="text"
               class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               placeholder="Masukkan alamat"
+              required
             />
           </div>
 

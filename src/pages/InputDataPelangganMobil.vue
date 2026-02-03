@@ -9,7 +9,9 @@
         <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
           <h3 class="text-xl font-bold mb-4 text-blue-700">Data Pelanggan</h3>
           <div class="mb-4">
-            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Nama</label>
+            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2"
+              >Nama <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.nama"
               id="nama"
@@ -19,7 +21,9 @@
             />
           </div>
           <div class="mb-4">
-            <label for="alamat" class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+            <label for="alamat" class="block text-sm font-medium text-gray-700 mb-2"
+              >Alamat <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.alamat"
               id="alamat"
@@ -29,7 +33,9 @@
             />
           </div>
           <div class="mb-4">
-            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2">Nomor HP</label>
+            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2"
+              >Nomor HP <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.hp"
               id="hp"
@@ -81,7 +87,9 @@
             />
           </div>
           <div class="mb-4">
-            <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-2">Brand</label>
+            <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-2"
+              >Brand <span class="text-red-500">*</span></label
+            >
             <div class="flex gap-2 items-end">
               <select
                 v-model="formData.brand_id"
@@ -103,7 +111,7 @@
           <BrandModal
             v-model:open="showBrandModal"
             :text="newBrandName"
-            @update:text="val => newBrandName = (val || '').toString().toUpperCase()"
+            @update:text="(val) => (newBrandName = (val || '').toString().toUpperCase())"
             title="Add New Brand"
             description="Masukkan nama brand untuk menambah brand baru."
             input-label="Nama Brand"
@@ -168,12 +176,11 @@
               id="kapasitas"
               type="text"
               class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
             />
           </div>
           <div class="mb-4">
             <label for="no_pol" class="block text-sm font-medium text-gray-700 mb-2"
-              >Nomor Polisi</label
+              >Nomor Polisi <span class="text-red-500">*</span></label
             >
             <input
               v-model="formData.no_pol"

@@ -12,7 +12,7 @@
         <div class="info-card">
           <div class="relative"></div>
           <label for="ownerName" class="modern-label-label text-blue-700 font-bold"
-            >Nama Pelanggan</label
+            >Nama Pelanggan <span class="text-red-500">*</span></label
           >
           <select
             v-model="formData.customer_id"
@@ -47,20 +47,16 @@
           <div class="info-card">
             <div class="relative">
               <label for="type" class="modern-label-label text-green-700 font-bold">Type</label>
-              <input
-                v-model="formData.type"
-                id="type"
-                type="text"
-                class="modern-input peer"
-                required
-              />
+              <input v-model="formData.type" id="type" type="text" class="modern-input peer" />
             </div>
           </div>
         </div>
 
         <!-- Brand Input -->
         <div class="info-card mt-3">
-          <label for="brand_id" class="modern-label-label text-blue-700 font-bold">Brand</label>
+          <label for="brand_id" class="modern-label-label text-blue-700 font-bold"
+            >Brand <span class="text-red-500">*</span></label
+          >
           <div class="flex gap-2 items-end">
             <select v-model="formData.brand_id" id="brand_id" class="modern-select peer" required>
               <option value="" disabled selected>Select Brand</option>
@@ -173,7 +169,7 @@
                 id="kapasitas"
                 type="text"
                 class="modern-input peer"
-                placeholder="MAsukkan Kapasitas Mesin dalam CC"
+                placeholder="Masukkan Kapasitas Mesin dalam CC"
               />
             </div>
           </div>
@@ -181,7 +177,7 @@
           <div class="info-card">
             <div class="relative">
               <label for="no_pol" class="modern-label-label text-blue-700 font-bold"
-                >Nomor Polisi</label
+                >Nomor Polisi <span class="text-red-500">*</span></label
               >
               <input
                 v-model="formData.no_pol"

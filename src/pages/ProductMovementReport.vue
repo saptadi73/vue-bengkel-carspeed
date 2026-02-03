@@ -41,7 +41,7 @@
     <!-- Search Input -->
     <div v-if="reportData && reportData.items.length" class="bg-white rounded-2xl shadow p-6">
       <h2 class="text-lg font-semibold mb-4">Pencarian</h2>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Nama Product</label>
           <input
@@ -57,6 +57,7 @@
             <option value="">Semua</option>
             <option value="income">Income</option>
             <option value="outcome">Outcome</option>
+            <option value="adjustment">Adjustment</option>
           </select>
         </div>
         <div>
@@ -69,14 +70,32 @@
           />
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Notes</label>
+          <label class="block text-sm text-gray-600 mb-1">Customer/Vendor</label>
           <input
             type="text"
-            v-model="searchNotes"
+            v-model="searchParty"
             class="w-full border rounded-xl px-3 py-2"
-            placeholder="Cari notes..."
+            placeholder="Cari customer/vendor..."
           />
         </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Nopol</label>
+          <input
+            type="text"
+            v-model="searchNopol"
+            class="w-full border rounded-xl px-3 py-2"
+            placeholder="Cari nopol..."
+          />
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Notes</label>
+        <input
+          type="text"
+          v-model="searchNotes"
+          class="w-full border rounded-xl px-3 py-2"
+          placeholder="Cari notes..."
+        />
       </div>
     </div>
 
@@ -98,12 +117,16 @@
       <table class="min-w-full text-sm">
         <thead class="bg-gray-100 text-gray-700">
           <tr>
-            <th class="px-4 py-3 text-left">Product Name</th>
-            <th class="px-4 py-3 text-left">Type</th>
-            <th class="px-4 py-3 text-right">Quantity</th>
-            <th class="px-4 py-3 text-left">Timestamp</th>
-            <th class="px-4 py-3 text-left">Performed By</th>
-            <th class="px-4 py-3 text-left">Notes</th>
+            <th class="px-3 py-2 text-left">Product</th>
+            <th class="px-3 py-2 text-left">Type</th>
+            <th class="px-3 py-2 text-right">Qty</th>
+            <th class="px-3 py-2 text-right">Price</th>
+            <th class="px-3 py-2 text-right">HPP</th>
+            <th class="px-3 py-2 text-left">Customer/Vendor</th>
+            <th class="px-3 py-2 text-left">Nopol</th>
+            <th class="px-3 py-2 text-left">Timestamp</th>
+            <th class="px-3 py-2 text-left">By</th>
+            <th class="px-3 py-2 text-left">Notes</th>
           </tr>
         </thead>
         <tbody>
@@ -112,16 +135,31 @@
             :key="item.product_id + item.timestamp"
             class="border-t"
           >
-            <td class="px-4 py-3">{{ item.product_name }}</td>
-            <td class="px-4 py-3">
-              <span :class="item.type === 'income' ? 'text-green-600' : 'text-red-600'">
-                {{ item.type }}
+            <td class="px-3 py-2 text-sm">{{ item.product_name }}</td>
+            <td class="px-3 py-2">
+              <span
+                :class="
+                  item.type === 'income'
+                    ? 'bg-green-100 text-green-700'
+                    : item.type === 'outcome'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                "
+                class="px-2 py-1 rounded text-xs font-semibold"
+              >
+                {{ item.type.toUpperCase() }}
               </span>
             </td>
-            <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
-            <td class="px-4 py-3">{{ formatDateTime(item.timestamp) }}</td>
-            <td class="px-4 py-3">{{ item.performed_by }}</td>
-            <td class="px-4 py-3">{{ item.notes || '-' }}</td>
+            <td class="px-3 py-2 text-right font-semibold">
+              {{ item.quantity > 0 ? '+' : '' }}{{ item.quantity }}
+            </td>
+            <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.price) }}</td>
+            <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.hpp) }}</td>
+            <td class="px-3 py-2 text-sm">{{ item.customer_name || item.vendor_name || '-' }}</td>
+            <td class="px-3 py-2 text-sm font-mono">{{ item.nopol || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ formatDateTime(item.timestamp) }}</td>
+            <td class="px-3 py-2 text-xs">{{ item.performed_by }}</td>
+            <td class="px-3 py-2 text-xs text-gray-600">{{ item.notes || '-' }}</td>
           </tr>
         </tbody>
       </table>
@@ -144,6 +182,8 @@ const selectedMonth = ref('')
 const searchProduct = ref('')
 const searchType = ref('')
 const searchPerformedBy = ref('')
+const searchParty = ref('')
+const searchNopol = ref('')
 const searchNotes = ref('')
 const reportData = ref(null)
 const hasFetched = ref(false)
@@ -159,10 +199,25 @@ const filteredItems = computed(() => {
     const matchesPerformedBy =
       !searchPerformedBy.value ||
       item.performed_by.toLowerCase().includes(searchPerformedBy.value.toLowerCase())
+    const matchesParty =
+      !searchParty.value ||
+      (item.customer_name &&
+        item.customer_name.toLowerCase().includes(searchParty.value.toLowerCase())) ||
+      (item.vendor_name && item.vendor_name.toLowerCase().includes(searchParty.value.toLowerCase()))
+    const matchesNopol =
+      !searchNopol.value ||
+      (item.nopol && item.nopol.toLowerCase().includes(searchNopol.value.toLowerCase()))
     const matchesNotes =
       !searchNotes.value ||
       (item.notes && item.notes.toLowerCase().includes(searchNotes.value.toLowerCase()))
-    return matchesProduct && matchesType && matchesPerformedBy && matchesNotes
+    return (
+      matchesProduct &&
+      matchesType &&
+      matchesPerformedBy &&
+      matchesParty &&
+      matchesNopol &&
+      matchesNotes
+    )
   })
 })
 
@@ -196,6 +251,15 @@ async function fetchReport() {
 }
 
 // Utils
+function formatCurrency(value) {
+  if (!value) return '-'
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 function formatDateTime(dateStr) {
   if (!dateStr) return '-'
   const d = new Date(dateStr)

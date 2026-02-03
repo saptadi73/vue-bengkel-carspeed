@@ -175,7 +175,7 @@
             class="modern-input peer"
             placeholder=" "
           />
-          <label class="modern-label">HPP (Cost)</label>
+          <label class="modern-label">HPP</label>
         </div>
         <div class="relative">
           <textarea

@@ -110,11 +110,11 @@
       </div>
       <div class="info-card">
         <div class="relative">
-          <label for="cost" class="modern-label-label">HPP (Cost)</label>
+          <label for="hpp" class="modern-label-label">HPP</label>
           <input
             v-model="form.cost"
             type="number"
-            id="cost"
+            id="hpp"
             class="modern-input peer"
             placeholder="Isikan HPP"
           />

@@ -174,6 +174,11 @@ const router = createRouter({
           name: 'paket baru',
           component: () => import('../components/FormCreatePaket.vue'),
         },
+        {
+          path: 'paket/list',
+          name: 'daftar paket',
+          component: () => import('../pages/TablePacketList.vue'),
+        },
       ],
     },
     {
@@ -282,6 +287,21 @@ const router = createRouter({
           path: 'internal-consumption',
           name: 'internal consumption',
           component: () => import('../pages/InternalConsumption.vue'),
+        },
+        {
+          path: 'consignment-receipt/list',
+          name: 'daftar penerimaan konsinyasi',
+          component: () => import('../pages/TableConsignmentReceiptList.vue'),
+        },
+        {
+          path: 'adjustment/list',
+          name: 'daftar penyesuaian inventori',
+          component: () => import('../pages/TableInventoryAdjustmentList.vue'),
+        },
+        {
+          path: 'loss/list',
+          name: 'daftar kehilangan barang',
+          component: () => import('../pages/TableLostItemsList.vue'),
         },
       ],
     },

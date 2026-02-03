@@ -40,192 +40,144 @@
     <loading-overlay v-if="loading" />
 
     <div v-if="report" ref="reportRef" class="space-y-6">
-      <!-- KPI Cards -->
-      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow-sm border">
-          <div class="text-xs text-slate-500">Opening Balance (Bank)</div>
-          <div class="mt-2 flex items-baseline justify-between">
-            <div class="text-lg font-semibold text-slate-800">
-              {{ formatCurrency(report.cash_books[0]?.opening_balance || 0) }}
+      <!-- ===== 1. WORK ORDERS (TOP) ===== -->
+      <section class="bg-white rounded-lg shadow border p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-slate-800">Work Orders Hari Ini</h2>
+          <div class="text-2xl font-bold text-blue-600">
+            {{ report.work_orders?.total_workorders || 0 }} WO
+          </div>
+        </div>
+
+        <!-- WO Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div class="bg-slate-50 rounded p-4">
+            <div class="text-sm text-slate-600">Total Revenue</div>
+            <div class="text-2xl font-bold text-green-600">
+              {{ formatCurrency(report.work_orders?.total_revenue || 0) }}
             </div>
-            <div class="text-xs text-sky-600 font-medium">
-              Tanggal: {{ formatDate(report.date) }}
+          </div>
+          <div class="bg-slate-50 rounded p-4">
+            <div class="text-sm text-slate-600">Total Biaya</div>
+            <div class="text-2xl font-bold text-red-600">
+              {{ formatCurrency(calculateTotalWOCost()) }}
+            </div>
+          </div>
+          <div class="bg-slate-50 rounded p-4">
+            <div class="text-sm text-slate-600">Profit WO</div>
+            <div class="text-2xl font-bold text-emerald-600">
+              {{
+                formatCurrency((report.work_orders?.total_revenue || 0) - calculateTotalWOCost())
+              }}
             </div>
           </div>
         </div>
 
-        <div class="bg-white p-4 rounded-lg shadow-sm border">
-          <div class="text-xs text-slate-500">Total Product Sales</div>
-          <div class="mt-2">
-            <div class="text-lg font-semibold text-slate-800">
-              {{ formatCurrency(report.product_sales.total_sales || 0) }}
-            </div>
-            <div class="text-sm text-slate-500">
-              Qty: {{ report.product_sales.total_quantity || 0 }}
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-sm border">
-          <div class="text-xs text-slate-500">Total Service Sales</div>
-          <div class="mt-2">
-            <div class="text-lg font-semibold text-slate-800">
-              {{ formatCurrency(report.service_sales.total_sales || 0) }}
-            </div>
-            <div class="text-sm text-slate-500">
-              Qty: {{ report.service_sales.total_quantity || 0 }}
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-sm border">
-          <div class="text-xs text-slate-500">Net Profit</div>
-          <div class="mt-2">
-            <div class="text-lg font-semibold text-emerald-600">
-              {{ formatCurrency(report.profit_loss.net_profit || 0) }}
-            </div>
-            <div class="text-sm text-slate-500">
-              Revenue: {{ formatCurrency(report.profit_loss.total_revenue || 0) }}
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-white p-4 rounded-lg shadow-sm border">
-          <div class="text-xs text-slate-500">Total Purchases</div>
-          <div class="mt-2">
-            <div class="text-lg font-semibold text-slate-800">
-              {{ formatCurrency(report.purchase_orders.total_purchases || 0) }}
-            </div>
-            <div class="text-sm text-slate-500">
-              Qty: {{ report.purchase_orders.total_quantity || 0 }}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Cash Books detailed -->
-      <section class="bg-white rounded-lg shadow border">
-        <div class="px-4 py-3 border-b flex items-center justify-between">
-          <div>
-            <h3 class="font-semibold text-slate-800">Cash Books</h3>
-            <p class="text-sm text-slate-500">Per akun — debit/credit dan ending balance</p>
-          </div>
-        </div>
-
-        <div class="p-4 space-y-6">
-          <div
-            v-for="acct in report.cash_books"
-            :key="acct.account_code"
-            class="border rounded-lg overflow-hidden"
-          >
-            <div class="p-4 flex items-start justify-between gap-4 bg-slate-50">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-block px-2 py-0.5 text-xs bg-slate-100 rounded font-mono text-slate-600"
-                    >{{ acct.account_code }}</span
-                  >
-                  <h4 class="font-medium text-slate-800">{{ acct.account_name }}</h4>
-                </div>
-                <div class="mt-1 text-sm text-slate-500">
-                  Opening: {{ formatCurrency(acct.opening_balance) }}
-                </div>
-              </div>
-
-              <div class="text-right text-sm">
-                <div>
-                  Total Debit:
-                  <span class="font-semibold text-slate-800">{{
-                    formatCurrency(sum(acct.entries, 'debit'))
-                  }}</span>
-                </div>
-                <div>
-                  Total Credit:
-                  <span class="font-semibold text-slate-800">{{
-                    formatCurrency(sum(acct.entries, 'credit'))
-                  }}</span>
-                </div>
-                <div>
-                  Ending:
-                  <span class="font-semibold text-emerald-600">{{
-                    formatCurrency(lastBalance(acct.entries, acct.opening_balance))
-                  }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="overflow-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-white/60 sticky top-0">
-                  <tr class="text-left text-xs text-slate-500">
-                    <th class="px-3 py-2">Tanggal</th>
-                    <th class="px-3 py-2">Memo</th>
-                    <th class="px-3 py-2 text-right">Debit</th>
-                    <th class="px-3 py-2 text-right">Credit</th>
-                    <th class="px-3 py-2 text-right">Balance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="(e, i) in acct.entries"
-                    :key="i"
-                    class="even:bg-slate-50 hover:bg-slate-100"
-                  >
-                    <td class="px-3 py-2">{{ formatDate(e.date) }}</td>
-                    <td class="px-3 py-2">{{ e.memo || '-' }}</td>
-                    <td class="px-3 py-2 text-right">{{ formatCurrency(e.debit) }}</td>
-                    <td class="px-3 py-2 text-right">{{ formatCurrency(e.credit) }}</td>
-                    <td class="px-3 py-2 text-right">{{ formatCurrency(e.balance) }}</td>
-                  </tr>
-                  <tr v-if="!acct.entries?.length">
-                    <td colspan="5" class="px-3 py-6 text-center text-slate-400">No entries</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Purchase Orders -->
-      <section class="bg-white rounded-lg shadow border p-4">
-        <h3 class="font-semibold text-slate-800 mb-3">Purchase Orders</h3>
+        <!-- WO Table -->
         <div class="overflow-auto">
           <table class="w-full text-sm">
-            <thead class="text-xs text-slate-500">
+            <thead class="bg-slate-100 text-slate-700">
               <tr>
-                <th class="px-3 py-2 text-left">PO</th>
-                <th class="px-3 py-2 text-left">Date</th>
-                <th class="px-3 py-2 text-left">Supplier</th>
-                <th class="px-3 py-2 text-left">Product</th>
-                <th class="px-3 py-2 text-right">Qty</th>
-                <th class="px-3 py-2 text-right">Price</th>
-                <th class="px-3 py-2 text-right">Subtotal</th>
+                <th class="px-3 py-2 text-left">WO No</th>
+                <th class="px-3 py-2 text-left">Customer</th>
+                <th class="px-3 py-2 text-right">Total Biaya</th>
+                <th class="px-3 py-2 text-left">Status</th>
               </tr>
             </thead>
             <tbody>
               <tr
-                v-for="(it, i) in report.purchase_orders.items"
-                :key="i"
-                class="even:bg-slate-50 hover:bg-slate-100"
+                v-for="w in report.work_orders?.items || []"
+                :key="w.workorder_no"
+                class="border-t hover:bg-slate-50"
               >
-                <td class="px-3 py-2">{{ it.po_no }}</td>
-                <td class="px-3 py-2">{{ formatDate(it.po_date) }}</td>
-                <td class="px-3 py-2">{{ it.supplier_name }}</td>
-                <td class="px-3 py-2">{{ it.product_name }}</td>
-                <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
-                <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
-                <td class="px-3 py-2 text-right">{{ formatCurrency(it.subtotal) }}</td>
+                <td class="px-3 py-2 font-semibold">{{ w.workorder_no }}</td>
+                <td class="px-3 py-2">{{ w.customer_name }}</td>
+                <td class="px-3 py-2 text-right">{{ formatCurrency(w.total_biaya) }}</td>
+                <td class="px-3 py-2">
+                  <span
+                    :class="
+                      w.status === 'dibayar'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    "
+                    class="px-2 py-1 rounded text-xs font-semibold"
+                  >
+                    {{ w.status }}
+                  </span>
+                </td>
               </tr>
-              <tr v-if="!report.purchase_orders.items?.length">
-                <td colspan="7" class="px-3 py-6 text-center text-slate-400">No purchase orders</td>
+              <tr v-if="!report.work_orders?.items?.length">
+                <td colspan="4" class="px-3 py-6 text-center text-slate-400">
+                  Tidak ada WO hari ini
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
       </section>
 
-      <!-- Product & Service sales -->
+      <!-- ===== 2. OUTFLOW (Expenses + Purchase Orders) ===== -->
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Expenses -->
+        <div class="bg-white rounded-lg shadow border p-4">
+          <h3 class="font-semibold text-slate-800 mb-3 text-lg">Pengeluaran Biaya</h3>
+          <div class="text-2xl font-bold text-red-600 mb-3">
+            {{ formatCurrency(calculateTotalExpenses()) }}
+          </div>
+          <div class="overflow-auto max-h-64">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-100">
+                <tr>
+                  <th class="px-2 py-2 text-left">Kategori</th>
+                  <th class="px-2 py-2 text-right">Jumlah</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="e in report.profit_loss?.expenses || []"
+                  :key="e.account_code"
+                  class="border-t"
+                >
+                  <td class="px-2 py-2 text-xs">{{ e.account_name }}</td>
+                  <td class="px-2 py-2 text-right text-xs">{{ formatCurrency(e.amount) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Purchase Orders -->
+        <div class="bg-white rounded-lg shadow border p-4">
+          <h3 class="font-semibold text-slate-800 mb-3 text-lg">Purchase Orders</h3>
+          <div class="text-2xl font-bold text-orange-600 mb-3">
+            {{ formatCurrency(report.purchase_orders?.total_purchases || 0) }}
+          </div>
+          <div class="overflow-auto max-h-64">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-100">
+                <tr>
+                  <th class="px-2 py-2 text-left">PO No</th>
+                  <th class="px-2 py-2 text-left">Supplier</th>
+                  <th class="px-2 py-2 text-right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="po in report.purchase_orders?.items || []"
+                  :key="po.po_no"
+                  class="border-t"
+                >
+                  <td class="px-2 py-2 text-xs font-semibold">{{ po.po_no }}</td>
+                  <td class="px-2 py-2 text-xs">{{ po.supplier_name }}</td>
+                  <td class="px-2 py-2 text-right text-xs">{{ formatCurrency(po.subtotal) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 3. SALES (Product + Service) ===== -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white rounded-lg shadow border p-4">
           <h3 class="font-semibold text-slate-800 mb-3">Product Sales</h3>
@@ -237,7 +189,10 @@
                   <th class="px-3 py-2 text-left">WO</th>
                   <th class="px-3 py-2 text-right">Qty</th>
                   <th class="px-3 py-2 text-right">Price</th>
+                  <th class="px-3 py-2 text-right">HPP</th>
+                  <th class="px-3 py-2 text-right">Discount</th>
                   <th class="px-3 py-2 text-right">Subtotal</th>
+                  <th class="px-3 py-2 text-right">Profit</th>
                 </tr>
               </thead>
               <tbody>
@@ -250,13 +205,50 @@
                   <td class="px-3 py-2">{{ it.workorder_no }}</td>
                   <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
+                  <td class="px-3 py-2 text-right">{{ formatCurrency(it.hpp) }}</td>
+                  <td class="px-3 py-2 text-right">{{ formatCurrency(it.discount) }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.subtotal) }}</td>
+                  <td
+                    class="px-3 py-2 text-right font-semibold"
+                    :class="
+                      (it.price - it.hpp) * it.quantity > 0 ? 'text-emerald-600' : 'text-red-600'
+                    "
+                  >
+                    {{ formatCurrency((it.price - (it.hpp || 0)) * it.quantity) }}
+                  </td>
                 </tr>
                 <tr v-if="!report.product_sales.items?.length">
-                  <td colspan="5" class="px-3 py-6 text-center text-slate-400">No product sales</td>
+                  <td colspan="8" class="px-3 py-6 text-center text-slate-400">No product sales</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- Product Sales Summary -->
+          <div class="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-slate-500">Total Sales:</span>
+              <div class="font-semibold text-slate-800">
+                {{ formatCurrency(report.product_sales.total_sales || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Total HPP:</span>
+              <div class="font-semibold text-slate-800">
+                {{ formatCurrency(report.product_sales.total_hpp || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Total Margin:</span>
+              <div class="font-semibold text-emerald-600">
+                {{ formatCurrency(report.product_sales.total_margin || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Margin %:</span>
+              <div class="font-semibold text-emerald-600">
+                {{ (report.product_sales.margin_percentage || 0).toFixed(2) }}%
+              </div>
+            </div>
           </div>
         </div>
 
@@ -270,7 +262,10 @@
                   <th class="px-3 py-2 text-left">WO</th>
                   <th class="px-3 py-2 text-right">Qty</th>
                   <th class="px-3 py-2 text-right">Price</th>
+                  <th class="px-3 py-2 text-right">HPP</th>
+                  <th class="px-3 py-2 text-right">Discount</th>
                   <th class="px-3 py-2 text-right">Subtotal</th>
+                  <th class="px-3 py-2 text-right">Profit</th>
                 </tr>
               </thead>
               <tbody>
@@ -283,10 +278,104 @@
                   <td class="px-3 py-2">{{ it.workorder_no }}</td>
                   <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
+                  <td class="px-3 py-2 text-right">{{ formatCurrency(it.hpp) }}</td>
+                  <td class="px-3 py-2 text-right">{{ formatCurrency(it.discount) }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.subtotal) }}</td>
+                  <td
+                    class="px-3 py-2 text-right font-semibold"
+                    :class="
+                      (it.price - it.hpp) * it.quantity > 0 ? 'text-emerald-600' : 'text-red-600'
+                    "
+                  >
+                    {{ formatCurrency((it.price - (it.hpp || 0)) * it.quantity) }}
+                  </td>
                 </tr>
                 <tr v-if="!report.service_sales.items?.length">
-                  <td colspan="5" class="px-3 py-6 text-center text-slate-400">No service sales</td>
+                  <td colspan="8" class="px-3 py-6 text-center text-slate-400">No service sales</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- Service Sales Summary -->
+          <div class="mt-3 pt-3 border-t border-slate-200 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span class="text-slate-500">Total Sales:</span>
+              <div class="font-semibold text-slate-800">
+                {{ formatCurrency(report.service_sales.total_sales || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Total HPP:</span>
+              <div class="font-semibold text-slate-800">
+                {{ formatCurrency(report.service_sales.total_hpp || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Total Margin:</span>
+              <div class="font-semibold text-sky-600">
+                {{ formatCurrency(report.service_sales.total_margin || 0) }}
+              </div>
+            </div>
+            <div>
+              <span class="text-slate-500">Margin %:</span>
+              <div class="font-semibold text-sky-600">
+                {{ (report.service_sales.margin_percentage || 0).toFixed(2) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 4. CASHBOOK (Compact dengan method payment) ===== -->
+      <section class="bg-white rounded-lg shadow border p-4">
+        <h2 class="text-lg font-bold text-slate-800 mb-4">Cashbook</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <div v-for="cb in report.cash_books" :key="cb.account_code" class="border rounded-lg p-4">
+            <div class="text-sm text-slate-600">{{ cb.account_name }}</div>
+            <div class="text-2xl font-bold text-blue-600 mt-1">
+              {{ formatCurrency(cb.opening_balance) }}
+            </div>
+            <div class="text-xs text-slate-500 mt-2">Opening Balance</div>
+            <div class="mt-3 space-y-2 text-xs">
+              <div class="flex justify-between">
+                <span>Debit:</span>
+                <span class="font-semibold">{{ formatCurrency(sum(cb.entries, 'debit')) }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Credit:</span>
+                <span class="font-semibold">{{ formatCurrency(sum(cb.entries, 'credit')) }}</span>
+              </div>
+              <div class="border-t pt-2 flex justify-between font-bold text-green-600">
+                <span>Saldo Akhir:</span>
+                <span>{{ formatCurrency(lastBalance(cb.entries, cb.opening_balance)) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Cashbook Entries -->
+        <div v-for="cb in report.cash_books" :key="cb.account_code" class="mb-6">
+          <h3 class="text-sm font-semibold text-slate-700 mb-2">{{ cb.account_name }} - Detail</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-100">
+                <tr>
+                  <th class="px-2 py-1 text-left">Tanggal</th>
+                  <th class="px-2 py-1 text-left">Memo</th>
+                  <th class="px-2 py-1 text-right">Debit</th>
+                  <th class="px-2 py-1 text-right">Credit</th>
+                  <th class="px-2 py-1 text-right">Saldo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(e, i) in cb.entries" :key="i" class="border-t">
+                  <td class="px-2 py-1">{{ formatDate(e.date) }}</td>
+                  <td class="px-2 py-1">{{ e.memo }}</td>
+                  <td class="px-2 py-1 text-right">{{ formatCurrency(e.debit) }}</td>
+                  <td class="px-2 py-1 text-right">{{ formatCurrency(e.credit) }}</td>
+                  <td class="px-2 py-1 text-right font-semibold">
+                    {{ formatCurrency(e.balance) }}
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -294,99 +383,124 @@
         </div>
       </section>
 
-      <!-- Profit & Work Orders -->
-      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-lg shadow border p-4">
-          <h3 class="font-semibold text-slate-800 mb-3">Profit & Loss</h3>
-          <div class="grid grid-cols-1 gap-3">
-            <div class="flex justify-between text-sm text-slate-600">
-              <div>Total Revenue</div>
-              <div class="font-semibold text-slate-800">
-                {{ formatCurrency(report.profit_loss.total_revenue || 0) }}
-              </div>
+      <!-- ===== 5. MARGIN ANALYSIS ===== -->
+      <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow border p-6">
+          <div class="text-xs text-slate-500">Product Margin Analysis</div>
+          <div class="mt-4">
+            <div class="text-3xl font-bold text-emerald-600">
+              {{ (report.product_sales.margin_percentage || 0).toFixed(2) }}%
             </div>
-            <div class="flex justify-between text-sm text-slate-600">
-              <div>Total Expenses</div>
-              <div class="font-semibold text-slate-800">
-                {{ formatCurrency(report.profit_loss.total_expenses || 0) }}
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">Sales:</span>
+                <span class="font-semibold">{{
+                  formatCurrency(report.product_sales.total_sales || 0)
+                }}</span>
               </div>
-            </div>
-            <div class="flex justify-between text-sm">
-              <div class="font-medium">Net Profit</div>
-              <div class="font-semibold text-emerald-600">
-                {{ formatCurrency(report.profit_loss.net_profit || 0) }}
+              <div class="flex justify-between">
+                <span class="text-slate-600">Cost (HPP):</span>
+                <span class="font-semibold">{{
+                  formatCurrency(report.product_sales.total_hpp || 0)
+                }}</span>
               </div>
-            </div>
-
-            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <div class="font-semibold text-sm mb-2">Revenues</div>
-                <ul class="text-sm space-y-1">
-                  <li
-                    v-for="r in report.profit_loss.revenues"
-                    :key="r.account_code"
-                    class="flex justify-between"
-                  >
-                    <span class="text-slate-700"
-                      >{{ r.account_name }}
-                      <small class="text-xs text-slate-500">({{ r.account_code }})</small></span
-                    >
-                    <span class="font-medium">{{ formatCurrency(r.amount) }}</span>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <div class="font-semibold text-sm mb-2">Expenses</div>
-                <ul class="text-sm space-y-1">
-                  <li
-                    v-for="e in report.profit_loss.expenses"
-                    :key="e.account_code"
-                    class="flex justify-between"
-                  >
-                    <span class="text-slate-700"
-                      >{{ e.account_name }}
-                      <small class="text-xs text-slate-500">({{ e.account_code }})</small></span
-                    >
-                    <span class="font-medium">{{ formatCurrency(e.amount) }}</span>
-                  </li>
-                </ul>
+              <div class="border-t pt-2 flex justify-between font-bold text-emerald-600">
+                <span>Profit:</span>
+                <span>{{ formatCurrency(report.product_sales.total_margin || 0) }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow border p-4">
-          <h3 class="font-semibold text-slate-800 mb-3">Work Orders</h3>
-          <div class="text-sm text-slate-600 mb-3">
-            Total: {{ report.work_orders.total_workorders }} — Revenue:
-            {{ formatCurrency(report.work_orders.total_revenue || 0) }}
-          </div>
-          <ul class="space-y-3">
-            <li
-              v-for="w in report.work_orders.items"
-              :key="w.workorder_no"
-              class="flex items-center justify-between gap-4"
-            >
-              <div>
-                <div class="font-medium text-slate-800">
-                  {{ w.workorder_no }} — {{ w.customer_name }}
-                </div>
-                <div class="text-xs text-slate-500">
-                  Status:
-                  <span
-                    class="px-2 py-0.5 rounded text-xs"
-                    :class="
-                      w.status === 'dibayar'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-amber-100 text-amber-700'
-                    "
-                    >{{ w.status }}</span
-                  >
-                </div>
+        <div class="bg-white rounded-lg shadow border p-6">
+          <div class="text-xs text-slate-500">Service Margin Analysis</div>
+          <div class="mt-4">
+            <div class="text-3xl font-bold text-sky-600">
+              {{ (report.service_sales.margin_percentage || 0).toFixed(2) }}%
+            </div>
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="flex justify-between">
+                <span class="text-slate-600">Sales:</span>
+                <span class="font-semibold">{{
+                  formatCurrency(report.service_sales.total_sales || 0)
+                }}</span>
               </div>
-              <div class="font-semibold">{{ formatCurrency(w.total_biaya) }}</div>
-            </li>
-          </ul>
+              <div class="flex justify-between">
+                <span class="text-slate-600">Cost (HPP):</span>
+                <span class="font-semibold">{{
+                  formatCurrency(report.service_sales.total_hpp || 0)
+                }}</span>
+              </div>
+              <div class="border-t pt-2 flex justify-between font-bold text-sky-600">
+                <span>Profit:</span>
+                <span>{{ formatCurrency(report.service_sales.total_margin || 0) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== 6. PROFIT & LOSS ===== -->
+      <section class="bg-white rounded-lg shadow border p-6">
+        <h2 class="text-lg font-bold text-slate-800 mb-4">Laporan Laba Rugi</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-blue-50 rounded-lg p-4">
+            <div class="text-sm text-slate-600">Total Revenue</div>
+            <div class="text-2xl font-bold text-blue-600">
+              {{ formatCurrency(report.profit_loss?.total_revenue || 0) }}
+            </div>
+          </div>
+          <div class="bg-red-50 rounded-lg p-4">
+            <div class="text-sm text-slate-600">Total Expenses</div>
+            <div class="text-2xl font-bold text-red-600">
+              {{ formatCurrency(report.profit_loss?.total_expenses || 0) }}
+            </div>
+          </div>
+          <div class="bg-emerald-50 rounded-lg p-4">
+            <div class="text-sm text-slate-600">Net Profit</div>
+            <div class="text-2xl font-bold text-emerald-600">
+              {{ formatCurrency(report.profit_loss?.net_profit || 0) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-slate-800 mb-3">Pendapatan (Revenue)</h3>
+            <div class="space-y-2 text-sm">
+              <div
+                v-for="r in report.profit_loss?.revenues || []"
+                :key="r.account_code"
+                class="flex justify-between p-2 border-b"
+              >
+                <span>{{ r.account_name }}</span>
+                <span class="font-semibold">{{ formatCurrency(r.amount) }}</span>
+              </div>
+              <div class="flex justify-between p-2 font-bold bg-blue-50 mt-2">
+                <span>Total Revenue</span>
+                <span>{{ formatCurrency(report.profit_loss?.total_revenue || 0) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-slate-800 mb-3">Beban/Biaya (Expenses)</h3>
+            <div class="space-y-2 text-sm">
+              <div
+                v-for="e in report.profit_loss?.expenses || []"
+                :key="e.account_code"
+                class="flex justify-between p-2 border-b"
+              >
+                <span>{{ e.account_name }}</span>
+                <span class="font-semibold">{{ formatCurrency(e.amount) }}</span>
+              </div>
+              <div class="flex justify-between p-2 font-bold bg-red-50 mt-2">
+                <span>Total Expenses</span>
+                <span>{{ formatCurrency(report.profit_loss?.total_expenses || 0) }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -575,11 +689,24 @@ export default {
         // Product sales
         const prodRows = []
         // put Discount before Subtotal as requested
-        prodRows.push(['WO', 'Date', 'Customer', 'Product', 'Qty', 'Price', 'Discount', 'Subtotal'])
+        prodRows.push([
+          'WO',
+          'Date',
+          'Customer',
+          'Product',
+          'Qty',
+          'Price',
+          'HPP',
+          'Discount',
+          'Subtotal',
+          'Profit',
+        ])
         let prodSubtotalTotal = 0
+        let prodProfitTotal = 0
         ;(report.value.product_sales?.items || []).forEach((it) => {
           const subtotal =
             Number(it.quantity || 0) * Number(it.price || 0) - Number(it.discount || 0)
+          const profit = (Number(it.price || 0) - Number(it.hpp || 0)) * Number(it.quantity || 0)
           prodRows.push([
             it.workorder_no,
             it.workorder_date,
@@ -587,23 +714,39 @@ export default {
             it.product_name,
             it.quantity,
             it.price,
+            it.hpp ?? 0,
             it.discount ?? 0,
             subtotal,
+            profit,
           ])
           prodSubtotalTotal += subtotal
+          prodProfitTotal += profit
         })
         // add empty row then totals row
         prodRows.push([])
-        prodRows.push(['', '', '', '', '', '', 'TOTAL', prodSubtotalTotal])
+        prodRows.push(['', '', '', '', '', '', '', 'TOTAL', prodSubtotalTotal, prodProfitTotal])
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prodRows), 'Product Sales')
 
         // Service sales
         const svcRows = []
-        svcRows.push(['WO', 'Date', 'Customer', 'Service', 'Qty', 'Price', 'Discount', 'Subtotal'])
+        svcRows.push([
+          'WO',
+          'Date',
+          'Customer',
+          'Service',
+          'Qty',
+          'Price',
+          'HPP',
+          'Discount',
+          'Subtotal',
+          'Profit',
+        ])
         let svcSubtotalTotal = 0
+        let svcProfitTotal = 0
         ;(report.value.service_sales?.items || []).forEach((it) => {
           const subtotal =
             Number(it.quantity || 0) * Number(it.price || 0) - Number(it.discount || 0)
+          const profit = (Number(it.price || 0) - Number(it.hpp || 0)) * Number(it.quantity || 0)
           svcRows.push([
             it.workorder_no,
             it.workorder_date,
@@ -611,13 +754,16 @@ export default {
             it.service_name,
             it.quantity,
             it.price,
+            it.hpp ?? 0,
             it.discount ?? 0,
             subtotal,
+            profit,
           ])
           svcSubtotalTotal += subtotal
+          svcProfitTotal += profit
         })
         svcRows.push([])
-        svcRows.push(['', '', '', '', '', '', 'TOTAL', svcSubtotalTotal])
+        svcRows.push(['', '', '', '', '', '', '', 'TOTAL', svcSubtotalTotal, svcProfitTotal])
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(svcRows), 'Service Sales')
 
         // Profit & Loss details
@@ -691,6 +837,35 @@ export default {
       return Number(opening) + totalDebit - totalCredit
     }
 
+    // Calculate total HPP (product + service)
+    const calculateTotalHpp = () => {
+      const productHpp = Number(report.value?.product_sales?.total_hpp) || 0
+      const serviceHpp = Number(report.value?.service_sales?.total_hpp) || 0
+      return productHpp + serviceHpp
+    }
+
+    // Calculate gross margin percentage
+    const calculateGrossMarginPercent = () => {
+      const revenue = Number(report.value?.profit_loss?.total_revenue) || 0
+      const totalHpp = calculateTotalHpp()
+      if (revenue === 0) return 0
+      const grossProfit = revenue - totalHpp
+      const margin = (grossProfit / revenue) * 100
+      return margin.toFixed(2)
+    }
+
+    // Calculate total Work Order cost (biaya)
+    const calculateTotalWOCost = () => {
+      const items = report.value?.work_orders?.items || []
+      return items.reduce((sum, wo) => sum + (Number(wo.total_biaya) || 0), 0)
+    }
+
+    // Calculate total expenses
+    const calculateTotalExpenses = () => {
+      const expenses = report.value?.profit_loss?.expenses || []
+      return expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0)
+    }
+
     return {
       loading,
       error,
@@ -704,6 +879,10 @@ export default {
       formatDate,
       sum,
       lastBalance,
+      calculateTotalHpp,
+      calculateGrossMarginPercent,
+      calculateTotalWOCost,
+      calculateTotalExpenses,
     }
   },
 }

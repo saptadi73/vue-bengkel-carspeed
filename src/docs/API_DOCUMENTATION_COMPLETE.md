@@ -3,8 +3,8 @@
 **Base URL:** `http://localhost:8000`  
 **Production URL:** `https://carspeed.gagakrimang.web.id`
 
-**Version:** 1.0.0  
-**Last Updated:** January 18, 2026
+**Version:** 1.0.1  
+**Last Updated:** February 1, 2026
 
 ## 📋 Table of Contents
 
@@ -34,6 +34,7 @@
 ## 🔐 Authentication
 
 All protected endpoints require JWT token in the Authorization header:
+
 ```
 Authorization: Bearer <your_jwt_token>
 ```
@@ -41,15 +42,19 @@ Authorization: Bearer <your_jwt_token>
 ### Common Response Format
 
 **Success Response:**
+
 ```json
 {
   "status": "success",
   "message": "Operation successful message",
-  "data": { /* response data */ }
+  "data": {
+    /* response data */
+  }
 }
 ```
 
 **Error Response:**
+
 ```json
 {
   "status": "error",
@@ -68,6 +73,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "username": "admin",
@@ -76,6 +82,7 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -105,6 +112,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "username": "newuser",
@@ -114,6 +122,7 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -137,6 +146,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -158,6 +168,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -181,6 +192,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -206,6 +218,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "name": "mechanic",
@@ -219,6 +232,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "name": "senior_mechanic",
@@ -241,6 +255,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "user_id": "uuid-string",
@@ -254,6 +269,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `user_id` (string): User UUID
 - `role_id` (string): Role UUID
 
@@ -273,6 +289,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "role_ids": ["uuid-1", "uuid-2"]
@@ -290,6 +307,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -319,6 +337,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "John Doe",
@@ -345,6 +364,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -381,6 +401,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -415,6 +436,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Jane Doe",
@@ -435,6 +457,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "customer_id": "uuid-string",
@@ -456,6 +479,7 @@ Authorization: Bearer <your_jwt_token>
 **Description:** Send WhatsApp maintenance reminders to customers whose maintenance schedule is less than 3 days.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -485,6 +509,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "customer_id": "uuid-string",
@@ -517,6 +542,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -553,6 +579,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "workorder_id": "uuid-string",
@@ -574,6 +601,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "keluhan": "Updated complaint description"
@@ -601,6 +629,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "workorder_id": "uuid-string",
@@ -616,6 +645,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "kuantitas": 3,
@@ -634,6 +664,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "workorder_id": "uuid-string",
@@ -669,6 +700,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -697,6 +729,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "nama": "Oli Mesin Mobil",
@@ -716,6 +749,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -746,6 +780,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Tune Up Mesin",
@@ -770,6 +805,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Castrol"
@@ -782,6 +818,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Pelumas"
@@ -794,6 +831,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Liter"
@@ -817,23 +855,72 @@ Authorization: Bearer <your_jwt_token>
 
 ### 7.13 Get All Inventory
 
+### 7.13 Get All Inventory
+
 **Endpoint:** `GET /products/inventory/all`  
 **Auth Required:** ❌ No
+
+**Response Body:**
+
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Oli Shell 1L",
+      "type": "product",
+      "description": "Oli mesin berkualitas tinggi",
+      "price": 150000,
+      "hpp": 100000,
+      "min_stock": 10,
+      "is_consignment": false,
+      "category_name": "Sparepart",
+      "brand_name": "Shell",
+      "satuan_name": "Botol",
+      "supplier_name": "PT Supplier Maju",
+      "total_stock": 50
+    }
+  ]
+}
+```
+
+**Field Definitions:**
+
+- `id` (string): ID produk
+- `name` (string): Nama produk
+- `type` (string): Tipe produk
+- `description` (string): Deskripsi produk
+- `price` (decimal): Harga jual per unit
+- `hpp` (decimal): Harga pokok penjualan/cost per unit
+- `min_stock` (decimal): Stok minimum
+- `is_consignment` (boolean): Apakah produk konsinyasi
+- `category_name` (string): Nama kategori
+- `brand_name` (string): Nama brand
+- `satuan_name` (string): Satuan pengukuran
+- `supplier_name` (string): Nama supplier/vendor
+- `total_stock` (decimal): Total stok saat ini di inventori
 
 ### 7.14 Get All Consignment Inventory
 
 **Endpoint:** `GET /products/inventory/all/consignment`  
 **Auth Required:** ❌ No
 
+**Response:** Sama seperti "Get All Inventory" tetapi hanya menampilkan produk dengan `is_consignment: true`
+
 ### 7.15 Get All Non-Consignment Inventory
 
 **Endpoint:** `GET /products/inventory/all/excconsignment`  
 **Auth Required:** ❌ No
 
+**Response:** Sama seperti "Get All Inventory" tetapi hanya menampilkan produk dengan `is_consignment: false`
+
 ### 7.16 Get Inventory by Product ID
 
 **Endpoint:** `GET /products/inventory/{product_id}`  
 **Auth Required:** ❌ No
+
+**Response:** Sama seperti "Get All Inventory" tetapi hanya 1 produk berdasarkan product_id
 
 ### 7.17 Create Product Move (Single)
 
@@ -841,6 +928,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "product_id": "uuid-string",
@@ -858,6 +946,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "moves": [
@@ -882,6 +971,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "product_id": "uuid-string",
@@ -896,6 +986,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "product_id": "uuid-string",
@@ -911,6 +1002,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `start_date` (optional): Filter from date
 - `end_date` (optional): Filter to date
 
@@ -925,6 +1017,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -954,13 +1047,74 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
-  "end_date": "2025-01-31",
-  "product_id": "uuid-string"
+  "end_date": "2025-01-31"
 }
 ```
+
+**Response Body:**
+
+```json
+{
+  "total_entries": 5,
+  "items": [
+    {
+      "product_id": "550e8400-e29b-41d4-a716-446655440000",
+      "product_name": "Oli Shell 1L",
+      "type": "outcome",
+      "quantity": -5,
+      "timestamp": "2025-01-15T10:30:00",
+      "performed_by": "system",
+      "notes": "Product ordered in Workorder 550e8400-e29b-41d4-a716-446655440001",
+      "price": 150000,
+      "hpp": 100000,
+      "customer_name": "PT Maju Jaya",
+      "vendor_name": null,
+      "nopol": "B-1234-ABC"
+    },
+    {
+      "product_id": "550e8400-e29b-41d4-a716-446655440000",
+      "product_name": "Oli Shell 1L",
+      "type": "income",
+      "quantity": 20,
+      "timestamp": "2025-01-10T14:20:00",
+      "performed_by": "system",
+      "notes": "Purchase order PO001 received",
+      "price": 120000,
+      "hpp": 100000,
+      "customer_name": null,
+      "vendor_name": "PT Maju Supplier",
+      "nopol": null
+    }
+  ]
+}
+```
+
+**Field Definitions:**
+
+- `product_id` (string, UUID): ID unik produk
+- `product_name` (string): Nama produk (misal "Oli Shell 1L")
+- `type` (string): Tipe pergerakan barang:
+  - `"income"`: Barang masuk (dari pembelian/purchase order)
+  - `"outcome"`: Barang keluar (dari penjualan/work order)
+  - `"adjustment"`: Koreksi stok (manual adjustment)
+- `quantity` (decimal): Jumlah barang yang bergerak
+  - Positif untuk income (barang masuk)
+  - Negatif untuk outcome (barang keluar)
+- `timestamp` (datetime): Waktu transaksi (ISO 8601 format)
+- `performed_by` (string): Siapa yang melakukan transaksi (user name atau "system")
+- `notes` (string): Catatan/referensi transaksi
+  - Untuk outcome: "Product ordered in Workorder WO001"
+  - Untuk income: "Purchase order PO001 received"
+  - Untuk adjustment: Alasan koreksi stok
+- `price` (decimal, nullable): Harga jual per unit (dari product list price untuk sales)
+- `hpp` (decimal, nullable): Harga pokok penjualan/cost dari product (untuk margin analysis)
+- `customer_name` (string, nullable): Nama pelanggan (diisi untuk transaksi outcome/sales)
+- `vendor_name` (string, nullable): Nama vendor/supplier (diisi untuk transaksi income/purchases)
+- `nopol` (string, nullable): Nomor polisi kendaraan pelanggan (diisi untuk transaksi outcome/sales)
 
 ### 8.3 Create Product Move
 
@@ -973,6 +1127,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "product_id": "uuid-string",
@@ -997,6 +1152,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "supplier_id": "uuid-string",
@@ -1018,6 +1174,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1053,6 +1210,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "status_po": "approved"
@@ -1070,6 +1228,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request:** Multipart form-data
+
 - `file`: Image file
 
 ### 9.8 Update PO Line
@@ -1083,6 +1242,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "product_id": "uuid-string",
@@ -1102,6 +1262,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "jumlah_bayar": 3000000,
@@ -1131,6 +1292,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "tanggal": "2025-01-18",
@@ -1148,6 +1310,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `start_date` (optional)
 - `end_date` (optional)
 - `kategori` (optional)
@@ -1189,6 +1352,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "customer_id": "uuid-string",
@@ -1230,6 +1394,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "PT Supplier ABC",
@@ -1270,6 +1435,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama": "Ahmad Mekanik",
@@ -1300,6 +1466,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "karyawan_id": "uuid-string",
@@ -1331,6 +1498,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `start_date`: YYYY-MM-DD
 - `end_date`: YYYY-MM-DD
 
@@ -1350,6 +1518,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ✅ Yes
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1373,6 +1542,7 @@ Authorization: Bearer <your_jwt_token>
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1397,6 +1567,7 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1418,6 +1589,7 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1434,9 +1606,11 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Query Parameters:**
+
 - `months` (optional, default: 6): Number of months (1-24)
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1453,6 +1627,7 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Query Parameters:**
+
 - `months` (optional, default: 6): Number of months (1-24)
 
 ### 15.5 Expenses Monthly Report
@@ -1461,6 +1636,7 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Query Parameters:**
+
 - `months` (optional, default: 6): Number of months (1-24)
 
 ### 15.6 Combined Monthly Report
@@ -1469,9 +1645,11 @@ All dashboard endpoints require authentication.
 **Auth Required:** ✅ Yes
 
 **Query Parameters:**
+
 - `months` (optional, default: 6): Number of months (1-24)
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1526,6 +1704,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
@@ -1569,6 +1748,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "tanggal": "2025-01-18",
@@ -1590,6 +1770,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `start_date` (optional)
 - `end_date` (optional)
 - `account_id` (optional)
@@ -1600,6 +1781,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "kode": "1-1001",
@@ -1625,6 +1807,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
@@ -1634,6 +1817,7 @@ All accounting endpoints require authentication (✅).
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1656,6 +1840,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
@@ -1684,6 +1869,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
@@ -1692,6 +1878,7 @@ All accounting endpoints require authentication (✅).
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1725,6 +1912,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "as_of_date": "2025-01-31"
@@ -1742,13 +1930,58 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
   "end_date": "2025-01-31",
-  "product_id": "uuid-string"
+  "product_id": "uuid-string (optional)",
+  "customer_id": "uuid-string (optional)"
 }
 ```
+
+**Response Body:**
+
+```json
+{
+  "total_quantity": 50,
+  "total_sales": 5000000,
+  "total_hpp": 3333333.33,
+  "items": [
+    {
+      "workorder_no": "WO001",
+      "workorder_date": "2025-01-15",
+      "customer_name": "PT Maju Jaya",
+      "product_name": "Oli Shell 1L",
+      "nopol": "B-1234-ABC",
+      "quantity": 5,
+      "price": 150000,
+      "hpp": 100000,
+      "subtotal": 750000,
+      "discount": 0
+    }
+  ]
+}
+```
+
+**Field Definitions (Summary):**
+
+- `total_quantity` (decimal): Total unit barang yang terjual
+- `total_sales` (decimal): Total pendapatan penjualan barang (setelah diskon)
+- `total_hpp` (decimal): Total harga pokok penjualan (cost × quantity) - untuk perhitungan margin/profit
+
+**Field Definitions (Items):**
+
+- `workorder_no` (string): Nomor Work Order
+- `workorder_date` (date): Tanggal masuk work order
+- `customer_name` (string): Nama pelanggan
+- `product_name` (string): Nama produk yang dijual
+- `nopol` (string, nullable): Nomor polisi kendaraan
+- `quantity` (decimal): Jumlah unit barang yang dijual
+- `price` (decimal): Harga jual per unit
+- `hpp` (decimal, nullable): Harga pokok penjualan (cost) - untuk analisis margin
+- `subtotal` (decimal): Total penjualan (quantity × price - discount)
+- `discount` (decimal): Jumlah diskon yang diberikan
 
 ### 16.30 Service Sales Report
 
@@ -1756,13 +1989,58 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
   "end_date": "2025-01-31",
-  "service_id": "uuid-string"
+  "service_id": "uuid-string (optional)",
+  "customer_id": "uuid-string (optional)"
 }
 ```
+
+**Response Body:**
+
+```json
+{
+  "total_quantity": 20,
+  "total_sales": 8000000,
+  "total_hpp": 5000000,
+  "items": [
+    {
+      "workorder_no": "WO002",
+      "workorder_date": "2025-01-16",
+      "customer_name": "PT Maju Jaya",
+      "service_name": "Servis Lengkap",
+      "nopol": "B-1234-ABC",
+      "quantity": 10,
+      "price": 500000,
+      "hpp": 250000,
+      "subtotal": 5000000,
+      "discount": 0
+    }
+  ]
+}
+```
+
+**Field Definitions (Summary):**
+
+- `total_quantity` (decimal): Total unit/jam jasa yang terjual
+- `total_sales` (decimal): Total pendapatan penjualan jasa (setelah diskon)
+- `total_hpp` (decimal): Total harga pokok penjualan (cost × quantity) - untuk perhitungan margin/profit
+
+**Field Definitions (Items):**
+
+- `workorder_no` (string): Nomor Work Order
+- `workorder_date` (date): Tanggal masuk work order
+- `customer_name` (string): Nama pelanggan
+- `service_name` (string): Nama layanan/jasa yang dijual
+- `nopol` (string, nullable): Nomor polisi kendaraan
+- `quantity` (decimal): Jumlah unit/jam jasa yang dijual
+- `price` (decimal): Harga jual per unit
+- `hpp` (decimal, nullable): Harga pokok penjualan (cost) - untuk analisis margin
+- `subtotal` (decimal): Total penjualan (quantity × price - discount)
+- `discount` (decimal): Jumlah diskon yang diberikan
 
 ### 16.31 Mechanic Sales Report
 
@@ -1770,6 +2048,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "start_date": "2025-01-01",
@@ -1778,12 +2057,72 @@ All accounting endpoints require authentication (✅).
 }
 ```
 
-### 16.32 Daily Report
+### 16.32 Purchase Orders Report
+
+**Endpoint:** `POST /accounting/purchase-orders-report`  
+**Auth Required:** ✅ Yes
+
+**Request Body:**
+
+```json
+{
+  "start_date": "2025-01-01",
+  "end_date": "2025-01-31",
+  "supplier_id": "uuid-string (optional)",
+  "status": "pending (optional - pending|approved|received|cancelled)"
+}
+```
+
+**Response Body:**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "total_quantity": 150,
+    "total_purchases": 9000000,
+    "items": [
+      {
+        "po_no": "PO-2025-001",
+        "po_date": "2025-01-15",
+        "supplier_name": "PT Supplier Jaya",
+        "product_name": "Oli Shell 1L",
+        "quantity": 50,
+        "price": 60000,
+        "discount": 0,
+        "subtotal": 3000000,
+        "status_po": "received"
+      }
+    ]
+  }
+}
+```
+
+**Field Definitions (Summary):**
+
+- `total_quantity` (decimal): Total unit barang yang dipesan
+- `total_purchases` (decimal): Total nilai pembelian (setelah diskon)
+- `items` (array): Daftar pembelian per line item
+
+**Field Definitions (Items):**
+
+- `po_no` (string): Nomor Purchase Order
+- `po_date` (date): Tanggal PO dibuat
+- `supplier_name` (string): Nama supplier/vendor
+- `product_name` (string): Nama produk yang dibeli
+- `quantity` (decimal): Jumlah unit yang dipesan
+- `price` (decimal): Harga beli per unit
+- `discount` (decimal, nullable): Diskon yang diberikan (per line item)
+- `subtotal` (decimal): Total line item (quantity × price - discount)
+- `status_po` (string): Status PO ("pending", "approved", "received", "cancelled")
+
+### 16.33 Daily Report
 
 **Endpoint:** `POST /accounting/daily-report`  
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "date": "2025-01-18"
@@ -1791,21 +2130,208 @@ All accounting endpoints require authentication (✅).
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
   "data": {
     "date": "2025-01-18",
-    "sales_count": 12,
-    "sales_total": 5500000,
-    "cash_in": 5500000,
-    "cash_out": 1200000,
-    "expenses": 800000,
-    "net_cash": 3500000,
-    "workorders": []
+    "cash_books": [
+      {
+        "account_code": "1-1001",
+        "account_name": "Kas Besar",
+        "opening_balance": 10000000,
+        "entries": [
+          {
+            "date": "2025-01-18",
+            "memo": "Sales WO001",
+            "debit": 5000000,
+            "credit": 0,
+            "balance": 15000000
+          }
+        ]
+      }
+    ],
+    "product_sales": {
+      "total_quantity": 15,
+      "total_sales": 2250000,
+      "total_hpp": 1500000,
+      "items": [
+        {
+          "workorder_no": "WO001",
+          "workorder_date": "2025-01-18",
+          "customer_name": "PT Maju Jaya",
+          "product_name": "Oli Shell 1L",
+          "nopol": "B-1234-ABC",
+          "quantity": 5,
+          "price": 150000,
+          "hpp": 100000,
+          "subtotal": 750000,
+          "discount": 0
+        }
+      ]
+    },
+    "service_sales": {
+      "total_quantity": 3,
+      "total_sales": 1500000,
+      "total_hpp": 750000,
+      "items": [
+        {
+          "workorder_no": "WO002",
+          "workorder_date": "2025-01-18",
+          "customer_name": "PT Maju Jaya",
+          "service_name": "Servis Lengkap",
+          "nopol": "B-1234-ABC",
+          "quantity": 2,
+          "price": 500000,
+          "hpp": 250000,
+          "subtotal": 1000000,
+          "discount": 0
+        }
+      ]
+    },
+    "purchase_orders": {
+      "total_quantity": 50,
+      "total_purchases": 3000000,
+      "items": [
+        {
+          "po_no": "PO001",
+          "po_date": "2025-01-18",
+          "supplier_name": "PT Supplier Jaya",
+          "product_name": "Oli Shell 1L",
+          "quantity": 50,
+          "price": 60000,
+          "subtotal": 3000000
+        }
+      ]
+    },
+    "profit_loss": {
+      "total_revenue": 3750000,
+      "total_expenses": 500000,
+      "net_profit": 3250000,
+      "revenues": [
+        {
+          "account_code": "4-1001",
+          "account_name": "Penjualan Sparepart",
+          "amount": 2250000
+        },
+        {
+          "account_code": "4-1002",
+          "account_name": "Penjualan Jasa",
+          "amount": 1500000
+        }
+      ],
+      "expenses": [
+        {
+          "account_code": "5-1001",
+          "account_name": "HPP Sparepart",
+          "amount": 1500000
+        },
+        {
+          "account_code": "5-1002",
+          "account_name": "HPP Jasa",
+          "amount": 750000
+        }
+      ]
+    },
+    "work_orders": {
+      "total_workorders": 2,
+      "total_revenue": 3750000,
+      "items": [
+        {
+          "workorder_no": "WO001",
+          "customer_name": "PT Maju Jaya",
+          "total_biaya": 1750000,
+          "status": "dibayar"
+        }
+      ]
+    }
   }
 }
 ```
+
+**Field Definitions (Summary - Root Level):**
+
+- `date` (date): Tanggal laporan
+- `cash_books` (array): Daftar buku kas per akun dengan pergerakan transaksi
+- `product_sales` (object): Ringkasan penjualan sparepart/produk
+- `service_sales` (object): Ringkasan penjualan jasa/layanan
+- `purchase_orders` (object): Ringkasan pembelian barang
+- `profit_loss` (object): Ringkasan laba-rugi dan detail akun
+- `work_orders` (object): Ringkasan work order harian
+
+**Field Definitions (Cash Books):**
+
+- `account_code` (string): Kode akun kas (misal 1-1001)
+- `account_name` (string): Nama akun kas (misal "Kas Besar")
+- `opening_balance` (decimal): Saldo awal hari
+- `entries` (array): Daftar transaksi harian
+  - `date` (date): Tanggal transaksi
+  - `memo` (string): Deskripsi transaksi
+  - `debit` (decimal): Jumlah debit
+  - `credit` (decimal): Jumlah kredit
+  - `balance` (decimal): Saldo setelah transaksi
+
+**Field Definitions (Product Sales):**
+
+- `total_quantity` (decimal): Total unit sparepart yang terjual
+- `total_sales` (decimal): Total pendapatan penjualan sparepart (setelah diskon)
+- `total_hpp` (decimal): Total harga pokok penjualan (untuk perhitungan profit margin)
+- `items` (array): Daftar penjualan per item
+  - `workorder_no` (string): Nomor Work Order
+  - `workorder_date` (date): Tanggal WO
+  - `customer_name` (string): Nama pelanggan
+  - `product_name` (string): Nama produk
+  - `nopol` (string, nullable): Nomor polisi kendaraan
+  - `quantity` (decimal): Jumlah unit
+  - `price` (decimal): Harga jual per unit
+  - `hpp` (decimal): Harga pokok penjualan per unit (untuk margin analysis)
+  - `subtotal` (decimal): Total (quantity × price - discount)
+  - `discount` (decimal): Diskon yang diberikan
+
+**Field Definitions (Service Sales):**
+
+- `total_quantity` (decimal): Total unit jasa yang terjual
+- `total_sales` (decimal): Total pendapatan penjualan jasa (setelah diskon)
+- `total_hpp` (decimal): Total harga pokok penjualan jasa (untuk perhitungan profit margin)
+- `items` (array): Daftar penjualan per item (struktur sama dengan product_sales)
+
+**Field Definitions (Purchase Orders):**
+
+- `total_quantity` (decimal): Total unit barang yang dibeli
+- `total_purchases` (decimal): Total nilai pembelian
+- `items` (array): Daftar pembelian per item
+  - `po_no` (string): Nomor Purchase Order
+  - `po_date` (date): Tanggal PO
+  - `supplier_name` (string): Nama supplier
+  - `product_name` (string): Nama produk yang dibeli
+  - `quantity` (decimal): Jumlah unit
+  - `price` (decimal): Harga beli per unit
+  - `subtotal` (decimal): Total (quantity × price)
+
+**Field Definitions (Profit & Loss):**
+
+- `total_revenue` (decimal): Total pendapatan (penjualan sparepart + penjualan jasa)
+- `total_expenses` (decimal): Total beban/biaya
+- `net_profit` (decimal): Laba bersih (revenue - expenses - hpp)
+- `revenues` (array): Detail akun pendapatan
+  - `account_code` (string): Kode akun
+  - `account_name` (string): Nama akun
+  - `amount` (decimal): Jumlah
+- `expenses` (array): Detail akun beban/HPP
+  - `account_code` (string): Kode akun
+  - `account_name` (string): Nama akun
+  - `amount` (decimal): Jumlah
+
+**Field Definitions (Work Orders):**
+
+- `total_workorders` (integer): Jumlah total WO pada hari ini
+- `total_revenue` (decimal): Total pendapatan dari semua WO
+- `items` (array): Daftar WO harian
+  - `workorder_no` (string): Nomor WO
+  - `customer_name` (string): Nama pelanggan
+  - `total_biaya` (decimal): Total biaya WO (sparepart + jasa)
+  - `status` (string): Status pembayaran ("dibayar", "belum_bayar", "dp", dll)
 
 ---
 
@@ -1817,6 +2343,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "phone_number": "628123456789",
@@ -1826,6 +2353,7 @@ All accounting endpoints require authentication (✅).
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1844,6 +2372,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "phone_number": "628123456789",
@@ -1857,6 +2386,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request:** Multipart form-data
+
 - `phone_number`: string
 - `message`: string
 - `file`: File attachment
@@ -1867,6 +2397,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "phone_number": "628123456789",
@@ -1885,11 +2416,13 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `status` (optional): Filter by status (sent, failed, pending)
 - `start_date` (optional)
 - `end_date` (optional)
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1918,6 +2451,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -1965,6 +2499,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "nopol": "B 1234 ABC",
@@ -1985,6 +2520,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request:** Multipart form-data
+
 - `file`: CSV file with columns (nopol, customer_name, phone_number, etc.)
 
 ### 19.3 Get All Manual WhatsApp Records
@@ -1993,6 +2529,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Query Parameters:**
+
 - `skip` (default: 0)
 - `limit` (default: 100)
 - `is_active` (optional): Filter by active status
@@ -2030,6 +2567,7 @@ All accounting endpoints require authentication (✅).
 **Description:** Send reminders to all vehicles due for service based on reminder_days_before.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -2053,6 +2591,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Request Body:**
+
 ```json
 {
   "record_ids": ["uuid-1", "uuid-2"],
@@ -2066,6 +2605,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ❌ No
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -2090,6 +2630,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "hour": 7,
@@ -2098,6 +2639,7 @@ All accounting endpoints require authentication (✅).
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -2120,6 +2662,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -2149,6 +2692,7 @@ All accounting endpoints require authentication (✅).
 **Auth Required:** ✅ Yes
 
 **Request Body:**
+
 ```json
 {
   "nama_paket": "Paket Servis Lengkap",
@@ -2209,6 +2753,7 @@ All accounting endpoints require authentication (✅).
 ### CORS Configuration
 
 The API accepts requests from:
+
 - `http://localhost:*` (any port during development)
 - `http://127.0.0.1:*` (any port during development)
 - `https://carspeed.gagakrimang.web.id` (production)
@@ -2216,6 +2761,7 @@ The API accepts requests from:
 ### File Uploads
 
 Endpoints that accept file uploads use `multipart/form-data`:
+
 - Maximum file size: Configured in server
 - Supported formats: Images (jpg, png, pdf) for proof of payment/receipts
 
@@ -2227,6 +2773,7 @@ Endpoints that accept file uploads use `multipart/form-data`:
 ### Pagination
 
 Some list endpoints support pagination:
+
 - `skip`: Number of records to skip (default: 0)
 - `limit`: Maximum records to return (default: 100)
 
@@ -2235,6 +2782,7 @@ Some list endpoints support pagination:
 ## 🎯 Quick Start Examples
 
 ### Login and Get Token
+
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
@@ -2242,12 +2790,14 @@ curl -X POST http://localhost:8000/auth/login \
 ```
 
 ### Use Token in Subsequent Requests
+
 ```bash
 curl -X GET http://localhost:8000/dashboard/summary \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
 ### Create Work Order
+
 ```bash
 curl -X POST http://localhost:8000/workorders/create/new \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
@@ -2263,6 +2813,136 @@ curl -X POST http://localhost:8000/workorders/create/new \
 ---
 
 **For more detailed information about specific features:**
+
+- Dashboard: See `DASHBOARD_DOCUMENTATION.md`
+- WhatsApp Integration: See `WHATSAPP_API_DOCUMENTATION.md`
+- Manual WhatsApp: See `MANUAL_WHATSAPP_DOCUMENTATION.md`
+- Authentication & Roles: See `LOGIN_WITH_ROLES_DOCUMENTATION.md`
+- Services: See `SERVICE_DOCUMENTATION.md`
+
+---
+
+**Last Updated:** January 18, 2026  
+**Maintained by:** FastAPI Bengkel Team
+"deskripsi": "Ganti oli + tune up + cuci mobil",
+"harga": 500000,
+"products_in_packet": [
+{
+"product_id": "uuid-string",
+"kuantitas": 4
+}
+],
+"services_in_packet": [
+{
+"service_id": "uuid-string",
+"kuantitas": 1
+}
+]
+}
+
+````
+
+### 21.2 Get All Packet Orders
+
+**Endpoint:** `GET /packet-orders/all`
+**Auth Required:** ❌ No
+
+### 21.3 Get Packet Order by ID
+
+**Endpoint:** `GET /packet-orders/{packet_id}`
+**Auth Required:** ❌ No
+
+---
+
+## 📊 Common HTTP Status Codes
+
+- **200 OK**: Request successful
+- **201 Created**: Resource created successfully
+- **204 No Content**: Request successful, no content to return
+- **400 Bad Request**: Invalid request format or parameters
+- **401 Unauthorized**: Authentication required or token invalid
+- **403 Forbidden**: Insufficient permissions
+- **404 Not Found**: Resource not found
+- **500 Internal Server Error**: Server error
+
+---
+
+## 🔒 Security Notes
+
+1. **JWT Tokens expire after 12 hours** - Obtain a new token by logging in again
+2. Store tokens securely in your client application
+3. Never expose your API keys or tokens in public repositories
+4. Use HTTPS in production environments
+5. WhatsApp API key should be kept in `.env` file: `STARSENDER_API_KEY`
+
+---
+
+## 📝 Additional Notes
+
+### CORS Configuration
+
+The API accepts requests from:
+
+- `http://localhost:*` (any port during development)
+- `http://127.0.0.1:*` (any port during development)
+- `https://carspeed.gagakrimang.web.id` (production)
+
+### File Uploads
+
+Endpoints that accept file uploads use `multipart/form-data`:
+
+- Maximum file size: Configured in server
+- Supported formats: Images (jpg, png, pdf) for proof of payment/receipts
+
+### Date Format
+
+- Date fields use: `YYYY-MM-DD` (e.g., `2025-01-18`)
+- DateTime fields use ISO 8601: `YYYY-MM-DDTHH:mm:ss` (e.g., `2025-01-18T10:30:00`)
+
+### Pagination
+
+Some list endpoints support pagination:
+
+- `skip`: Number of records to skip (default: 0)
+- `limit`: Maximum records to return (default: 100)
+
+---
+
+## 🎯 Quick Start Examples
+
+### Login and Get Token
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password123"}'
+````
+
+### Use Token in Subsequent Requests
+
+```bash
+curl -X GET http://localhost:8000/dashboard/summary \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Create Work Order
+
+```bash
+curl -X POST http://localhost:8000/workorders/create/new \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id":"uuid-here",
+    "vehicle_id":"uuid-here",
+    "tanggal_masuk":"2025-01-18",
+    "keluhan":"Ganti oli"
+  }'
+```
+
+---
+
+**For more detailed information about specific features:**
+
 - Dashboard: See `DASHBOARD_DOCUMENTATION.md`
 - WhatsApp Integration: See `WHATSAPP_API_DOCUMENTATION.md`
 - Manual WhatsApp: See `MANUAL_WHATSAPP_DOCUMENTATION.md`

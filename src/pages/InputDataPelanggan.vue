@@ -11,7 +11,9 @@
         <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
           <!-- Name Input -->
           <div>
-            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+            <label for="nama" class="block text-sm font-medium text-gray-700 mb-2"
+              >Name <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.nama"
               id="nama"
@@ -24,7 +26,9 @@
 
           <!-- Address Input -->
           <div class="mt-6">
-            <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+            <label for="address" class="block text-sm font-medium text-gray-700 mb-2"
+              >Alamat <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.alamat"
               id="alamat"
@@ -37,7 +41,9 @@
 
           <!-- Phone Number Input -->
           <div class="mt-6">
-            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2">Nomor HP</label>
+            <label for="hp" class="block text-sm font-medium text-gray-700 mb-2"
+              >Nomor HP <span class="text-red-500">*</span></label
+            >
             <input
               v-model="formData.hp"
               id="hp"
@@ -72,7 +78,6 @@
               type="email"
               class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               placeholder="Enter your email"
-              required
             />
           </div>
         </div>

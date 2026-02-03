@@ -69,7 +69,7 @@
     </div>
 
     <!-- Summary -->
-    <div v-if="filteredItems && filteredItems.length" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div v-if="filteredItems && filteredItems.length" class="grid grid-cols-1 md:grid-cols-5 gap-4">
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Total Quantity</h3>
         <p class="text-2xl font-bold text-blue-600">{{ filteredTotalQuantity }}</p>
@@ -79,8 +79,18 @@
         <p class="text-2xl font-bold text-green-600">{{ formatIDR(filteredTotalSales) }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
-        <h3 class="text-lg font-semibold">Total Items</h3>
-        <p class="text-2xl font-bold text-purple-600">{{ filteredItems.length }}</p>
+        <h3 class="text-lg font-semibold">Total HPP</h3>
+        <p class="text-2xl font-bold text-red-600">{{ formatIDR(filteredTotalHpp) }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h3 class="text-lg font-semibold">Total Margin</h3>
+        <p class="text-2xl font-bold text-sky-600">{{ formatIDR(reportData.total_margin || 0) }}</p>
+      </div>
+      <div class="bg-white rounded-2xl shadow p-6">
+        <h3 class="text-lg font-semibold">Margin %</h3>
+        <p class="text-2xl font-bold text-sky-600">
+          {{ (reportData.margin_percentage || 0).toFixed(2) }}%
+        </p>
       </div>
     </div>
 
@@ -93,13 +103,15 @@
         <thead class="bg-gray-100 text-gray-700">
           <tr>
             <th class="px-4 py-3 text-left">Workorder No</th>
-            <th class="px-4 py-3 text-left">Workorder Date</th>
-            <th class="px-4 py-3 text-left">Customer Name</th>
-            <th class="px-4 py-3 text-left">Service Name</th>
-            <th class="px-4 py-3 text-right">Quantity</th>
+            <th class="px-4 py-3 text-left">WO Date</th>
+            <th class="px-4 py-3 text-left">Customer</th>
+            <th class="px-4 py-3 text-left">Service</th>
+            <th class="px-4 py-3 text-left">Nopol</th>
+            <th class="px-4 py-3 text-right">Qty</th>
             <th class="px-4 py-3 text-right">Price</th>
+            <th class="px-4 py-3 text-right">HPP</th>
+            <th class="px-4 py-3 text-right">Discount</th>
             <th class="px-4 py-3 text-right">Subtotal</th>
-            <th class="px-4 py-3 text-right">Discount (%)</th>
           </tr>
         </thead>
         <tbody>
@@ -112,10 +124,12 @@
             <td class="px-4 py-3">{{ formatDate(item.workorder_date) }}</td>
             <td class="px-4 py-3">{{ item.customer_name }}</td>
             <td class="px-4 py-3">{{ item.service_name }}</td>
+            <td class="px-4 py-3 text-sm">{{ item.nopol || '-' }}</td>
             <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
             <td class="px-4 py-3 text-right">{{ formatIDR(item.price) }}</td>
+            <td class="px-4 py-3 text-right">{{ formatIDR(item.hpp) }}</td>
+            <td class="px-4 py-3 text-right">{{ formatIDR(item.discount) }}</td>
             <td class="px-4 py-3 text-right">{{ formatIDR(item.subtotal) }}</td>
-            <td class="px-4 py-3 text-right">{{ item.discount }}%</td>
           </tr>
         </tbody>
       </table>
@@ -172,6 +186,13 @@ const filteredTotalQuantity = computed(() => {
 
 const filteredTotalSales = computed(() => {
   return filteredItems.value.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
+})
+
+const filteredTotalHpp = computed(() => {
+  return filteredItems.value.reduce(
+    (sum, item) => sum + (Number(item.hpp) || 0) * (Number(item.quantity) || 0),
+    0,
+  )
 })
 
 onMounted(() => {
