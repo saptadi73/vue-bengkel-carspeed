@@ -66,7 +66,9 @@
         >
           Previous
         </button>
-        <span class="text-sm"> Page {{ currentPage }} of {{ totalPages }} </span>
+        <span class="text-sm">
+          Page {{ currentPage }} of {{ totalPages }} · {{ totalItems }} barang
+        </span>
         <button
           @click="goToPage(currentPage + 1)"
           :disabled="currentPage === totalPages"
@@ -85,18 +87,21 @@
         <input
           v-model="searchQuery"
           type="text"
+          maxlength="100"
           placeholder="Cari produk..."
           class="border px-2 py-1 rounded w-full sm:w-64"
         />
         <div class="flex gap-2">
           <select v-model="selectedCategory" class="border px-2 py-1 rounded w-full sm:w-48">
             <option value="">Semua Kategori</option>
-            <option v-for="cat in categoryFilterList" :key="cat" :value="cat">{{ cat }}</option>
+            <option v-for="cat in categoryList" :key="cat.id" :value="cat.id">
+              {{ cat.name }}
+            </option>
           </select>
           <select v-model="selectedStatus" class="border px-2 py-1 rounded w-full sm:w-48">
             <option value="">Semua Status</option>
-            <option value="aman">Aman</option>
-            <option value="segera_beli">Segera Beli</option>
+            <option value="safe">Aman</option>
+            <option value="reorder">Segera Beli</option>
           </select>
         </div>
       </div>
@@ -204,7 +209,9 @@
         >
           Previous
         </button>
-        <span class="text-sm"> Page {{ currentPage }} of {{ totalPages }} </span>
+        <span class="text-sm">
+          Page {{ currentPage }} of {{ totalPages }} · {{ totalItems }} barang
+        </span>
         <button
           @click="goToPage(currentPage + 1)"
           :disabled="currentPage === totalPages"
@@ -517,6 +524,11 @@ export default {
       units: [],
       currentPage: 1,
       itemsPerPage: 25,
+      totalItems: 0,
+      serverTotalPages: 0,
+      hasPreviousPage: false,
+      hasNextPage: false,
+      searchDebounceTimer: null,
       isEditing: false,
       formData: {
         id: null,
@@ -533,60 +545,56 @@ export default {
     }
   },
   computed: {
-    categoryFilterList() {
-      const set = new Set(this.inventoryList.map((i) => i.category_name))
-      return Array.from(set)
-    },
     filteredList() {
-      let list = this.inventoryList
-      if (this.selectedCategory) {
-        list = list.filter((i) => i.category_name === this.selectedCategory)
-      }
-      if (this.selectedStatus) {
-        if (this.selectedStatus === 'aman') {
-          list = list.filter((i) => i.total_stock > i.min_stock)
-        } else if (this.selectedStatus === 'segera_beli') {
-          list = list.filter((i) => i.total_stock <= i.min_stock)
-        }
-      }
-      if (this.searchQuery) {
-        const q = this.searchQuery.toLowerCase()
-        list = list.filter(
-          (i) =>
-            (i.name || '').toLowerCase().includes(q) ||
-            (i.brand_name || '').toLowerCase().includes(q) ||
-            (i.category_name || '').toLowerCase().includes(q) ||
-            (i.type || '').toLowerCase().includes(q),
-        )
-      }
-      return list
+      return this.inventoryList
     },
     paginatedList() {
-      const start = (this.currentPage - 1) * this.itemsPerPage
-      const end = start + this.itemsPerPage
-      return this.filteredList.slice(start, end)
+      return this.inventoryList
     },
     totalPages() {
-      return Math.ceil(this.filteredList.length / this.itemsPerPage)
+      return this.serverTotalPages
     },
   },
   methods: {
     async fetchInventory() {
       try {
         this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/inventory/all`)
-        this.inventoryList = (response.data.data || []).map((item) => ({
+        const params = { page: this.currentPage, limit: this.itemsPerPage }
+        const search = this.searchQuery.trim()
+        if (search) params.search = search
+        if (this.selectedCategory) params.category_id = this.selectedCategory
+        if (this.selectedStatus) params.stock_status = this.selectedStatus
+
+        const response = await axios.get(`${BASE_URL}products/inventory/all`, { params })
+        const body = Array.isArray(response.data?.data)
+          ? response.data
+          : response.data?.data || response.data
+        const items = Array.isArray(body?.data) ? body.data : []
+        const pagination = body?.pagination || {}
+
+        this.inventoryList = items.map((item) => ({
           ...item,
           hpp: Number(item.hpp ?? item.cost ?? 0),
-          purchase_price: Number(
-            item.purchase_price ?? item.last_purchase_price ?? item.buy_price ?? item.cost ?? 0,
-          ),
+          purchase_price:
+            item.purchase_price !== undefined
+              ? item.purchase_price
+              : (item.last_purchase_price ?? item.buy_price ?? item.cost ?? null),
         }))
+        this.totalItems = Number(pagination.total ?? this.inventoryList.length)
+        this.serverTotalPages = Number(pagination.total_pages ?? (this.totalItems ? 1 : 0))
+        this.hasPreviousPage = Boolean(pagination.has_previous)
+        this.hasNextPage = Boolean(pagination.has_next)
+        if (pagination.page) this.currentPage = Number(pagination.page)
         console.log('Inventory: ', this.inventoryList)
       } catch (error) {
         console.error('Error fetching inventory:', error)
+        this.inventoryList = []
+        this.totalItems = 0
+        this.serverTotalPages = 0
+        this.hasPreviousPage = false
+        this.hasNextPage = false
         this.show_toast = true
-        this.message_toast = 'Gagal memuat data inventory.'
+        this.message_toast = error.response?.data?.message || 'Gagal memuat data inventory.'
       } finally {
         this.loadingStore.hide()
       }
@@ -623,14 +631,11 @@ export default {
       return Number(item?.hpp ?? item?.cost ?? 0)
     },
     getPurchasePrice(item) {
-      return Number(
-        item?.purchase_price ??
-          item?.last_purchase_price ??
-          item?.buy_price ??
-          item?.cost ??
-          item?.hpp ??
-          0,
-      )
+      if (item?.purchase_price !== undefined) {
+        return item.purchase_price == null ? null : Number(item.purchase_price)
+      }
+      const fallback = item?.last_purchase_price ?? item?.buy_price ?? item?.cost ?? item?.hpp
+      return fallback == null ? null : Number(fallback)
     },
     getMargin(item) {
       return Number(item?.price || 0) - this.getHpp(item)
@@ -765,9 +770,10 @@ export default {
     resetPagination() {
       this.currentPage = 1
     },
-    goToPage(page) {
+    async goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
+        await this.fetchInventory()
       }
     },
   },
@@ -791,12 +797,16 @@ export default {
   watch: {
     searchQuery() {
       this.resetPagination()
+      clearTimeout(this.searchDebounceTimer)
+      this.searchDebounceTimer = setTimeout(() => this.fetchInventory(), 350)
     },
     selectedCategory() {
       this.resetPagination()
+      this.fetchInventory()
     },
     selectedStatus() {
       this.resetPagination()
+      this.fetchInventory()
     },
   },
   created() {
