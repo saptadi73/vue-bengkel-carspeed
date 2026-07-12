@@ -39,8 +39,18 @@
           <div>{{ item.category_name }}</div>
           <div class="text-gray-500">Satuan</div>
           <div>{{ item.satuan_name }}</div>
-          <div class="text-gray-500">Harga</div>
+          <div class="text-gray-500">Harga Jual</div>
           <div>{{ formatCurrency(item.price) }}</div>
+          <div class="text-gray-500">Harga Beli</div>
+          <div>{{ formatCurrency(getPurchasePrice(item)) }}</div>
+          <div class="text-gray-500">HPP</div>
+          <div>{{ formatCurrency(getHpp(item)) }}</div>
+          <div class="text-gray-500">Margin</div>
+          <div :class="getMargin(item) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+            {{ formatCurrency(getMargin(item)) }} ({{
+              formatPercentage(getMarginPercentage(item))
+            }})
+          </div>
           <div class="text-gray-500">Stock On Hand</div>
           <div>{{ item.total_stock }}</div>
           <div class="text-gray-500">Minimal Stock</div>
@@ -90,88 +100,101 @@
           </select>
         </div>
       </div>
-      <table class="table-auto w-full border-collapse">
-        <thead>
-          <tr>
-            <th
-              v-for="(header, i) in [
-                'Nama Produk',
-                'Brand',
-                'Type',
-                'Category',
-                'Satuan',
-                'Harga',
-                'Stock On Hand',
-                'Minimal Stock',
-                'Status',
-                'Aksi',
-              ]"
-              :key="header"
-              :class="[
-                'bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold py-3 px-2 text-sm uppercase tracking-wider border-b border-blue-700 shadow-sm',
-                i === 0 ? 'rounded-tl-xl' : '',
-                i === 10 ? 'rounded-tr-xl' : '',
-              ]"
-            >
-              {{ header }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(item, idx) in paginatedList"
-            :key="idx"
-            :class="{ 'bg-gray-50': idx % 2 === 1 }"
-          >
-            <td>{{ item.name }}</td>
-            <td>{{ item.brand_name }}</td>
-            <td>{{ item.type }}</td>
-            <td>{{ item.category_name }}</td>
-            <td>{{ item.satuan_name }}</td>
-            <td>{{ formatCurrency(item.price) }}</td>
-            <td>{{ item.total_stock }}</td>
-            <td>{{ item.min_stock }}</td>
-            <td>
-              <span
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="table-auto min-w-[1500px] w-full border-collapse">
+          <thead>
+            <tr>
+              <th
+                v-for="(header, i) in [
+                  'Nama Produk',
+                  'Brand',
+                  'Type',
+                  'Category',
+                  'Satuan',
+                  'Harga Jual',
+                  'Harga Beli',
+                  'HPP',
+                  'Margin',
+                  'Stock On Hand',
+                  'Minimal Stock',
+                  'Status',
+                  'Aksi',
+                ]"
+                :key="header"
                 :class="[
-                  'inline-block px-2 py-1 rounded text-xs font-semibold',
-                  item.total_stock > item.min_stock
-                    ? 'bg-green-100 text-green-700 border border-green-300'
-                    : 'bg-red-100 text-red-700 border border-red-300',
+                  'bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold py-3 px-2 text-sm uppercase tracking-wider border-b border-blue-700 shadow-sm',
+                  i === 0 ? 'rounded-tl-xl' : '',
+                  i === 12 ? 'rounded-tr-xl' : '',
                 ]"
               >
-                {{ item.total_stock > item.min_stock ? 'Aman' : 'Segera Beli' }}
-              </span>
-            </td>
-            <td class="flex gap-2 items-center">
-              <button
-                @click="openViewModal(item)"
-                class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-                title="View"
-              >
-                <span class="material-symbols-outlined text-sm">visibility</span>
-              </button>
-              <button
-                @click="openEditModal(item)"
-                class="px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 transition-colors"
-                title="Edit"
-              >
-                <span class="material-symbols-outlined text-sm">edit</span>
-              </button>
-              <button
-                @click="confirmDelete(item)"
-                class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
-                title="Delete"
-              >
-                <span class="material-symbols-outlined text-sm">delete</span>
-              </button>
-            </td>
-          </tr>
-          <tr v-if="paginatedList.length === 0">
-            <td colspan="11" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
-          </tr>
-        </tbody>
-      </table>
+                {{ header }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(item, idx) in paginatedList"
+              :key="idx"
+              :class="{ 'bg-gray-50': idx % 2 === 1 }"
+            >
+              <td>{{ item.name }}</td>
+              <td>{{ item.brand_name }}</td>
+              <td>{{ item.type }}</td>
+              <td>{{ item.category_name }}</td>
+              <td>{{ item.satuan_name }}</td>
+              <td>{{ formatCurrency(item.price) }}</td>
+              <td>{{ formatCurrency(getPurchasePrice(item)) }}</td>
+              <td>{{ formatCurrency(getHpp(item)) }}</td>
+              <td>
+                <div :class="getMargin(item) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                  <div class="font-semibold">{{ formatCurrency(getMargin(item)) }}</div>
+                  <div class="text-xs">{{ formatPercentage(getMarginPercentage(item)) }}</div>
+                </div>
+              </td>
+              <td>{{ item.total_stock }}</td>
+              <td>{{ item.min_stock }}</td>
+              <td>
+                <span
+                  :class="[
+                    'inline-block px-2 py-1 rounded text-xs font-semibold',
+                    item.total_stock > item.min_stock
+                      ? 'bg-green-100 text-green-700 border border-green-300'
+                      : 'bg-red-100 text-red-700 border border-red-300',
+                  ]"
+                >
+                  {{ item.total_stock > item.min_stock ? 'Aman' : 'Segera Beli' }}
+                </span>
+              </td>
+              <td class="flex gap-2 items-center">
+                <button
+                  @click="openViewModal(item)"
+                  class="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+                  title="View"
+                >
+                  <span class="material-symbols-outlined text-sm">visibility</span>
+                </button>
+                <button
+                  @click="openEditModal(item)"
+                  class="px-2 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 transition-colors"
+                  title="Edit"
+                >
+                  <span class="material-symbols-outlined text-sm">edit</span>
+                </button>
+                <button
+                  @click="confirmDelete(item)"
+                  class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                  title="Delete"
+                >
+                  <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
+              </td>
+            </tr>
+            <tr v-if="paginatedList.length === 0">
+              <td colspan="13" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <!-- Pagination for desktop -->
       <div v-if="totalPages > 1" class="mt-4 flex justify-center items-center space-x-2">
         <button
@@ -230,12 +253,19 @@
               <div>{{ selectedProduct.category_name }}</div>
               <div class="text-gray-500">Satuan</div>
               <div>{{ selectedProduct.satuan_name }}</div>
-              <div class="text-gray-500">Harga</div>
+              <div class="text-gray-500">Harga Jual</div>
               <div class="font-semibold text-blue-700">
                 {{ formatCurrency(selectedProduct.price) }}
               </div>
+              <div class="text-gray-500">Harga Beli</div>
+              <div>{{ formatCurrency(getPurchasePrice(selectedProduct)) }}</div>
               <div class="text-gray-500">HPP</div>
-              <div>{{ formatCurrency(selectedProduct.cost) }}</div>
+              <div>{{ formatCurrency(getHpp(selectedProduct)) }}</div>
+              <div class="text-gray-500">Margin</div>
+              <div :class="getMargin(selectedProduct) >= 0 ? 'text-emerald-600' : 'text-red-600'">
+                {{ formatCurrency(getMargin(selectedProduct)) }}
+                ({{ formatPercentage(getMarginPercentage(selectedProduct)) }})
+              </div>
               <div class="text-gray-500">Stock On Hand</div>
               <div>{{ selectedProduct.total_stock }}</div>
               <div class="text-gray-500">Minimal Stock</div>
@@ -486,7 +516,7 @@ export default {
       categoryList: [],
       units: [],
       currentPage: 1,
-      itemsPerPage: 10,
+      itemsPerPage: 25,
       isEditing: false,
       formData: {
         id: null,
@@ -545,7 +575,13 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/inventory/all`)
-        this.inventoryList = response.data.data || []
+        this.inventoryList = (response.data.data || []).map((item) => ({
+          ...item,
+          hpp: Number(item.hpp ?? item.cost ?? 0),
+          purchase_price: Number(
+            item.purchase_price ?? item.last_purchase_price ?? item.buy_price ?? item.cost ?? 0,
+          ),
+        }))
         console.log('Inventory: ', this.inventoryList)
       } catch (error) {
         console.error('Error fetching inventory:', error)
@@ -582,6 +618,30 @@ export default {
     formatCurrency(val) {
       if (val == null) return '-'
       return Number(val).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })
+    },
+    getHpp(item) {
+      return Number(item?.hpp ?? item?.cost ?? 0)
+    },
+    getPurchasePrice(item) {
+      return Number(
+        item?.purchase_price ??
+          item?.last_purchase_price ??
+          item?.buy_price ??
+          item?.cost ??
+          item?.hpp ??
+          0,
+      )
+    },
+    getMargin(item) {
+      return Number(item?.price || 0) - this.getHpp(item)
+    },
+    getMarginPercentage(item) {
+      const sellingPrice = Number(item?.price || 0)
+      if (!sellingPrice) return 0
+      return (this.getMargin(item) / sellingPrice) * 100
+    },
+    formatPercentage(value) {
+      return `${Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`
     },
     openViewModal(item) {
       this.selectedProduct = item

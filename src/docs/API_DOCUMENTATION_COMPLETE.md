@@ -821,15 +821,21 @@ Authorization: Bearer <your_jwt_token>
 
 ### 7.13 Get All Inventory
 
-### 7.13 Get All Inventory
-
 **Endpoint:** `GET /products/inventory/all`  
 **Auth Required:** ❌ No
+
+**Query Parameters:**
+- `page` (optional, default `1`): halaman data inventory
+- `limit` (optional, default `25`): jumlah item per halaman
+- `search` (optional): pencarian nama, type, atau deskripsi produk
+- `category_id` (optional): filter berdasarkan kategori
+- `stock_status` (optional): `safe` atau `reorder`
 
 **Response Body:**
 ```json
 {
   "status": "success",
+  "message": "Inventory retrieved successfully",
   "data": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -837,33 +843,61 @@ Authorization: Bearer <your_jwt_token>
       "type": "product",
       "description": "Oli mesin berkualitas tinggi",
       "price": 150000,
+      "purchase_price": 95000,
       "hpp": 100000,
+      "margin": 50000,
+      "margin_percentage": 33.33,
       "min_stock": 10,
+      "total_stock": 50,
+      "stock_status": "safe",
       "is_consignment": false,
       "category_name": "Sparepart",
       "brand_name": "Shell",
       "satuan_name": "Botol",
-      "supplier_name": "PT Supplier Maju",
-      "total_stock": 50
+      "supplier_name": "PT Supplier Maju"
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 150,
+    "total_pages": 6,
+    "has_previous": false,
+    "has_next": true
+  }
 }
 ```
 
 **Field Definitions:**
-- `id` (string): ID produk
-- `name` (string): Nama produk
-- `type` (string): Tipe produk
-- `description` (string): Deskripsi produk
-- `price` (decimal): Harga jual per unit
-- `hpp` (decimal): Harga pokok penjualan/cost per unit
-- `min_stock` (decimal): Stok minimum
-- `is_consignment` (boolean): Apakah produk konsinyasi
-- `category_name` (string): Nama kategori
-- `brand_name` (string): Nama brand
-- `satuan_name` (string): Satuan pengukuran
-- `supplier_name` (string): Nama supplier/vendor
-- `total_stock` (decimal): Total stok saat ini di inventori
+- `price` (decimal): harga jual saat ini
+- `purchase_price` (decimal): harga beli terakhir yang valid
+- `hpp` (decimal): harga pokok inventory yang dipakai untuk margin/laba-rugi
+- `margin` (decimal): selisih `price - hpp`
+- `margin_percentage` (decimal): persentase margin terhadap harga jual
+- `min_stock` (decimal): stok minimum
+- `total_stock` (decimal): total stok saat ini di inventory
+- `stock_status` (string): status stok, saat ini `safe` atau `reorder`
+- `category_name` (string): nama kategori
+- `brand_name` (string): nama brand
+- `satuan_name` (string): nama satuan
+- `supplier_name` (string): nama supplier/vendor
+
+**Empty Response:**
+```json
+{
+  "status": "success",
+  "message": "Inventory retrieved successfully",
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 0,
+    "total_pages": 0,
+    "has_previous": false,
+    "has_next": false
+  }
+}
+```
 
 ### 7.14 Get All Consignment Inventory
 
@@ -884,7 +918,7 @@ Authorization: Bearer <your_jwt_token>
 **Endpoint:** `GET /products/inventory/{product_id}`  
 **Auth Required:** ❌ No
 
-**Response:** Sama seperti "Get All Inventory" tetapi hanya 1 produk berdasarkan product_id
+**Response:** Sama seperti item pada "Get All Inventory" tetapi hanya 1 produk berdasarkan `product_id`
 
 ### 7.17 Create Product Move (Single)
 

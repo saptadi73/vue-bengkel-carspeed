@@ -347,16 +347,66 @@ export default {
       this.paket.service_line_packet_order.splice(idx, 1)
     },
     async submitPaket() {
+      if (!this.paket.name?.trim()) {
+        this.show_toast = true
+        this.message_toast = 'Nama paket wajib diisi.'
+        return
+      }
+
+      const validProducts = this.paket.product_line_packet_order.filter(
+        (item) => item.product_id && Number(item.quantity) > 0 && item.satuan_id,
+      )
+      const validServices = this.paket.service_line_packet_order.filter(
+        (item) => item.service_id && Number(item.quantity) > 0,
+      )
+      if (!validProducts.length && !validServices.length) {
+        this.show_toast = true
+        this.message_toast = 'Tambahkan minimal satu produk atau jasa yang valid.'
+        return
+      }
+
+      const payload = {
+        name: this.paket.name.trim(),
+        product_line_packet_order: validProducts.map((item) => ({
+          product_id: item.product_id,
+          quantity: Number(item.quantity),
+          price: Number(item.price) || 0,
+          satuan_id: item.satuan_id,
+          discount: Number(item.discount) || 0,
+          subtotal:
+            Number(item.subtotal) ||
+            Number(item.price || 0) * Number(item.quantity || 0) - Number(item.discount || 0),
+        })),
+        service_line_packet_order: validServices.map((item) => ({
+          service_id: item.service_id,
+          quantity: Number(item.quantity),
+          price: Number(item.price) || 0,
+          discount: Number(item.discount) || 0,
+          subtotal:
+            Number(item.subtotal) ||
+            Number(item.price || 0) * Number(item.quantity || 0) - Number(item.discount || 0),
+        })),
+      }
+
       this.$emit('save', JSON.parse(JSON.stringify(this.paket)))
-      console.log('Data :', this.paket)
+      console.log('Data :', payload)
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}packetorders/create/new`, this.paket)
+        const response = await api.post(`${BASE_URL}packetorders/create/new`, payload)
         console.log('add Packet Order: ', response.data.data)
         this.show_toast = true
-        this.message_toast = response.data.message
+        this.message_toast = response.data.message || 'Paket berhasil dibuat.'
+        this.paket = { name: '', product_line_packet_order: [], service_line_packet_order: [] }
       } catch (error) {
-        console.log('Error Submit Data: ', error)
+        console.error('Error Submit Data: ', error)
+        const validationDetail = error.response?.data?.detail
+        this.show_toast = true
+        this.message_toast =
+          error.response?.data?.message ||
+          (Array.isArray(validationDetail)
+            ? validationDetail.map((item) => item.msg).join(', ')
+            : validationDetail) ||
+          'Gagal membuat paket.'
       } finally {
         this.loadingStore.hide()
       }

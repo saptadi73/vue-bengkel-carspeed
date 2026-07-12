@@ -61,6 +61,7 @@
             type="date"
             id="date"
             class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
           />
         </div>
       </div>
@@ -74,6 +75,7 @@
           rows="4"
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Masukkan deskripsi"
+          required
         ></textarea>
       </div>
 
@@ -185,7 +187,7 @@ export default {
         description: '',
         expense_type: '',
         amount: 0,
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         bukti_transfer: null,
       },
     }
@@ -233,6 +235,17 @@ export default {
       this.form.bukti_transfer = event.target.files[0]
     },
     async submitForm() {
+      if (!this.form.description?.trim()) {
+        this.message_toast = 'Deskripsi pengeluaran wajib diisi.'
+        this.show_toast = true
+        return
+      }
+      if (!this.form.date) {
+        this.message_toast = 'Tanggal pengeluaran wajib diisi.'
+        this.show_toast = true
+        return
+      }
+
       try {
         this.loadingStore.show()
         const formData = new FormData()
@@ -240,29 +253,18 @@ export default {
         formData.append('description', this.form.description)
         formData.append('expense_type', this.form.expense_type)
         formData.append('amount', this.form.amount.toString())
-        // Don't send date field if it's empty or default value
-        if (this.form.date && this.form.date !== '' && this.form.date !== '1970-01-01') {
-          formData.append('date', this.form.date)
-        }
+        formData.append('date', this.form.date)
         if (this.form.bukti_transfer) {
           formData.append('bukti_transfer', this.form.bukti_transfer)
         }
 
         let response
         if (this.isEdit) {
-          response = await api.put(`${BASE_URL}expenses/${this.$route.params.id}`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
+          response = await api.put(`${BASE_URL}expenses/${this.$route.params.id}`, formData)
           this.message_toast = response.data.message || 'Expense berhasil diupdate'
           await this.checkExpenseStatus()
         } else {
-          response = await api.post(`${BASE_URL}expenses/create`, formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-          })
+          response = await api.post(`${BASE_URL}expenses/create`, formData)
           this.message_toast = 'Expense berhasil dibuat'
           // Reset form
           this.form = {
@@ -271,7 +273,7 @@ export default {
             description: '',
             expense_type: '',
             amount: 0,
-            date: '',
+            date: new Date().toISOString().split('T')[0],
             bukti_transfer: null,
           }
           this.expenseStatus = null
@@ -281,7 +283,13 @@ export default {
         this.show_toast = true
       } catch (error) {
         console.error('Error submitting expense:', error)
-        this.message_toast = error.response?.data?.message || 'Gagal submit expense'
+        const validationDetail = error.response?.data?.detail
+        this.message_toast =
+          error.response?.data?.message ||
+          (Array.isArray(validationDetail)
+            ? validationDetail.map((item) => item.msg).join(', ')
+            : validationDetail) ||
+          'Gagal submit expense'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()

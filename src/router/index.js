@@ -172,7 +172,7 @@ const router = createRouter({
         {
           path: 'paket/baru',
           name: 'paket baru',
-          component: () => import('../components/FormCreatePaket.vue'),
+          component: () => import('../components/PaketOrderForm.vue'),
         },
         {
           path: 'paket/list',
