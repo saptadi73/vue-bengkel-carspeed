@@ -175,23 +175,6 @@
                 <label class="modern-select-label">Mekanik</label>
               </div>
             </div>
-            <div class="info-card">
-              <div class="relative">
-                <select
-                  v-model="form.status_pembayaran"
-                  id="status_pembayaran"
-                  class="modern-select peer"
-                >
-                  <option value="" disabled selected>Pilih Status Pembayaran</option>
-                  <option value="belum_ada_pembayaran">Belum Ada Pembayaran</option>
-                  <option value="belum_lunas">Belum Lunas</option>
-                  <option value="tempo">Tempo</option>
-                  <option value="lunas">Lunas</option>
-                </select>
-                <label class="modern-select-label">Status Pembayaran</label>
-              </div>
-            </div>
-
             <div class="info-card" v-if="form.status_pembayaran !== 'lunas'">
               <div class="relative">
                 <input
@@ -809,6 +792,54 @@
             </div>
           </div>
 
+          <!-- Status Pembayaran -->
+          <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="mb-3 text-sm font-semibold text-slate-700">Status Pembayaran</div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button
+                type="button"
+                class="rounded-lg border px-4 py-3 text-sm font-semibold transition-colors"
+                :class="
+                  ['belum_lunas', 'belum_ada_pembayaran', ''].includes(form.status_pembayaran)
+                    ? 'border-amber-500 bg-amber-500 text-white shadow-sm'
+                    : 'border-amber-200 bg-white text-amber-700 hover:bg-amber-50'
+                "
+                :aria-pressed="
+                  ['belum_lunas', 'belum_ada_pembayaran', ''].includes(form.status_pembayaran)
+                "
+                @click="form.status_pembayaran = 'belum_lunas'"
+              >
+                Belum Lunas
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border px-4 py-3 text-sm font-semibold transition-colors"
+                :class="
+                  form.status_pembayaran === 'tempo'
+                    ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                    : 'border-blue-200 bg-white text-blue-700 hover:bg-blue-50'
+                "
+                :aria-pressed="form.status_pembayaran === 'tempo'"
+                @click="form.status_pembayaran = 'tempo'"
+              >
+                Tempo
+              </button>
+              <button
+                type="button"
+                class="rounded-lg border px-4 py-3 text-sm font-semibold transition-colors"
+                :class="
+                  form.status_pembayaran === 'lunas'
+                    ? 'border-emerald-600 bg-emerald-600 text-white shadow-sm'
+                    : 'border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50'
+                "
+                :aria-pressed="form.status_pembayaran === 'lunas'"
+                @click="form.status_pembayaran = 'lunas'"
+              >
+                Lunas
+              </button>
+            </div>
+          </div>
+
           <!-- Submit Button -->
           <div class="flex justify-end">
             <button type="submit" class="modern-btn-success flex items-center gap-2">
@@ -961,7 +992,7 @@ export default {
         next_service_km: 0,
         next_service_date: '',
         last_service: '',
-        status_pembayaran: '',
+        status_pembayaran: 'belum_lunas',
         dp_amount: 0,
         product_ordered: [],
         service_ordered: [],

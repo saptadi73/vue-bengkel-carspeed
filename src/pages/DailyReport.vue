@@ -40,6 +40,34 @@
     <loading-overlay v-if="loading" />
 
     <div v-if="report" ref="reportRef" class="space-y-6">
+      <!-- ===== DAILY OVERVIEW ===== -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-blue-50 rounded-lg border border-blue-100 p-5">
+          <div class="text-sm text-slate-600">Total WO Hari Ini</div>
+          <div class="mt-1 text-3xl font-bold text-blue-700">
+            {{ report.work_orders?.total_workorders || 0 }} WO
+          </div>
+        </div>
+        <div class="bg-red-50 rounded-lg border border-red-100 p-5">
+          <div class="text-sm text-slate-600">Total Cash-out</div>
+          <div class="mt-1 text-2xl font-bold text-red-700">
+            {{ formatCurrency(report.outflows?.total_cash_out || 0) }}
+          </div>
+        </div>
+        <div class="bg-amber-50 rounded-lg border border-amber-100 p-5">
+          <div class="text-sm text-slate-600">Sisa Cash di Kasir</div>
+          <div class="mt-1 text-2xl font-bold text-amber-700">
+            {{ formatCurrency(report.cashier_cash?.closing_balance || 0) }}
+          </div>
+        </div>
+        <div class="bg-emerald-50 rounded-lg border border-emerald-100 p-5">
+          <div class="text-sm text-slate-600">Net Profit</div>
+          <div class="mt-1 text-2xl font-bold text-emerald-700">
+            {{ formatCurrency(report.profit_loss?.net_profit || 0) }}
+          </div>
+        </div>
+      </section>
+
       <!-- ===== 1. WORK ORDERS (TOP) ===== -->
       <section class="bg-white rounded-lg shadow border p-6">
         <div class="flex items-center justify-between mb-4">
@@ -60,14 +88,17 @@
           <div class="bg-slate-50 rounded p-4">
             <div class="text-sm text-slate-600">Total Biaya</div>
             <div class="text-2xl font-bold text-red-600">
-              {{ formatCurrency(calculateTotalWOCost()) }}
+              {{ formatCurrency(report.work_orders?.total_hpp || calculateTotalWOCost()) }}
             </div>
           </div>
           <div class="bg-slate-50 rounded p-4">
             <div class="text-sm text-slate-600">Profit WO</div>
             <div class="text-2xl font-bold text-emerald-600">
               {{
-                formatCurrency((report.work_orders?.total_revenue || 0) - calculateTotalWOCost())
+                formatCurrency(
+                  report.work_orders?.gross_profit ||
+                    (report.work_orders?.total_revenue || 0) - calculateTotalWOCost(),
+                )
               }}
             </div>
           </div>
@@ -80,8 +111,9 @@
               <tr>
                 <th class="px-3 py-2 text-left">WO No</th>
                 <th class="px-3 py-2 text-left">Customer</th>
-                <th class="px-3 py-2 text-right">Total Biaya</th>
-                <th class="px-3 py-2 text-left">Status</th>
+                <th class="px-3 py-2 text-right">Revenue</th>
+                <th class="px-3 py-2 text-right">HPP</th>
+                <th class="px-3 py-2 text-left">Pembayaran</th>
               </tr>
             </thead>
             <tbody>
@@ -92,22 +124,25 @@
               >
                 <td class="px-3 py-2 font-semibold">{{ w.workorder_no }}</td>
                 <td class="px-3 py-2">{{ w.customer_name }}</td>
-                <td class="px-3 py-2 text-right">{{ formatCurrency(w.total_biaya) }}</td>
+                <td class="px-3 py-2 text-right">
+                  {{ formatCurrency(w.total_revenue ?? w.total_biaya) }}
+                </td>
+                <td class="px-3 py-2 text-right">{{ formatCurrency(w.total_hpp || 0) }}</td>
                 <td class="px-3 py-2">
                   <span
                     :class="
-                      w.status === 'dibayar'
+                      ['paid', 'dibayar', 'dibayarkan'].includes(w.payment_status || w.status)
                         ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
                     "
                     class="px-2 py-1 rounded text-xs font-semibold"
                   >
-                    {{ w.status }}
+                    {{ paymentStatusLabel(w.payment_status || w.status) }}
                   </span>
                 </td>
               </tr>
               <tr v-if="!report.work_orders?.items?.length">
-                <td colspan="4" class="px-3 py-6 text-center text-slate-400">
+                <td colspan="5" class="px-3 py-6 text-center text-slate-400">
                   Tidak ada WO hari ini
                 </td>
               </tr>
@@ -122,7 +157,7 @@
         <div class="bg-white rounded-lg shadow border p-4">
           <h3 class="font-semibold text-slate-800 mb-3 text-lg">Pengeluaran Biaya</h3>
           <div class="text-2xl font-bold text-red-600 mb-3">
-            {{ formatCurrency(calculateTotalExpenses()) }}
+            {{ formatCurrency(report.outflows?.expenses?.total || 0) }}
           </div>
           <div class="overflow-auto max-h-64">
             <table class="w-full text-sm">
@@ -134,12 +169,17 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="e in report.profit_loss?.expenses || []"
-                  :key="e.account_code"
+                  v-for="e in report.outflows?.expenses?.items || []"
+                  :key="e.payment_id || `${e.account_code}-${e.payment_date}`"
                   class="border-t"
                 >
-                  <td class="px-2 py-2 text-xs">{{ e.account_name }}</td>
+                  <td class="px-2 py-2 text-xs">{{ e.category || e.account_name }}</td>
                   <td class="px-2 py-2 text-right text-xs">{{ formatCurrency(e.amount) }}</td>
+                </tr>
+                <tr v-if="!report.outflows?.expenses?.items?.length">
+                  <td colspan="2" class="px-2 py-6 text-center text-slate-400">
+                    Tidak ada pembayaran biaya
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -150,7 +190,7 @@
         <div class="bg-white rounded-lg shadow border p-4">
           <h3 class="font-semibold text-slate-800 mb-3 text-lg">Purchase Orders</h3>
           <div class="text-2xl font-bold text-orange-600 mb-3">
-            {{ formatCurrency(report.purchase_orders?.total_purchases || 0) }}
+            {{ formatCurrency(report.outflows?.purchase_order_payments?.total || 0) }}
           </div>
           <div class="overflow-auto max-h-64">
             <table class="w-full text-sm">
@@ -163,13 +203,20 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="po in report.purchase_orders?.items || []"
-                  :key="po.po_no"
+                  v-for="po in report.outflows?.purchase_order_payments?.items || []"
+                  :key="po.payment_id || po.purchase_order_id"
                   class="border-t"
                 >
-                  <td class="px-2 py-2 text-xs font-semibold">{{ po.po_no }}</td>
+                  <td class="px-2 py-2 text-xs font-semibold">{{ po.purchase_order_no }}</td>
                   <td class="px-2 py-2 text-xs">{{ po.supplier_name }}</td>
-                  <td class="px-2 py-2 text-right text-xs">{{ formatCurrency(po.subtotal) }}</td>
+                  <td class="px-2 py-2 text-right text-xs">
+                    {{ formatCurrency(po.amount_paid) }}
+                  </td>
+                </tr>
+                <tr v-if="!report.outflows?.purchase_order_payments?.items?.length">
+                  <td colspan="3" class="px-2 py-6 text-center text-slate-400">
+                    Tidak ada pembayaran PO
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -326,60 +373,45 @@
         </div>
       </section>
 
-      <!-- ===== 4. CASHBOOK (Compact dengan method payment) ===== -->
+      <!-- ===== 4. PAYMENT CHANNELS ===== -->
       <section class="bg-white rounded-lg shadow border p-4">
-        <h2 class="text-lg font-bold text-slate-800 mb-4">Cashbook</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-          <div v-for="cb in report.cash_books" :key="cb.account_code" class="border rounded-lg p-4">
-            <div class="text-sm text-slate-600">{{ cb.account_name }}</div>
-            <div class="text-2xl font-bold text-blue-600 mt-1">
-              {{ formatCurrency(cb.opening_balance) }}
+        <h2 class="text-lg font-bold text-slate-800 mb-4">Posisi Kas & Pembayaran</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <div
+            v-for="channel in report.payment_channels"
+            :key="channel.code || channel.account_code"
+            class="border rounded-lg p-4"
+          >
+            <div class="text-sm font-semibold text-slate-700">{{ channel.name }}</div>
+            <div class="text-xs uppercase tracking-wide text-slate-400 mt-1">
+              {{ paymentChannelLabel(channel.type) }}
             </div>
-            <div class="text-xs text-slate-500 mt-2">Opening Balance</div>
+            <div class="text-2xl font-bold text-blue-600 mt-1">
+              {{ formatCurrency(channel.closing_balance) }}
+            </div>
+            <div class="text-xs text-slate-500 mt-1">Saldo Akhir</div>
             <div class="mt-3 space-y-2 text-xs">
               <div class="flex justify-between">
-                <span>Debit:</span>
-                <span class="font-semibold">{{ formatCurrency(sum(cb.entries, 'debit')) }}</span>
+                <span>Saldo Awal:</span>
+                <span class="font-semibold">{{ formatCurrency(channel.opening_balance) }}</span>
               </div>
               <div class="flex justify-between">
-                <span>Credit:</span>
-                <span class="font-semibold">{{ formatCurrency(sum(cb.entries, 'credit')) }}</span>
+                <span>Cash-in:</span>
+                <span class="font-semibold text-emerald-600">{{
+                  formatCurrency(channel.cash_in)
+                }}</span>
               </div>
-              <div class="border-t pt-2 flex justify-between font-bold text-green-600">
-                <span>Saldo Akhir:</span>
-                <span>{{ formatCurrency(lastBalance(cb.entries, cb.opening_balance)) }}</span>
+              <div class="flex justify-between">
+                <span>Cash-out:</span>
+                <span class="font-semibold text-red-600">{{
+                  formatCurrency(channel.cash_out)
+                }}</span>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Detailed Cashbook Entries -->
-        <div v-for="cb in report.cash_books" :key="cb.account_code" class="mb-6">
-          <h3 class="text-sm font-semibold text-slate-700 mb-2">{{ cb.account_name }} - Detail</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full text-xs">
-              <thead class="bg-slate-100">
-                <tr>
-                  <th class="px-2 py-1 text-left">Tanggal</th>
-                  <th class="px-2 py-1 text-left">Memo</th>
-                  <th class="px-2 py-1 text-right">Debit</th>
-                  <th class="px-2 py-1 text-right">Credit</th>
-                  <th class="px-2 py-1 text-right">Saldo</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(e, i) in cb.entries" :key="i" class="border-t">
-                  <td class="px-2 py-1">{{ formatDate(e.date) }}</td>
-                  <td class="px-2 py-1">{{ e.memo }}</td>
-                  <td class="px-2 py-1 text-right">{{ formatCurrency(e.debit) }}</td>
-                  <td class="px-2 py-1 text-right">{{ formatCurrency(e.credit) }}</td>
-                  <td class="px-2 py-1 text-right font-semibold">
-                    {{ formatCurrency(e.balance) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <div v-if="!report.payment_channels?.length" class="py-6 text-center text-slate-400">
+          Tidak ada posisi channel pembayaran
         </div>
       </section>
 
@@ -452,9 +484,9 @@
             </div>
           </div>
           <div class="bg-red-50 rounded-lg p-4">
-            <div class="text-sm text-slate-600">Total Expenses</div>
+            <div class="text-sm text-slate-600">Operating Expenses</div>
             <div class="text-2xl font-bold text-red-600">
-              {{ formatCurrency(report.profit_loss?.total_expenses || 0) }}
+              {{ formatCurrency(report.profit_loss?.operating_expenses || 0) }}
             </div>
           </div>
           <div class="bg-emerald-50 rounded-lg p-4">
@@ -496,8 +528,8 @@
                 <span class="font-semibold">{{ formatCurrency(e.amount) }}</span>
               </div>
               <div class="flex justify-between p-2 font-bold bg-red-50 mt-2">
-                <span>Total Expenses</span>
-                <span>{{ formatCurrency(report.profit_loss?.total_expenses || 0) }}</span>
+                <span>Total Operating Expenses</span>
+                <span>{{ formatCurrency(report.profit_loss?.operating_expenses || 0) }}</span>
               </div>
             </div>
           </div>
@@ -558,6 +590,61 @@ export default {
           if (!Array.isArray(data.cash_books))
             data.cash_books = data.cash_books ? [data.cash_books] : []
 
+          data.outflows = data.outflows || {
+            total_cash_out: Number(data.cash_out || 0),
+            expenses: {
+              total: Number(data.expenses || data.profit_loss?.total_expenses || 0),
+              items: Array.isArray(data.profit_loss?.expenses) ? data.profit_loss.expenses : [],
+            },
+            purchase_order_payments: {
+              total: Number(data.purchase_orders?.total_purchases || 0),
+              items: Array.isArray(data.purchase_orders?.items)
+                ? data.purchase_orders.items.map((item) => ({
+                    ...item,
+                    purchase_order_no: item.purchase_order_no || item.po_no,
+                    amount_paid: item.amount_paid ?? item.subtotal,
+                  }))
+                : [],
+            },
+          }
+          data.outflows.expenses = data.outflows.expenses || { total: 0, items: [] }
+          data.outflows.expenses.items = Array.isArray(data.outflows.expenses.items)
+            ? data.outflows.expenses.items
+            : []
+          data.outflows.purchase_order_payments = data.outflows.purchase_order_payments || {
+            total: 0,
+            items: [],
+          }
+          data.outflows.purchase_order_payments.items = Array.isArray(
+            data.outflows.purchase_order_payments.items,
+          )
+            ? data.outflows.purchase_order_payments.items
+            : []
+
+          if (!Array.isArray(data.payment_channels) || !data.payment_channels.length) {
+            data.payment_channels = data.cash_books.map((cashBook) => ({
+              code: cashBook.account_code,
+              account_code: cashBook.account_code,
+              name: cashBook.account_name || 'Cash Book',
+              type: 'other',
+              opening_balance: Number(cashBook.opening_balance || 0),
+              cash_in: sum(cashBook.entries, 'debit'),
+              cash_out: sum(cashBook.entries, 'credit'),
+              closing_balance: lastBalance(cashBook.entries, cashBook.opening_balance),
+            }))
+          }
+
+          data.cashier_cash = data.cashier_cash ||
+            data.payment_channels.find((channel) => channel.type === 'cashier_cash') || {
+              code: 'CASHIER_CASH',
+              account_code: '',
+              account_name: 'Kas Kasir',
+              opening_balance: 0,
+              cash_in: 0,
+              cash_out: 0,
+              closing_balance: 0,
+            }
+
           // ensure product/service/profit/work arrays exist
           data.product_sales = data.product_sales || {
             total_quantity: 0,
@@ -588,6 +675,23 @@ export default {
           data.profit_loss.expenses = Array.isArray(data.profit_loss.expenses)
             ? data.profit_loss.expenses
             : []
+          data.profit_loss.product_hpp = Number(
+            data.profit_loss.product_hpp ?? data.product_sales.total_hpp ?? 0,
+          )
+          data.profit_loss.service_hpp = Number(
+            data.profit_loss.service_hpp ?? data.service_sales.total_hpp ?? 0,
+          )
+          data.profit_loss.total_hpp = Number(
+            data.profit_loss.total_hpp ??
+              data.profit_loss.product_hpp + data.profit_loss.service_hpp,
+          )
+          data.profit_loss.gross_profit = Number(
+            data.profit_loss.gross_profit ??
+              Number(data.profit_loss.total_revenue || 0) - data.profit_loss.total_hpp,
+          )
+          data.profit_loss.operating_expenses = Number(
+            data.profit_loss.operating_expenses ?? data.profit_loss.total_expenses ?? 0,
+          )
           data.work_orders = data.work_orders || {
             total_workorders: 0,
             total_revenue: 0,
@@ -596,6 +700,11 @@ export default {
           data.work_orders.items = Array.isArray(data.work_orders.items)
             ? data.work_orders.items
             : []
+          data.work_orders.items = data.work_orders.items.map((item) => ({
+            ...item,
+            total_revenue: Number(item.total_revenue ?? item.total_biaya ?? 0),
+            total_hpp: Number(item.total_hpp || 0),
+          }))
           data.purchase_orders = data.purchase_orders || {
             total_quantity: 0,
             total_purchases: 0,
@@ -636,14 +745,21 @@ export default {
         // Summary sheet
         const summary = [
           ['Date', report.value.date || date.value],
+          ['Total Work Orders', report.value.work_orders?.total_workorders || 0],
+          ['Work Order Revenue', report.value.work_orders?.total_revenue || 0],
+          ['Work Order HPP', report.value.work_orders?.total_hpp || 0],
+          ['Work Order Gross Profit', report.value.work_orders?.gross_profit || 0],
           ['Total Product Sales', report.value.product_sales?.total_sales || 0],
           ['Total Product Qty', report.value.product_sales?.total_quantity || 0],
           ['Total Service Sales', report.value.service_sales?.total_sales || 0],
           ['Total Service Qty', report.value.service_sales?.total_quantity || 0],
-          ['Total Purchases', report.value.purchase_orders?.total_purchases || 0],
-          ['Total Purchase Qty', report.value.purchase_orders?.total_quantity || 0],
+          ['Expense Cash-out', report.value.outflows?.expenses?.total || 0],
+          ['PO Payment Cash-out', report.value.outflows?.purchase_order_payments?.total || 0],
+          ['Total Cash-out', report.value.outflows?.total_cash_out || 0],
+          ['Cashier Closing Balance', report.value.cashier_cash?.closing_balance || 0],
           ['Total Revenue', report.value.profit_loss?.total_revenue || 0],
-          ['Total Expenses', report.value.profit_loss?.total_expenses || 0],
+          ['Total HPP', report.value.profit_loss?.total_hpp || 0],
+          ['Operating Expenses', report.value.profit_loss?.operating_expenses || 0],
           ['Net Profit', report.value.profit_loss?.net_profit || 0],
         ]
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), 'Summary')
@@ -662,6 +778,63 @@ export default {
           const name = `Cash_${acct.account_code || acct.account_name || 'acct'}`.slice(0, 31)
           XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), name)
         })
+
+        const channelRows = [
+          ['Code', 'Account Code', 'Name', 'Type', 'Opening', 'Cash In', 'Cash Out', 'Closing'],
+        ]
+        ;(report.value.payment_channels || []).forEach((channel) => {
+          channelRows.push([
+            channel.code,
+            channel.account_code,
+            channel.name,
+            channel.type,
+            channel.opening_balance || 0,
+            channel.cash_in || 0,
+            channel.cash_out || 0,
+            channel.closing_balance || 0,
+          ])
+        })
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(channelRows), 'Payment Channels')
+
+        const expenseOutflowRows = [
+          ['Payment ID', 'Date', 'Category', 'Description', 'Channel', 'Account', 'Amount'],
+        ]
+        ;(report.value.outflows?.expenses?.items || []).forEach((item) => {
+          expenseOutflowRows.push([
+            item.payment_id,
+            item.payment_date,
+            item.category,
+            item.description,
+            item.channel_code || item.payment_channel,
+            item.account_name || item.account_code,
+            item.amount || 0,
+          ])
+        })
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.aoa_to_sheet(expenseOutflowRows),
+          'Outflows Expenses',
+        )
+
+        const poPaymentRows = [
+          ['Payment ID', 'Date', 'PO', 'Supplier', 'Channel', 'Account', 'Amount Paid'],
+        ]
+        ;(report.value.outflows?.purchase_order_payments?.items || []).forEach((item) => {
+          poPaymentRows.push([
+            item.payment_id,
+            item.payment_date,
+            item.purchase_order_no,
+            item.supplier_name,
+            item.channel_code || item.payment_channel,
+            item.account_name || item.account_code,
+            item.amount_paid || 0,
+          ])
+        })
+        XLSX.utils.book_append_sheet(
+          wb,
+          XLSX.utils.aoa_to_sheet(poPaymentRows),
+          'Outflows PO Payments',
+        )
 
         // Purchase Orders
         const poRows = []
@@ -779,9 +952,19 @@ export default {
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(expRows), 'Expenses')
 
         // Work orders
-        const woRows = [['WO', 'Customer', 'Total Biaya', 'Status']]
+        const woRows = [
+          ['WO', 'Customer', 'Revenue', 'HPP', 'Gross Profit', 'Status', 'Payment Status'],
+        ]
         ;(report.value.work_orders?.items || []).forEach((w) =>
-          woRows.push([w.workorder_no, w.customer_name, w.total_biaya, w.status]),
+          woRows.push([
+            w.workorder_no,
+            w.customer_name,
+            w.total_revenue ?? w.total_biaya,
+            w.total_hpp || 0,
+            w.gross_profit || 0,
+            w.status,
+            w.payment_status,
+          ]),
         )
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(woRows), 'Work Orders')
 
@@ -821,6 +1004,30 @@ export default {
       return dt.toLocaleString('id-ID', { year: 'numeric', month: 'long', day: '2-digit' })
     }
 
+    const paymentStatusLabel = (status) => {
+      const labels = {
+        unpaid: 'Belum Dibayar',
+        partial: 'Dibayar Sebagian',
+        paid: 'Dibayar',
+        refunded: 'Dikembalikan',
+        dibayar: 'Dibayar',
+        dibayarkan: 'Dibayar',
+      }
+      return labels[status] || status || '-'
+    }
+
+    const paymentChannelLabel = (type) => {
+      const labels = {
+        cashier_cash: 'Cash Kasir',
+        bank: 'Bank',
+        qris: 'QRIS',
+        debit: 'Debit',
+        petty_cash: 'Kas Kecil',
+        other: 'Lainnya',
+      }
+      return labels[type] || type || 'Lainnya'
+    }
+
     // utility: sum numeric field in entries
     const sum = (entries = [], field = 'debit') => {
       return (entries || []).reduce((s, it) => s + (Number(it?.[field]) || 0), 0)
@@ -856,14 +1063,10 @@ export default {
 
     // Calculate total Work Order cost (biaya)
     const calculateTotalWOCost = () => {
+      const aggregateHpp = Number(report.value?.work_orders?.total_hpp)
+      if (aggregateHpp) return aggregateHpp
       const items = report.value?.work_orders?.items || []
-      return items.reduce((sum, wo) => sum + (Number(wo.total_biaya) || 0), 0)
-    }
-
-    // Calculate total expenses
-    const calculateTotalExpenses = () => {
-      const expenses = report.value?.profit_loss?.expenses || []
-      return expenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0)
+      return items.reduce((total, wo) => total + (Number(wo.total_hpp) || 0), 0)
     }
 
     return {
@@ -882,7 +1085,8 @@ export default {
       calculateTotalHpp,
       calculateGrossMarginPercent,
       calculateTotalWOCost,
-      calculateTotalExpenses,
+      paymentStatusLabel,
+      paymentChannelLabel,
     }
   },
 }
