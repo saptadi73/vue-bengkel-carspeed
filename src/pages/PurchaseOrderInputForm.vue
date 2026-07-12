@@ -8,7 +8,38 @@
       <!-- Supplier Information -->
       <div class="border-t pt-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Supplier Information</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <p class="text-sm font-semibold text-gray-700">Sumber Vendor</p>
+          <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <button
+              type="button"
+              class="rounded-xl border px-4 py-3 text-left transition"
+              :class="
+                form.supplier_mode === 'existing'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-600'
+              "
+              @click="setSupplierMode('existing')"
+            >
+              <p class="font-semibold">Pilih dari master supplier</p>
+              <p class="mt-1 text-xs">Gunakan supplier yang sudah tersimpan.</p>
+            </button>
+            <button
+              type="button"
+              class="rounded-xl border px-4 py-3 text-left transition"
+              :class="
+                form.supplier_mode === 'manual'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-white text-gray-600'
+              "
+              @click="setSupplierMode('manual')"
+            >
+              <p class="font-semibold">Input vendor manual</p>
+              <p class="mt-1 text-xs">Dipakai saat vendor belum ada di master.</p>
+            </button>
+          </div>
+        </div>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label for="supplier_id" class="block text-sm font-medium text-gray-700"
               >Supplier Name</label
@@ -17,15 +48,52 @@
               v-model="form.supplier_id"
               id="supplier_id"
               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              :disabled="form.supplier_mode !== 'existing'"
             >
-              <option value="">Select Supplier</option>
-              <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                {{ supplier.nama }},{{ supplier.toko ? ` Toko: ${supplier.toko}` : '' }},{{
-                  supplier.perusahaan ? ` Perusahaan: ${supplier.perusahaan}` : ''
+              <option value="">
+                {{
+                  form.supplier_mode === 'existing' ? 'Select Supplier' : 'Mode manual aktif'
                 }}
               </option>
+              <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                {{ buildSupplierOptionLabel(supplier) }}
+              </option>
             </select>
+            <p v-if="supplierError" class="mt-1 text-sm text-red-600">
+              Pilih supplier atau isi vendor manual.
+            </p>
+          </div>
+          <div>
+            <label for="vendor_code" class="block text-sm font-medium text-gray-700"
+              >Vendor Code</label
+            >
+            <input
+              v-model="form.vendor_code"
+              type="text"
+              id="vendor_code"
+              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="form.supplier_mode !== 'manual'"
+              :placeholder="
+                form.supplier_mode === 'manual' ? 'Contoh: VND-001' : 'Terisi otomatis dari supplier'
+              "
+            />
+          </div>
+          <div>
+            <label for="vendor_name" class="block text-sm font-medium text-gray-700"
+              >Vendor Name</label
+            >
+            <input
+              v-model="form.vendor_name"
+              type="text"
+              id="vendor_name"
+              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :disabled="form.supplier_mode !== 'manual'"
+              :placeholder="
+                form.supplier_mode === 'manual'
+                  ? 'Nama vendor untuk transaksi ini'
+                  : 'Terisi otomatis dari supplier'
+              "
+            />
           </div>
           <div>
             <label for="supplierAddress" class="block text-sm font-medium text-gray-700"
@@ -239,6 +307,7 @@ import InputBoxSelectedDropDown from '@/components/InputBoxSelectedDropDown.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import { buildSupplierOptionLabel, getSupplierCode, getSupplierName, mapSupplierDetails } from '@/utils/supplier'
 
 export default {
   components: { InputBoxSelectedDropDown, LoadingOverlay, ToastCard },
@@ -250,16 +319,23 @@ export default {
       satuans: [],
       isSubmitting: false, // prevent double submit
       dateError: false, // show inline warning when date empty
+      supplierError: false,
       form: {
         supplier_id: '',
+        supplier_mode: 'existing',
         poNumber: '',
         poDate: '',
         supplierName: '',
         alamat: '',
         hp: '',
         email: '',
+        vendor_code: '',
+        vendor_name: '',
+        perusahaan: '',
+        toko: '',
         date: '',
         status: 'draft',
+        status_pembayaran: '',
         includeTax: false,
         document: null,
         items: [
@@ -291,22 +367,15 @@ export default {
   },
   watch: {
     'form.supplier_id'(newVal) {
-      if (newVal) {
+      if (newVal && this.form.supplier_mode === 'existing') {
         const supplier = this.suppliers.find((s) => s.id == newVal)
         if (supplier) {
-          this.form.alamat = supplier.alamat || ''
-          this.form.hp = supplier.hp || ''
-          this.form.email = supplier.email || ''
-          this.form.perusahaan = supplier.perusahaan || ''
-          this.form.toko = supplier.toko || ''
+          Object.assign(this.form, mapSupplierDetails(supplier))
         }
       } else {
-        this.form.alamat = ''
-        this.form.hp = ''
-        this.form.email = ''
-        this.form.perusahaan = ''
-        this.form.toko = ''
+        this.clearSupplierDetails()
       }
+      this.supplierError = false
     },
     'form.dp_amount'(val) {
       // ensure numeric
@@ -316,8 +385,14 @@ export default {
     'form.date'() {
       this.dateError = false
     },
+    'form.vendor_name'() {
+      this.supplierError = false
+    },
   },
   computed: {
+    selectedSupplier() {
+      return this.suppliers.find((supplier) => supplier.id == this.form.supplier_id) || null
+    },
     // computed subtotal/tax/total to drive UI reliably
     subtotal() {
       return this.form.items.reduce((s, it) => s + (Number(it.subtotal) || 0), 0)
@@ -334,6 +409,58 @@ export default {
     },
   },
   methods: {
+    buildSupplierOptionLabel,
+    setSupplierMode(mode) {
+      this.form.supplier_mode = mode
+      this.supplierError = false
+
+      if (mode === 'existing') {
+        this.form.vendor_code = ''
+        this.form.vendor_name = ''
+        if (this.form.supplier_id && this.selectedSupplier) {
+          Object.assign(this.form, mapSupplierDetails(this.selectedSupplier))
+        }
+        return
+      }
+
+      this.form.supplier_id = ''
+      this.clearSupplierDetails()
+    },
+    clearSupplierDetails() {
+      this.form.alamat = ''
+      this.form.hp = ''
+      this.form.email = ''
+      this.form.perusahaan = ''
+      this.form.toko = ''
+      if (this.form.supplier_mode === 'existing') {
+        this.form.vendor_code = ''
+        this.form.vendor_name = ''
+      }
+    },
+    hasValidSupplierSelection() {
+      if (this.form.supplier_mode === 'manual') {
+        return !!(this.form.vendor_name || '').trim()
+      }
+
+      return !!this.form.supplier_id
+    },
+    resolveSupplierPayload() {
+      if (this.form.supplier_mode === 'manual') {
+        return {
+          supplier_id: null,
+          supplier_name: (this.form.vendor_name || '').trim() || null,
+          vendor_name: (this.form.vendor_name || '').trim() || null,
+          vendor_code: (this.form.vendor_code || '').trim() || null,
+        }
+      }
+
+      return {
+        supplier_id: this.form.supplier_id || null,
+        supplier_name: getSupplierName(this.selectedSupplier) || null,
+        vendor_name: getSupplierName(this.selectedSupplier) || null,
+        vendor_code: getSupplierCode(this.selectedSupplier) || null,
+      }
+    },
     // handler for child emit
     onItems(items) {
       // normalize items into form.items shape
@@ -423,6 +550,12 @@ export default {
     },
     async submitForm() {
       if (this.isSubmitting) return
+      if (!this.hasValidSupplierSelection()) {
+        this.supplierError = true
+        this.show_toast = true
+        this.message_toast = 'Lengkapi supplier atau vendor manual terlebih dahulu.'
+        return
+      }
       // validate required date
       if (!this.form.date) {
         this.dateError = true
@@ -446,8 +579,9 @@ export default {
       }
       try {
         this.loadingStore.show()
+        const supplierPayload = this.resolveSupplierPayload()
         const payload = {
-          supplier_id: this.form.supplier_id,
+          ...supplierPayload,
           date: this.form.date,
           pajak: this.form.includeTax ? this.tax : null,
           total: this.grandTotal, // grand total (subtotal + tax - dp)
@@ -487,15 +621,18 @@ export default {
         // Reset form after submission
         this.form = {
           supplier_id: '',
+          supplier_mode: 'existing',
           poNumber: '',
           poDate: '',
           supplierName: '',
           alamat: '',
           hp: '',
           email: '',
+          vendor_code: '',
+          vendor_name: '',
           perusahaan: '',
           toko: '',
-          deliveryDate: '',
+          date: '',
           status: 'draft',
           status_pembayaran: '',
           dp_amount: 0,

@@ -162,7 +162,7 @@
               <select v-model="form.supplier_id" id="supplier_id" class="modern-select peer w-full">
                 <option value="" disabled selected>Pilih Supplier</option>
                 <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                  {{ supplier.nama || supplier.name }}
+                  {{ buildSupplierOptionLabel(supplier) }}
                 </option>
               </select>
               <button type="button" class="modern-btn-info" @click="openSupplierModal">
@@ -197,6 +197,15 @@
         <h3 class="text-xl font-semibold mb-4">Tambah Supplier</h3>
         <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
           <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kode Vendor</label>
+            <input
+              v-model="supplierForm.supplier_code"
+              type="text"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              placeholder="Contoh: VND-001"
+            />
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
             <input
               v-model="supplierForm.nama"
@@ -220,6 +229,7 @@
               v-model="supplierForm.alamat"
               type="text"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              required
             />
           </div>
           <div>
@@ -262,7 +272,7 @@
           <button
             type="button"
             class="modern-btn-primary"
-            :disabled="!supplierForm.nama || !supplierForm.hp"
+            :disabled="!canSubmitSupplierForm"
             @click="addSupplier"
           >
             Save
@@ -394,6 +404,7 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import { buildSupplierOptionLabel } from '@/utils/supplier'
 
 export default {
   components: { LoadingOverlay, ToastCard },
@@ -427,6 +438,7 @@ export default {
       isUnitModalOpen: false,
       showSupplierModal: false,
       supplierForm: {
+        supplier_code: '',
         nama: '',
         hp: '',
         alamat: '',
@@ -443,10 +455,20 @@ export default {
     const message_toast = ref('')
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
+  computed: {
+    canSubmitSupplierForm() {
+      return (
+        !!(this.supplierForm.nama || '').trim() &&
+        !!(this.supplierForm.hp || '').trim() &&
+        !!(this.supplierForm.alamat || '').trim()
+      )
+    },
+  },
   methods: {
     onNameInput(val) {
       this.form.name = (val || '').toString().toUpperCase()
     },
+    buildSupplierOptionLabel,
     async tutupToast() {
       this.show_toast = false
       this.message_toast = ''
@@ -504,9 +526,9 @@ export default {
     openSupplierModal() {
       this.showSupplierModal = true
     },
-    closeSupplierModal() {
-      this.showSupplierModal = false
-      this.supplierForm = {
+    getInitialSupplierForm() {
+      return {
+        supplier_code: '',
         nama: '',
         hp: '',
         alamat: '',
@@ -516,18 +538,26 @@ export default {
         toko: '',
       }
     },
+    closeSupplierModal() {
+      this.showSupplierModal = false
+      this.supplierForm = this.getInitialSupplierForm()
+    },
+    buildSupplierPayload() {
+      return {
+        supplier_code: (this.supplierForm.supplier_code || '').toString().trim() || null,
+        nama: (this.supplierForm.nama || '').toString().trim(),
+        hp: (this.supplierForm.hp || '').toString().trim(),
+        alamat: (this.supplierForm.alamat || '').toString().trim(),
+        email: (this.supplierForm.email || '').toString().trim() || null,
+        npwp: (this.supplierForm.npwp || '').toString().trim() || null,
+        perusahaan: (this.supplierForm.perusahaan || '').toString().trim() || null,
+        toko: (this.supplierForm.toko || '').toString().trim() || null,
+      }
+    },
     async addSupplier() {
       try {
         this.loadingStore.show()
-        const payload = {
-          nama: (this.supplierForm.nama || '').toString().trim(),
-          hp: (this.supplierForm.hp || '').toString().trim(),
-          alamat: this.supplierForm.alamat || null,
-          email: this.supplierForm.email || null,
-          npwp: this.supplierForm.npwp || null,
-          perusahaan: this.supplierForm.perusahaan || null,
-          toko: this.supplierForm.toko || null,
-        }
+        const payload = this.buildSupplierPayload()
         const res = await api.post(`${BASE_URL}suppliers/create`, payload)
         this.show_toast = true
         this.message_toast = res.data?.message || 'Supplier created'

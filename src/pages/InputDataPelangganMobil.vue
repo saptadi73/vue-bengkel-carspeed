@@ -88,16 +88,15 @@
           </div>
           <div class="mb-4">
             <label for="brand_id" class="block text-sm font-medium text-gray-700 mb-2"
-              >Brand <span class="text-red-500">*</span></label
+              >Brand</label
             >
             <div class="flex gap-2 items-end">
               <select
                 v-model="formData.brand_id"
                 id="brand_id"
                 class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                required
               >
-                <option value="" disabled>Pilih Brand</option>
+                <option value="">Pilih Brand</option>
                 <option v-for="brand in brands" :key="brand.id" :value="brand.id">
                   {{ (brand.name || '').toString().toUpperCase() }}
                 </option>
@@ -179,15 +178,14 @@
             />
           </div>
           <div class="mb-4">
-            <label for="no_pol" class="block text-sm font-medium text-gray-700 mb-2"
-              >Nomor Polisi <span class="text-red-500">*</span></label
-            >
+            <label for="no_pol" class="block text-sm font-medium text-gray-700 mb-2">
+              Nomor Polisi
+            </label>
             <input
               v-model="formData.no_pol"
               id="no_pol"
               type="text"
               class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              required
             />
           </div>
         </div>
@@ -215,27 +213,29 @@ import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import BrandModal from '@/pages/BrandModal.vue'
 
+const createInitialFormData = () => ({
+  nama: '',
+  alamat: '',
+  hp: '',
+  tanggal_lahir: '',
+  email: '',
+  type: '',
+  brand_id: '',
+  model: '',
+  tahun: '',
+  no_rangka: '',
+  no_mesin: '',
+  kapasitas: '',
+  no_pol: '',
+  warna: '',
+})
+
 export default {
   name: 'InputDataPelangganMobil',
   components: { LoadingOverlay, ToastCard, BrandModal },
   data() {
     return {
-      formData: {
-        nama: '',
-        alamat: '',
-        hp: '',
-        tanggal_lahir: '',
-        email: '',
-        type: '',
-        brand_id: '',
-        model: '',
-        tahun: '',
-        no_rangka: '',
-        no_mesin: '',
-        kapasitas: '',
-        no_pol: '',
-        warna: '',
-      },
+      formData: createInitialFormData(),
       brands: [],
       showBrandModal: false,
       newBrandName: '',
@@ -252,6 +252,9 @@ export default {
     this.isiPendaftaran()
   },
   methods: {
+    getInitialFormData() {
+      return createInitialFormData()
+    },
     isiPendaftaran() {
       const savedData = localStorage.getItem('bookingDataSaveToCustomer')
       if (savedData) {
@@ -264,29 +267,32 @@ export default {
         this.formData.warna = bookingData.warna || ''
       }
     },
+    buildPayload() {
+      return {
+        nama: (this.formData.nama || '').toString().trim(),
+        alamat: (this.formData.alamat || '').toString().trim(),
+        hp: (this.formData.hp || '').toString().trim(),
+        tanggal_lahir: this.formData.tanggal_lahir || null,
+        email: (this.formData.email || '').toString().trim() || null,
+        type: (this.formData.type || '').toString().trim() || null,
+        brand_id: this.formData.brand_id || null,
+        model: (this.formData.model || '').toString().trim() || null,
+        tahun: this.formData.tahun || null,
+        no_rangka: (this.formData.no_rangka || '').toString().trim() || null,
+        no_mesin: (this.formData.no_mesin || '').toString().trim() || null,
+        kapasitas: (this.formData.kapasitas || '').toString().trim() || null,
+        no_pol: (this.formData.no_pol || '').toString().trim() || null,
+        warna: (this.formData.warna || '').toString().trim() || null,
+      }
+    },
     async handleSubmit() {
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}customers/with-vehicle`, this.formData)
+        const response = await api.post(`${BASE_URL}customers/with-vehicle`, this.buildPayload())
         this.message_toast = response.data.message || 'Data berhasil ditambahkan!'
         this.show_toast = true
         // Reset form
-        this.formData = {
-          nama: '',
-          alamat: '',
-          hp: '',
-          tanggal_lahir: '',
-          email: '',
-          type: '',
-          brand_id: '',
-          model: '',
-          tahun: '',
-          no_rangka: '',
-          warna: '',
-          no_mesin: '',
-          kapasitas: '',
-          no_pol: '',
-        }
+        this.formData = this.getInitialFormData()
         console.log('Form submitted successfully:', this.formData)
         const savedData = localStorage.getItem('bookingDataSaveToCustomer')
         if (savedData && savedData.customer_id == this.formData.customer_id) {

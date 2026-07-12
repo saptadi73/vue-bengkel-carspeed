@@ -39,7 +39,7 @@
               type="text"
               id="search"
               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="Cari berdasarkan nomor PO, supplier..."
+              placeholder="Cari berdasarkan nomor PO, supplier, vendor, atau kode vendor..."
             />
             <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
@@ -147,7 +147,7 @@
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
-                Nama Supplier
+                Supplier / Vendor
               </th>
               <th
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
@@ -199,7 +199,10 @@
                 {{ order.po_no }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ order.supplier_name }}
+                <div class="space-y-1">
+                  <div class="font-medium text-gray-900">{{ resolveOrderName(order) }}</div>
+                  <div class="text-xs text-gray-500">{{ resolveOrderCode(order) || 'Tanpa kode vendor' }}</div>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-gray-900">{{ formatDate(order.date) }}</div>
@@ -244,7 +247,7 @@
               </td>
             </tr>
             <tr v-if="filteredOrders.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="10" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
                     class="h-12 w-12 text-gray-400 mb-4"
@@ -289,6 +292,27 @@
         </div>
 
         <div class="space-y-3">
+          <div class="flex items-center">
+            <svg
+              class="h-4 w-4 text-gray-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 7h18M5 7l1 12h12l1-12M9 11h6"
+              />
+            </svg>
+            <span class="text-sm"
+              ><strong>Vendor:</strong> {{ resolveOrderName(order) }} ({{
+                resolveOrderCode(order) || 'tanpa kode'
+              }})</span
+            >
+          </div>
+
           <div class="flex items-center">
             <svg
               class="h-4 w-4 text-gray-400 mr-2"
@@ -468,7 +492,11 @@
     :is-open="showPaymentModal"
     :initial-amount="selectedOrderForPayment ? selectedOrderForPayment.pembayaran : 0"
     :expense-name="selectedOrderForPayment ? `PO ${selectedOrderForPayment.po_no}` : ''"
-    :expense-type="selectedOrderForPayment ? selectedOrderForPayment.supplier_name : ''"
+    :expense-type="
+      selectedOrderForPayment
+        ? resolveOrderName(selectedOrderForPayment)
+        : ''
+    "
     @close="closePaymentModal"
     @submit="handlePaymentSubmit"
   />
@@ -483,6 +511,7 @@ import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL } from '../base.utils.url'
 import api from '@/user/axios'
+import { getSupplierCode, getSupplierName } from '@/utils/supplier'
 
 export default {
   name: 'TablePurchaseOrderAll',
@@ -519,7 +548,9 @@ export default {
         filtered = filtered.filter(
           (order) =>
             (order.id && order.id.toString().includes(query)) ||
-            (order.supplier_name && order.supplier_name.toLowerCase().includes(query)),
+            (order.po_no && order.po_no.toLowerCase().includes(query)) ||
+            this.resolveOrderName(order).toLowerCase().includes(query) ||
+            this.resolveOrderCode(order).toLowerCase().includes(query),
         )
       }
 
@@ -583,6 +614,12 @@ export default {
     },
   },
   methods: {
+    resolveOrderCode(order) {
+      return getSupplierCode(order)
+    },
+    resolveOrderName(order) {
+      return getSupplierName(order) || 'Vendor tanpa nama'
+    },
     goToCreatePO() {
       this.$router.push('/finansial/purchase')
     },
@@ -685,6 +722,12 @@ export default {
       this.selectedOrderForPayment = null
     },
     async handlePaymentSubmit(paymentData) {
+      if (!this.selectedOrderForPayment?.supplier_id) {
+        this.message_toast =
+          'Pembayaran jurnal membutuhkan supplier master. PO vendor manual tidak bisa dibayar dari layar ini.'
+        this.show_toast = true
+        return
+      }
       const form = {
         amount: paymentData.amount,
         date: paymentData.date,

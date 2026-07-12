@@ -207,6 +207,19 @@ export default {
     this.fetchAll()
   },
   methods: {
+    normalizeMonthlyPayload(payload) {
+      if (Array.isArray(payload)) {
+        return {
+          labels: payload.map((item) => item.month),
+          values: payload.map((item) => item.total ?? 0),
+        }
+      }
+
+      return {
+        labels: Array.isArray(payload?.labels) ? payload.labels : [],
+        values: Array.isArray(payload?.values) ? payload.values : [],
+      }
+    },
     async fetchAll() {
       this.loading = true
       this.errorMessage = ''
@@ -236,39 +249,65 @@ export default {
     async fetchWorkordersPie() {
       const { data } = await api.get('dashboard/workorders-pie')
       const payload = data?.data ?? data
+
+      // New API shape: { labels: [...], values: [...] }
+      if (Array.isArray(payload?.labels) && Array.isArray(payload?.values)) {
+        this.pieChartData.labels = payload.labels
+        this.pieChartData.datasets[0].data = payload.values
+        return
+      }
+
+      // Backward compatibility: { completed, pending }
       const completed = payload?.completed ?? 0
       const pending = payload?.pending ?? 0
+      this.pieChartData.labels = ['Completed', 'Pending']
       this.pieChartData.datasets[0].data = [completed, pending]
     },
     async fetchSales() {
       const { data } = await api.get('dashboard/sales-monthly', {
         params: { months: this.months },
       })
-      const payload = data?.data ?? data ?? []
-      const labels = payload.map((item) => item.month)
-      const values = payload.map((item) => item.total ?? 0)
-      this.salesData.labels = labels
-      this.salesData.datasets[0].data = values
+      const payload = data?.data ?? data ?? {}
+      const normalized = this.normalizeMonthlyPayload(payload)
+      this.salesData.labels = normalized.labels
+      this.salesData.datasets[0].data = normalized.values
     },
     async fetchPurchase() {
       const { data } = await api.get('dashboard/purchase-monthly', {
         params: { months: this.months },
       })
-      const payload = data?.data ?? data ?? []
-      const labels = payload.map((item) => item.month)
-      const values = payload.map((item) => item.total ?? 0)
-      this.purchasesData.labels = labels
-      this.purchasesData.datasets[0].data = values
+      const payload = data?.data ?? data ?? {}
+      const normalized = this.normalizeMonthlyPayload(payload)
+      this.purchasesData.labels = normalized.labels
+      this.purchasesData.datasets[0].data = normalized.values
     },
     async fetchCombined() {
       const { data } = await api.get('dashboard/combined-monthly', {
         params: { months: this.months },
       })
-      const payload = data?.data ?? data ?? []
-      const labels = payload.map((item) => item.month)
-      const sales = payload.map((item) => item.sales ?? 0)
-      const purchase = payload.map((item) => item.purchase ?? 0)
-      const expenses = payload.map((item) => item.expenses ?? 0)
+      const payload = data?.data ?? data ?? {}
+
+      let labels = []
+      let sales = []
+      let purchase = []
+      let expenses = []
+
+      if (Array.isArray(payload)) {
+        labels = payload.map((item) => item.month)
+        sales = payload.map((item) => item.sales ?? 0)
+        purchase = payload.map((item) => item.purchase ?? item.purchases ?? 0)
+        expenses = payload.map((item) => item.expenses ?? 0)
+      } else {
+        labels = Array.isArray(payload.labels) ? payload.labels : []
+        sales = Array.isArray(payload.sales) ? payload.sales : []
+        purchase = Array.isArray(payload.purchases)
+          ? payload.purchases
+          : Array.isArray(payload.purchase)
+            ? payload.purchase
+            : []
+        expenses = Array.isArray(payload.expenses) ? payload.expenses : []
+      }
+
       this.mixedChartData.labels = labels
       this.mixedChartData.datasets[0].data = purchase
       this.mixedChartData.datasets[1].data = expenses

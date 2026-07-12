@@ -84,14 +84,12 @@
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Total Margin</h3>
-        <p class="text-2xl font-bold text-emerald-600">
-          {{ formatIDR(reportData.total_margin || 0) }}
-        </p>
+        <p class="text-2xl font-bold text-emerald-600">{{ formatIDR(filteredTotalMargin) }}</p>
       </div>
       <div class="bg-white rounded-2xl shadow p-6">
         <h3 class="text-lg font-semibold">Margin %</h3>
         <p class="text-2xl font-bold text-emerald-600">
-          {{ (reportData.margin_percentage || 0).toFixed(2) }}%
+          {{ formatPercentage(filteredMarginPercentage) }}
         </p>
       </div>
     </div>
@@ -110,10 +108,12 @@
             <th class="px-4 py-3 text-left">Product</th>
             <th class="px-4 py-3 text-left">Nopol</th>
             <th class="px-4 py-3 text-right">Qty</th>
-            <th class="px-4 py-3 text-right">Price</th>
-            <th class="px-4 py-3 text-right">HPP</th>
+            <th class="px-4 py-3 text-right">Harga Jual/Unit</th>
+            <th class="px-4 py-3 text-right">HPP/Unit</th>
             <th class="px-4 py-3 text-right">Discount</th>
-            <th class="px-4 py-3 text-right">Subtotal</th>
+            <th class="px-4 py-3 text-right">Pendapatan</th>
+            <th class="px-4 py-3 text-right">Total HPP</th>
+            <th class="px-4 py-3 text-right">Margin</th>
           </tr>
         </thead>
         <tbody>
@@ -129,9 +129,16 @@
             <td class="px-4 py-3 text-sm">{{ item.nopol || '-' }}</td>
             <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
             <td class="px-4 py-3 text-right">{{ formatIDR(item.price) }}</td>
-            <td class="px-4 py-3 text-right">{{ formatIDR(item.hpp) }}</td>
+            <td class="px-4 py-3 text-right">{{ formatIDR(getUnitHpp(item)) }}</td>
             <td class="px-4 py-3 text-right">{{ formatIDR(item.discount) }}</td>
-            <td class="px-4 py-3 text-right">{{ formatIDR(item.subtotal) }}</td>
+            <td class="px-4 py-3 text-right">{{ formatIDR(getLineRevenue(item)) }}</td>
+            <td class="px-4 py-3 text-right">{{ formatIDR(getLineHpp(item)) }}</td>
+            <td
+              class="px-4 py-3 text-right font-semibold"
+              :class="getLineMargin(item) >= 0 ? 'text-emerald-600' : 'text-red-600'"
+            >
+              {{ formatIDR(getLineMargin(item)) }}
+            </td>
           </tr>
         </tbody>
       </table>
@@ -163,19 +170,19 @@ const filteredItems = computed(() => {
 
   if (searchWorkorderNo.value) {
     items = items.filter((item) =>
-      item.workorder_no.toLowerCase().includes(searchWorkorderNo.value.toLowerCase()),
+      (item.workorder_no || '').toLowerCase().includes(searchWorkorderNo.value.toLowerCase()),
     )
   }
 
   if (searchCustomerName.value) {
     items = items.filter((item) =>
-      item.customer_name.toLowerCase().includes(searchCustomerName.value.toLowerCase()),
+      (item.customer_name || '').toLowerCase().includes(searchCustomerName.value.toLowerCase()),
     )
   }
 
   if (searchProductName.value) {
     items = items.filter((item) =>
-      item.product_name.toLowerCase().includes(searchProductName.value.toLowerCase()),
+      (item.product_name || '').toLowerCase().includes(searchProductName.value.toLowerCase()),
     )
   }
 
@@ -187,14 +194,20 @@ const filteredTotalQuantity = computed(() => {
 })
 
 const filteredTotalSales = computed(() => {
-  return filteredItems.value.reduce((sum, item) => sum + (Number(item.subtotal) || 0), 0)
+  return filteredItems.value.reduce((sum, item) => sum + getLineRevenue(item), 0)
 })
 
 const filteredTotalHpp = computed(() => {
-  return filteredItems.value.reduce(
-    (sum, item) => sum + (Number(item.hpp) || 0) * (Number(item.quantity) || 0),
-    0,
-  )
+  return filteredItems.value.reduce((sum, item) => sum + getLineHpp(item), 0)
+})
+
+const filteredTotalMargin = computed(() => {
+  return filteredTotalSales.value - filteredTotalHpp.value
+})
+
+const filteredMarginPercentage = computed(() => {
+  if (!filteredTotalSales.value) return 0
+  return (filteredTotalMargin.value / filteredTotalSales.value) * 100
 })
 
 onMounted(() => {
@@ -223,7 +236,8 @@ async function fetchReport() {
   try {
     const response = await api.post(`${BASE_URL}accounting/product-sales-report`, payload)
     if (response.data.status === 'success') {
-      reportData.value = response.data.data
+      const body = response.data?.data?.items ? response.data.data : response.data?.data?.data
+      reportData.value = body || {}
       hasFetched.value = true
     } else {
       alert('Gagal memuat laporan: ' + response.data.message)
@@ -243,6 +257,31 @@ function formatIDR(n) {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(n || 0)
+}
+
+function getUnitHpp(item) {
+  return Number(item?.hpp_per_unit ?? item?.unit_hpp ?? item?.hpp ?? 0)
+}
+
+function getLineRevenue(item) {
+  if (item?.subtotal != null) return Number(item.subtotal) || 0
+  const quantity = Number(item?.quantity) || 0
+  const price = Number(item?.price) || 0
+  const discount = Number(item?.discount) || 0
+  return quantity * price - discount
+}
+
+function getLineHpp(item) {
+  if (item?.total_hpp != null) return Number(item.total_hpp) || 0
+  return getUnitHpp(item) * (Number(item?.quantity) || 0)
+}
+
+function getLineMargin(item) {
+  return getLineRevenue(item) - getLineHpp(item)
+}
+
+function formatPercentage(value) {
+  return `${Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`
 }
 
 function formatDate(dateStr) {

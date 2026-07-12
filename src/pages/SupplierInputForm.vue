@@ -68,8 +68,21 @@
         </div>
 
         <div class="p-6 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow">
-          <!-- NPWP Input -->
           <div>
+            <label for="supplier_code" class="block text-sm font-medium text-gray-700 mb-2">
+              Kode Vendor
+            </label>
+            <input
+              v-model="formData.supplier_code"
+              id="supplier_code"
+              type="text"
+              class="w-full px-6 py-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              placeholder="Contoh: VND-001"
+            />
+          </div>
+
+          <!-- NPWP Input -->
+          <div class="mt-6">
             <label for="npwp" class="block text-sm font-medium text-gray-700 mb-2">NPWP</label>
             <input
               v-model="formData.npwp"
@@ -131,20 +144,23 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 
+const createInitialFormData = () => ({
+  nama: '',
+  hp: '',
+  alamat: '',
+  email: '',
+  supplier_code: '',
+  npwp: '',
+  perusahaan: '',
+  toko: '',
+})
+
 export default {
   name: 'SupplierInputForm',
   components: { LoadingOverlay, ToastCard },
   data() {
     return {
-      formData: {
-        nama: '',
-        hp: '',
-        alamat: '',
-        email: '',
-        npwp: '',
-        perusahaan: '',
-        toko: '',
-      },
+      formData: createInitialFormData(),
     }
   },
   setup() {
@@ -154,25 +170,32 @@ export default {
     return { loadingStore, BASE_URL, BASE_URL2, show_toast, message_toast }
   },
   methods: {
+    getInitialFormData() {
+      return createInitialFormData()
+    },
+    buildPayload() {
+      return {
+        nama: (this.formData.nama || '').toString().trim(),
+        hp: (this.formData.hp || '').toString().trim(),
+        alamat: (this.formData.alamat || '').toString().trim(),
+        email: (this.formData.email || '').toString().trim() || null,
+        supplier_code: (this.formData.supplier_code || '').toString().trim() || null,
+        npwp: (this.formData.npwp || '').toString().trim() || null,
+        perusahaan: (this.formData.perusahaan || '').toString().trim() || null,
+        toko: (this.formData.toko || '').toString().trim() || null,
+      }
+    },
     async handleSubmit() {
       // console.log('Form Data to be submitted:', this.formData)
       try {
         this.loadingStore.show()
         await api
-          .post(`${BASE_URL}suppliers/create`, this.formData)
+          .post(`${BASE_URL}suppliers/create`, this.buildPayload())
           .then((response) => {
             // console.log('Form Submitted', this.formData)
             // console.log('Form submitted successfully:', response.data)
             // Reset form after successful submission
-            this.formData = {
-              nama: '',
-              hp: '',
-              alamat: '',
-              email: '',
-              npwp: '',
-              perusahaan: '',
-              toko: '',
-            }
+            this.formData = this.getInitialFormData()
             this.loadingStore.hide()
             this.show_toast = true
             this.message_toast = response.data.message || 'Supplier Berhasil Ditambahkan'

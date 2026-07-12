@@ -8,7 +8,7 @@
     <!-- Parameter Input -->
     <div class="bg-white rounded-2xl shadow p-6">
       <h2 class="text-lg font-semibold mb-4">Parameter Laporan</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Tanggal Awal</label>
           <input type="date" v-model="startDate" class="w-full border rounded-xl px-3 py-2" />
@@ -26,6 +26,22 @@
             class="w-full border rounded-xl px-3 py-2"
           />
         </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Riwayat Per Item Barang</label>
+          <select v-model="selectedProductId" class="w-full border rounded-xl px-3 py-2">
+            <option value="">Semua Product</option>
+            <option v-for="product in productOptions" :key="product.id" :value="product.id">
+              {{ product.nama || product.name || product.product_name }}
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Urutan Waktu</label>
+          <select v-model="sortOrder" class="w-full border rounded-xl px-3 py-2">
+            <option value="asc">Lama ke Baru</option>
+            <option value="desc">Baru ke Lama</option>
+          </select>
+        </div>
       </div>
       <div class="mt-4">
         <button
@@ -41,7 +57,7 @@
     <!-- Search Input -->
     <div v-if="reportData && reportData.items.length" class="bg-white rounded-2xl shadow p-6">
       <h2 class="text-lg font-semibold mb-4">Pencarian</h2>
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
         <div>
           <label class="block text-sm text-gray-600 mb-1">Nama Product</label>
           <input
@@ -70,7 +86,7 @@
           />
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Customer/Vendor</label>
+          <label class="block text-sm text-gray-600 mb-1">Customer / Supplier / Vendor</label>
           <input
             type="text"
             v-model="searchParty"
@@ -85,6 +101,15 @@
             v-model="searchNopol"
             class="w-full border rounded-xl px-3 py-2"
             placeholder="Cari nopol..."
+          />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">No WO / No PO / Ref No</label>
+          <input
+            type="text"
+            v-model="searchReference"
+            class="w-full border rounded-xl px-3 py-2"
+            placeholder="Cari WO/PO/reference..."
           />
         </div>
       </div>
@@ -107,6 +132,14 @@
           (Filtered: {{ filteredItems.length }})</span
         >
       </p>
+      <p class="text-sm text-gray-600 mt-1" v-if="reportData.summary">
+        Opening: <span class="font-semibold">{{ reportData.summary.opening_balance || 0 }}</span> |
+        In:
+        <span class="font-semibold text-green-600">{{ reportData.summary.total_in || 0 }}</span> |
+        Out:
+        <span class="font-semibold text-red-600">{{ reportData.summary.total_out || 0 }}</span> |
+        Closing: <span class="font-semibold">{{ reportData.summary.closing_balance || 0 }}</span>
+      </p>
     </div>
 
     <!-- Table -->
@@ -120,9 +153,16 @@
             <th class="px-3 py-2 text-left">Product</th>
             <th class="px-3 py-2 text-left">Type</th>
             <th class="px-3 py-2 text-right">Qty</th>
+            <th class="px-3 py-2 text-right">Harga Beli</th>
+            <th class="px-3 py-2 text-right">Harga Jual</th>
             <th class="px-3 py-2 text-right">Price</th>
             <th class="px-3 py-2 text-right">HPP</th>
-            <th class="px-3 py-2 text-left">Customer/Vendor</th>
+            <th class="px-3 py-2 text-left">No WO</th>
+            <th class="px-3 py-2 text-left">No PO</th>
+            <th class="px-3 py-2 text-left">Ref Type</th>
+            <th class="px-3 py-2 text-left">Ref No</th>
+            <th class="px-3 py-2 text-left">Kode Vendor</th>
+            <th class="px-3 py-2 text-left">Customer/Supplier/Vendor</th>
             <th class="px-3 py-2 text-left">Nopol</th>
             <th class="px-3 py-2 text-left">Timestamp</th>
             <th class="px-3 py-2 text-left">By</th>
@@ -132,7 +172,7 @@
         <tbody>
           <tr
             v-for="item in filteredItems"
-            :key="item.product_id + item.timestamp"
+            :key="item.movement_id || `${item.product_id}-${item.timestamp}`"
             class="border-t"
           >
             <td class="px-3 py-2 text-sm">{{ item.product_name }}</td>
@@ -153,9 +193,16 @@
             <td class="px-3 py-2 text-right font-semibold">
               {{ item.quantity > 0 ? '+' : '' }}{{ item.quantity }}
             </td>
+            <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.purchase_price) }}</td>
+            <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.selling_price) }}</td>
             <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.price) }}</td>
             <td class="px-3 py-2 text-right text-sm">{{ formatCurrency(item.hpp) }}</td>
-            <td class="px-3 py-2 text-sm">{{ item.customer_name || item.vendor_name || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ item.workorder_no || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ item.purchase_order_no || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ item.reference_type || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ item.reference_no || '-' }}</td>
+            <td class="px-3 py-2 text-xs">{{ getVendorCode(item) || '-' }}</td>
+            <td class="px-3 py-2 text-sm">{{ getPartyName(item) || '-' }}</td>
             <td class="px-3 py-2 text-sm font-mono">{{ item.nopol || '-' }}</td>
             <td class="px-3 py-2 text-xs">{{ formatDateTime(item.timestamp) }}</td>
             <td class="px-3 py-2 text-xs">{{ item.performed_by }}</td>
@@ -172,19 +219,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/user/axios'
 import { BASE_URL } from '@/base.utils.url'
+import { resolveTransactionPartyName, resolveVendorCode } from '@/utils/reportParties'
 
 const startDate = ref('')
 const endDate = ref('')
 const selectedMonth = ref('')
+const selectedProductId = ref('')
+const sortOrder = ref('asc')
 const searchProduct = ref('')
 const searchType = ref('')
 const searchPerformedBy = ref('')
 const searchParty = ref('')
 const searchNopol = ref('')
+const searchReference = ref('')
 const searchNotes = ref('')
+const productOptions = ref([])
 const reportData = ref(null)
 const hasFetched = ref(false)
 
@@ -194,32 +246,66 @@ const filteredItems = computed(() => {
   return reportData.value.items.filter((item) => {
     const matchesProduct =
       !searchProduct.value ||
-      item.product_name.toLowerCase().includes(searchProduct.value.toLowerCase())
+      (item.product_name || '').toLowerCase().includes(searchProduct.value.toLowerCase())
     const matchesType = !searchType.value || item.type === searchType.value
     const matchesPerformedBy =
       !searchPerformedBy.value ||
-      item.performed_by.toLowerCase().includes(searchPerformedBy.value.toLowerCase())
+      (item.performed_by || '').toLowerCase().includes(searchPerformedBy.value.toLowerCase())
     const matchesParty =
       !searchParty.value ||
       (item.customer_name &&
         item.customer_name.toLowerCase().includes(searchParty.value.toLowerCase())) ||
-      (item.vendor_name && item.vendor_name.toLowerCase().includes(searchParty.value.toLowerCase()))
+      (getPartyName(item) && getPartyName(item).toLowerCase().includes(searchParty.value.toLowerCase()))
     const matchesNopol =
       !searchNopol.value ||
       (item.nopol && item.nopol.toLowerCase().includes(searchNopol.value.toLowerCase()))
     const matchesNotes =
       !searchNotes.value ||
       (item.notes && item.notes.toLowerCase().includes(searchNotes.value.toLowerCase()))
+
+    const keyword = searchReference.value.toLowerCase()
+    const matchesReference =
+      !searchReference.value ||
+      (item.workorder_no || '').toLowerCase().includes(keyword) ||
+      (item.purchase_order_no || '').toLowerCase().includes(keyword) ||
+      (item.reference_no || '').toLowerCase().includes(keyword)
+
     return (
       matchesProduct &&
       matchesType &&
       matchesPerformedBy &&
       matchesParty &&
       matchesNopol &&
-      matchesNotes
+      matchesNotes &&
+      matchesReference
     )
   })
 })
+
+onMounted(() => {
+  fetchProducts()
+})
+
+async function fetchProducts() {
+  try {
+    const response = await api.get(`${BASE_URL}products/all`)
+    const body = response.data?.data ?? response.data
+    if (Array.isArray(body)) {
+      productOptions.value = body
+      return
+    }
+
+    if (Array.isArray(body?.data)) {
+      productOptions.value = body.data
+      return
+    }
+
+    productOptions.value = []
+  } catch (error) {
+    console.error('Error fetching product list:', error)
+    productOptions.value = []
+  }
+}
 
 async function fetchReport() {
   if (!startDate.value || !endDate.value) {
@@ -230,12 +316,22 @@ async function fetchReport() {
   const payload = {
     start_date: startDate.value,
     end_date: endDate.value,
+    product_id: selectedProductId.value || null,
+    movement_type: searchType.value || null,
+    reference_type: null,
+    supplier_id: null,
+    customer_id: null,
+    search: null,
+    page: 1,
+    limit: 100,
+    sort_order: sortOrder.value,
   }
 
   try {
     const response = await api.post(`${BASE_URL}inventory/product-move-history-report`, payload)
     if (response.data.status === 'success') {
-      reportData.value = response.data.data
+      const data = response.data?.data?.items ? response.data.data : response.data?.data?.data
+      reportData.value = data
       hasFetched.value = true
     } else {
       alert('Gagal memuat laporan: ' + response.data.message)
@@ -250,9 +346,17 @@ async function fetchReport() {
   }
 }
 
+function getVendorCode(item) {
+  return resolveVendorCode(item)
+}
+
+function getPartyName(item) {
+  return resolveTransactionPartyName(item)
+}
+
 // Utils
 function formatCurrency(value) {
-  if (!value) return '-'
+  if (value == null) return '-'
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',

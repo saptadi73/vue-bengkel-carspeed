@@ -106,18 +106,20 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
 import ToastCard from '@/components/ToastCard.vue'
 
+const createInitialFormData = () => ({
+  nama: '',
+  alamat: '',
+  hp: '',
+  tanggal_lahir: '',
+  email: '',
+})
+
 export default {
   name: 'InputDataPelanggan',
   components: { LoadingOverlay, ToastCard },
   data() {
     return {
-      formData: {
-        nama: '',
-        alamat: '',
-        hp: '',
-        tanggal_lahir: '',
-        email: '',
-      },
+      formData: createInitialFormData(),
     }
   },
   setup() {
@@ -127,24 +129,30 @@ export default {
     return { loadingStore, BASE_URL, BASE_URL2, show_toast, message_toast }
   },
   methods: {
+    getInitialFormData() {
+      return createInitialFormData()
+    },
+    buildPayload() {
+      return {
+        nama: (this.formData.nama || '').toString().trim(),
+        alamat: (this.formData.alamat || '').toString().trim(),
+        hp: (this.formData.hp || '').toString().trim(),
+        tanggal_lahir: this.formData.tanggal_lahir || null,
+        email: (this.formData.email || '').toString().trim() || null,
+      }
+    },
     // Handle file upload and store the selected file
 
     handleSubmit() {
       try {
         this.loadingStore.show()
         api
-          .post(`${BASE_URL}customers/customer-only`, this.formData)
+          .post(`${BASE_URL}customers/customer-only`, this.buildPayload())
           .then((response) => {
             console.log('Form Submitted', this.formData)
             console.log('Form submitted successfully:', response.data)
             // Reset form after successful submission
-            this.formData = {
-              nama: '',
-              alamat: '',
-              hp: '',
-              tanggal_lahir: '',
-              email: '',
-            }
+            this.formData = this.getInitialFormData()
             this.loadingStore.hide()
             this.show_toast = true
             this.message_toast = response.data.message || 'Pelanggan Berhasil Ditambahkan'

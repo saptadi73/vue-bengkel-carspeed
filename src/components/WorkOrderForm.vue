@@ -954,6 +954,7 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import { getInventoryUnitCost } from '@/utils/inventory'
 
 import jsPDF from 'jspdf'
 
@@ -1384,6 +1385,7 @@ export default {
         const data = response.data.data
         // Simpan stok di item
         item.stockku = data.total_stock || 0
+        item.cost = getInventoryUnitCost(data)
 
         // Validasi: jika quantity melebihi stok, reset dan beri warning
         this.validateQuantity(item)

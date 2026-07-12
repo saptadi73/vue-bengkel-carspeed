@@ -117,6 +117,20 @@ import axios from 'axios';
             </svg>
           </button>
           <button
+            class="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+            title="Hapus Pelanggan"
+            @click="deleteCustomer(pelanggan)"
+          >
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 7h12m-9 0V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12m4-12v12m5-12l-1 12a2 2 0 01-2 2H9a2 2 0 01-2-2L6 7"
+              />
+            </svg>
+          </button>
+          <button
             class="bg-green-500 text-white p-2 rounded hover:bg-green-600"
             title="Kirim Pengingat Service via WhatsApp"
             @click="sendWhatsApp(pelanggan)"
@@ -272,6 +286,20 @@ import axios from 'axios';
                   </svg>
                 </button>
                 <button
+                  class="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+                  title="Hapus Pelanggan"
+                  @click="deleteCustomer(pelanggan)"
+                >
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 7h12m-9 0V5a1 1 0 011-1h4a1 1 0 011 1v2m-7 0v12m4-12v12m5-12l-1 12a2 2 0 01-2 2H9a2 2 0 01-2-2L6 7"
+                    />
+                  </svg>
+                </button>
+                <button
                   class="bg-green-500 text-white p-1 rounded hover:bg-green-600"
                   title="Kirim Pengingat Service via WhatsApp"
                   @click="sendWhatsApp(pelanggan)"
@@ -343,7 +371,92 @@ import axios from 'axios';
         </button>
       </div>
     </div>
-    <!-- Modal and related code removed -->
+    <transition name="fade">
+      <div
+        v-if="showEditModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4"
+      >
+        <div class="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl">
+          <div class="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800">Edit Customer</h3>
+              <p class="text-sm text-gray-500">
+                Wajib isi Nama, Alamat, dan HP. Email serta tanggal lahir opsional.
+              </p>
+              <p v-if="selectedCustomerSummary?.no_pol" class="mt-1 text-xs text-gray-400">
+                Kendaraan terkait: {{ selectedCustomerSummary.no_pol }}
+              </p>
+            </div>
+            <button class="text-gray-500 hover:text-gray-800" @click="closeEditModal">X</button>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700">
+                Nama <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="editForm.nama"
+                type="text"
+                class="w-full rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700">
+                HP <span class="text-red-500">*</span>
+              </label>
+              <input
+                v-model="editForm.hp"
+                type="text"
+                class="w-full rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div class="md:col-span-2">
+              <label class="mb-1 block text-sm font-medium text-gray-700">
+                Alamat <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                v-model="editForm.alamat"
+                rows="3"
+                class="w-full rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700">Email</label>
+              <input
+                v-model="editForm.email"
+                type="email"
+                class="w-full rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-gray-700">Tanggal Lahir</label>
+              <input
+                v-model="editForm.tanggal_lahir"
+                type="date"
+                class="w-full rounded-xl border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-2">
+            <button
+              class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              @click="closeEditModal"
+            >
+              Batal
+            </button>
+            <button
+              class="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              :disabled="!canSubmitEditForm"
+              @click="submitEditCustomer"
+            >
+              Simpan
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
     <transition name="fade">
       <div
         v-if="showReportModal"
@@ -447,24 +560,40 @@ import axios from 'axios';
       </div>
     </transition>
     <loading-overlay />
+    <toast-card v-if="show_toast" :message="message_toast" @close="closeToast" />
   </div>
 </template>
 
 <script>
+import { ref } from 'vue'
 import axios from 'axios'
+import api from '@/user/axios'
 import LoadingOverlay from './LoadingOverlay.vue'
+import ToastCard from '@/components/ToastCard.vue'
 import { useLoadingStore } from '@/stores/loading'
 import { BASE_URL, BASE_URL2 } from '@/base.utils.url'
 
+const createInitialEditForm = () => ({
+  customer_id: '',
+  nama: '',
+  hp: '',
+  alamat: '',
+  email: '',
+  tanggal_lahir: '',
+})
+
 export default {
   name: 'TablePelangganBengkel',
-  components: { LoadingOverlay },
+  components: { LoadingOverlay, ToastCard },
   data() {
     return {
       searchQuery: '',
       page: 1,
       perPage: 10,
       dummyList: [],
+      showEditModal: false,
+      editForm: createInitialEditForm(),
+      selectedCustomerSummary: null,
       showReportModal: false,
       reportFilters: {
         customer_id: '',
@@ -478,7 +607,9 @@ export default {
     }
   },
   setup() {
-    return { BASE_URL, BASE_URL2 }
+    const show_toast = ref(false)
+    const message_toast = ref('')
+    return { BASE_URL, BASE_URL2, show_toast, message_toast }
   },
   computed: {
     filteredList() {
@@ -504,6 +635,13 @@ export default {
     },
     startIdx() {
       return (this.page - 1) * this.perPage
+    },
+    canSubmitEditForm() {
+      return (
+        !!(this.editForm.nama || '').trim() &&
+        !!(this.editForm.hp || '').trim() &&
+        !!(this.editForm.alamat || '').trim()
+      )
     },
   },
   watch: {
@@ -576,8 +714,83 @@ export default {
       this.$emit('create-wo', id)
       this.$router.push(`/wo/new/form/${id}`)
     },
+    closeToast() {
+      this.show_toast = false
+      this.message_toast = ''
+    },
     editPelanggan(pelanggan) {
-      this.$emit('edit-pelanggan', pelanggan)
+      const customer = pelanggan?.customer || {}
+      this.selectedCustomerSummary = pelanggan
+      this.editForm = {
+        customer_id: customer.id || pelanggan?.customer_id || pelanggan?.id_customer || '',
+        nama: customer.nama || pelanggan?.customer_nama || '',
+        hp: customer.hp || pelanggan?.customer_hp || '',
+        alamat: customer.alamat || pelanggan?.customer_alamat || '',
+        email: customer.email || '',
+        tanggal_lahir: customer.tanggal_lahir || '',
+      }
+      this.showEditModal = true
+    },
+    closeEditModal() {
+      this.showEditModal = false
+      this.editForm = createInitialEditForm()
+      this.selectedCustomerSummary = null
+    },
+    buildCustomerPayload() {
+      return {
+        nama: (this.editForm.nama || '').toString().trim(),
+        hp: (this.editForm.hp || '').toString().trim(),
+        alamat: (this.editForm.alamat || '').toString().trim(),
+        email: (this.editForm.email || '').toString().trim() || null,
+        tanggal_lahir: this.editForm.tanggal_lahir || null,
+      }
+    },
+    async submitEditCustomer() {
+      if (!this.canSubmitEditForm || !this.editForm.customer_id) return
+
+      const loadingStore = useLoadingStore()
+      loadingStore.show()
+      try {
+        const response = await api.post(
+          `${BASE_URL}customers/${this.editForm.customer_id}`,
+          this.buildCustomerPayload(),
+        )
+        this.show_toast = true
+        this.message_toast = response.data?.message || 'Customer berhasil diperbarui.'
+        this.closeEditModal()
+        await this.getTablePelanggan()
+      } catch (error) {
+        console.error('Error updating customer:', error)
+        this.show_toast = true
+        this.message_toast =
+          error.response?.data?.message || 'Gagal memperbarui customer.'
+      } finally {
+        loadingStore.hide()
+      }
+    },
+    async deleteCustomer(pelanggan) {
+      const customerId =
+        pelanggan?.customer?.id || pelanggan?.customer_id || pelanggan?.id_customer || ''
+      const customerName = pelanggan?.customer?.nama || pelanggan?.customer_nama || 'customer'
+
+      if (!customerId) return
+      if (!confirm(`Hapus customer "${customerName}"?`)) return
+
+      const loadingStore = useLoadingStore()
+      loadingStore.show()
+      try {
+        const response = await api.delete(`${BASE_URL}customers/${customerId}`)
+        this.show_toast = true
+        this.message_toast = response.data?.message || 'Customer berhasil dihapus.'
+        await this.getTablePelanggan()
+      } catch (error) {
+        console.error('Error deleting customer:', error)
+        this.show_toast = true
+        this.message_toast =
+          error.response?.data?.message || 'Gagal menghapus customer.'
+      } finally {
+        loadingStore.hide()
+      }
     },
     nextPage() {
       if (this.page < this.totalPages) this.page++

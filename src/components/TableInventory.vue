@@ -45,6 +45,8 @@
           <div>{{ formatCurrency(getPurchasePrice(item)) }}</div>
           <div class="text-gray-500">HPP</div>
           <div>{{ formatCurrency(getHpp(item)) }}</div>
+          <div class="text-gray-500">Vendor</div>
+          <div>{{ item.vendor_code || '-' }} | {{ item.supplier_name || '-' }}</div>
           <div class="text-gray-500">Margin</div>
           <div :class="getMargin(item) >= 0 ? 'text-emerald-600' : 'text-red-600'">
             {{ formatCurrency(getMargin(item)) }} ({{
@@ -55,6 +57,26 @@
           <div>{{ item.total_stock }}</div>
           <div class="text-gray-500">Minimal Stock</div>
           <div>{{ item.min_stock }}</div>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <button
+            @click="openViewModal(item)"
+            class="px-3 py-2 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+          >
+            Lihat
+          </button>
+          <button
+            @click="openEditModal(item)"
+            class="px-3 py-2 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600"
+          >
+            Edit
+          </button>
+          <button
+            @click="confirmDelete(item)"
+            class="px-3 py-2 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+          >
+            Hapus
+          </button>
         </div>
       </div>
       <!-- Pagination for mobile -->
@@ -119,6 +141,7 @@
                   'Harga Jual',
                   'Harga Beli',
                   'HPP',
+                  'Vendor',
                   'Margin',
                   'Stock On Hand',
                   'Minimal Stock',
@@ -129,7 +152,7 @@
                 :class="[
                   'bg-gradient-to-r from-blue-500 to-blue-700 text-white font-bold py-3 px-2 text-sm uppercase tracking-wider border-b border-blue-700 shadow-sm',
                   i === 0 ? 'rounded-tl-xl' : '',
-                  i === 12 ? 'rounded-tr-xl' : '',
+                  i === 13 ? 'rounded-tr-xl' : '',
                 ]"
               >
                 {{ header }}
@@ -150,6 +173,12 @@
               <td>{{ formatCurrency(item.price) }}</td>
               <td>{{ formatCurrency(getPurchasePrice(item)) }}</td>
               <td>{{ formatCurrency(getHpp(item)) }}</td>
+              <td>
+                <div class="text-sm">
+                  <div class="font-medium">{{ item.vendor_code || '-' }}</div>
+                  <div class="text-xs text-gray-500">{{ item.supplier_name || '-' }}</div>
+                </div>
+              </td>
               <td>
                 <div :class="getMargin(item) >= 0 ? 'text-emerald-600' : 'text-red-600'">
                   <div class="font-semibold">{{ formatCurrency(getMargin(item)) }}</div>
@@ -195,7 +224,7 @@
               </td>
             </tr>
             <tr v-if="paginatedList.length === 0">
-              <td colspan="13" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
+              <td colspan="14" class="text-center text-gray-400 py-4">Tidak ada data ditemukan</td>
             </tr>
           </tbody>
         </table>
@@ -268,6 +297,10 @@
               <div>{{ formatCurrency(getPurchasePrice(selectedProduct)) }}</div>
               <div class="text-gray-500">HPP</div>
               <div>{{ formatCurrency(getHpp(selectedProduct)) }}</div>
+              <div class="text-gray-500">Vendor</div>
+              <div>{{ selectedProduct.vendor_code || '-' }}</div>
+              <div class="text-gray-500">Supplier</div>
+              <div>{{ selectedProduct.supplier_name || '-' }}</div>
               <div class="text-gray-500">Margin</div>
               <div :class="getMargin(selectedProduct) >= 0 ? 'text-emerald-600' : 'text-red-600'">
                 {{ formatCurrency(getMargin(selectedProduct)) }}
@@ -437,9 +470,10 @@
           </button>
           <button
             @click="saveProduct"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            :disabled="isSaving"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ isEditing ? 'Update' : 'Simpan' }}
+            {{ isSaving ? 'Menyimpan...' : isEditing ? 'Update' : 'Simpan' }}
           </button>
         </div>
       </div>
@@ -484,9 +518,10 @@
           </button>
           <button
             @click="deleteProductConfirmed"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            :disabled="isDeleting"
+            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Hapus
+            {{ isDeleting ? 'Menghapus...' : 'Hapus' }}
           </button>
         </div>
       </div>
@@ -502,8 +537,8 @@ import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import api from '@/user/axios'
-import axios from 'axios'
 import { BASE_URL } from '../base.utils.url'
+import { normalizeInventoryItem } from '@/utils/inventory'
 
 export default {
   name: 'TableInventory',
@@ -530,6 +565,8 @@ export default {
       hasNextPage: false,
       searchDebounceTimer: null,
       isEditing: false,
+      isSaving: false,
+      isDeleting: false,
       formData: {
         id: null,
         name: '',
@@ -565,21 +602,14 @@ export default {
         if (this.selectedCategory) params.category_id = this.selectedCategory
         if (this.selectedStatus) params.stock_status = this.selectedStatus
 
-        const response = await axios.get(`${BASE_URL}products/inventory/all`, { params })
+        const response = await api.get(`${BASE_URL}products/inventory/all`, { params })
         const body = Array.isArray(response.data?.data)
           ? response.data
           : response.data?.data || response.data
         const items = Array.isArray(body?.data) ? body.data : []
         const pagination = body?.pagination || {}
 
-        this.inventoryList = items.map((item) => ({
-          ...item,
-          hpp: Number(item.hpp ?? item.cost ?? 0),
-          purchase_price:
-            item.purchase_price !== undefined
-              ? item.purchase_price
-              : (item.last_purchase_price ?? item.buy_price ?? item.cost ?? null),
-        }))
+        this.inventoryList = items.map((item) => normalizeInventoryItem(item))
         this.totalItems = Number(pagination.total ?? this.inventoryList.length)
         this.serverTotalPages = Number(pagination.total_pages ?? (this.totalItems ? 1 : 0))
         this.hasPreviousPage = Boolean(pagination.has_previous)
@@ -594,14 +624,14 @@ export default {
         this.hasPreviousPage = false
         this.hasNextPage = false
         this.show_toast = true
-        this.message_toast = error.response?.data?.message || 'Gagal memuat data inventory.'
+        this.message_toast = this.getApiErrorMessage(error, 'Gagal memuat data inventory.')
       } finally {
         this.loadingStore.hide()
       }
     },
     async getBrands() {
       try {
-        const response = await axios.get(`${BASE_URL}products/brands/all`)
+        const response = await api.get(`${BASE_URL}products/brands/all`)
         this.brands = response.data.data || []
       } catch (error) {
         console.error('Error fetching brands:', error)
@@ -609,7 +639,7 @@ export default {
     },
     async getCategories() {
       try {
-        const response = await axios.get(`${BASE_URL}products/categories/all`)
+        const response = await api.get(`${BASE_URL}products/categories/all`)
         this.categoryList = response.data.data || []
       } catch (error) {
         console.error('Error fetching categories:', error)
@@ -617,7 +647,7 @@ export default {
     },
     async getUnits() {
       try {
-        const response = await axios.get(`${BASE_URL}products/satuans/all`)
+        const response = await api.get(`${BASE_URL}products/satuans/all`)
         this.units = response.data.data || []
       } catch (error) {
         console.error('Error fetching units:', error)
@@ -628,14 +658,10 @@ export default {
       return Number(val).toLocaleString('id-ID', { style: 'currency', currency: 'IDR' })
     },
     getHpp(item) {
-      return Number(item?.hpp ?? item?.cost ?? 0)
+      return Number(normalizeInventoryItem(item).hpp || 0)
     },
     getPurchasePrice(item) {
-      if (item?.purchase_price !== undefined) {
-        return item.purchase_price == null ? null : Number(item.purchase_price)
-      }
-      const fallback = item?.last_purchase_price ?? item?.buy_price ?? item?.cost ?? item?.hpp
-      return fallback == null ? null : Number(fallback)
+      return normalizeInventoryItem(item).purchase_price
     },
     getMargin(item) {
       return Number(item?.price || 0) - this.getHpp(item)
@@ -647,6 +673,15 @@ export default {
     },
     formatPercentage(value) {
       return `${Number(value || 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`
+    },
+    getApiErrorMessage(error, fallback) {
+      const data = error.response?.data
+      if (typeof data?.detail === 'string') return data.detail
+      if (typeof data?.message === 'string') return data.message
+      if (Array.isArray(data?.detail)) {
+        return data.detail.map((item) => item.msg).filter(Boolean).join(', ') || fallback
+      }
+      return fallback
     },
     openViewModal(item) {
       this.selectedProduct = item
@@ -682,7 +717,7 @@ export default {
         satuan_id: item.satuan_id || '',
         type: item.type || '',
         price: item.price || 0,
-        cost: item.cost || 0,
+        cost: Number(item.cost ?? item.hpp ?? 0),
         min_stock: item.min_stock || 0,
         description: item.description || '',
       }
@@ -694,6 +729,7 @@ export default {
       this.isEditing = false
     },
     async saveProduct() {
+      if (this.isSaving) return
       if (
         !this.formData.name ||
         !this.formData.brand_id ||
@@ -706,6 +742,7 @@ export default {
       }
 
       try {
+        this.isSaving = true
         this.loadingStore.show()
         const payload = {
           name: this.formData.name,
@@ -736,8 +773,9 @@ export default {
       } catch (error) {
         console.error('Error saving product:', error)
         this.show_toast = true
-        this.message_toast = error.response?.data?.message || 'Gagal menyimpan produk'
+        this.message_toast = this.getApiErrorMessage(error, 'Gagal menyimpan produk')
       } finally {
+        this.isSaving = false
         this.loadingStore.hide()
       }
     },
@@ -750,20 +788,25 @@ export default {
       this.deleteProduct = null
     },
     async deleteProductConfirmed() {
-      if (!this.deleteProduct) return
+      if (!this.deleteProduct || this.isDeleting) return
 
       try {
+        this.isDeleting = true
         this.loadingStore.show()
         await api.delete(`${BASE_URL}products/${this.deleteProduct.id}`)
         this.show_toast = true
         this.message_toast = 'Produk berhasil dihapus'
         this.closeDeleteConfirm()
+        if (this.inventoryList.length === 1 && this.currentPage > 1) {
+          this.currentPage -= 1
+        }
         await this.fetchInventory()
       } catch (error) {
         console.error('Error deleting product:', error)
         this.show_toast = true
-        this.message_toast = error.response?.data?.message || 'Gagal menghapus produk'
+        this.message_toast = this.getApiErrorMessage(error, 'Gagal menghapus produk')
       } finally {
+        this.isDeleting = false
         this.loadingStore.hide()
       }
     },

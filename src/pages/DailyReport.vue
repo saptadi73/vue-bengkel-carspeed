@@ -197,7 +197,8 @@
               <thead class="bg-slate-100">
                 <tr>
                   <th class="px-2 py-2 text-left">PO No</th>
-                  <th class="px-2 py-2 text-left">Supplier</th>
+                  <th class="px-2 py-2 text-left">Kode Vendor</th>
+                  <th class="px-2 py-2 text-left">Supplier/Vendor</th>
                   <th class="px-2 py-2 text-right">Subtotal</th>
                 </tr>
               </thead>
@@ -208,13 +209,14 @@
                   class="border-t"
                 >
                   <td class="px-2 py-2 text-xs font-semibold">{{ po.purchase_order_no }}</td>
-                  <td class="px-2 py-2 text-xs">{{ po.supplier_name }}</td>
+                  <td class="px-2 py-2 text-xs">{{ getVendorCode(po) || '-' }}</td>
+                  <td class="px-2 py-2 text-xs">{{ getSupplierName(po) || '-' }}</td>
                   <td class="px-2 py-2 text-right text-xs">
                     {{ formatCurrency(po.amount_paid) }}
                   </td>
                 </tr>
                 <tr v-if="!report.outflows?.purchase_order_payments?.items?.length">
-                  <td colspan="3" class="px-2 py-6 text-center text-slate-400">
+                  <td colspan="4" class="px-2 py-6 text-center text-slate-400">
                     Tidak ada pembayaran PO
                   </td>
                 </tr>
@@ -234,6 +236,8 @@
                 <tr>
                   <th class="px-3 py-2 text-left">Product</th>
                   <th class="px-3 py-2 text-left">WO</th>
+                  <th class="px-3 py-2 text-left">Nopol</th>
+                  <th class="px-3 py-2 text-left">Pelanggan</th>
                   <th class="px-3 py-2 text-right">Qty</th>
                   <th class="px-3 py-2 text-right">Price</th>
                   <th class="px-3 py-2 text-right">HPP</th>
@@ -250,6 +254,8 @@
                 >
                   <td class="px-3 py-2">{{ it.product_name }}</td>
                   <td class="px-3 py-2">{{ it.workorder_no }}</td>
+                  <td class="px-3 py-2">{{ it.nopol || '-' }}</td>
+                  <td class="px-3 py-2">{{ it.customer_name || '-' }}</td>
                   <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.hpp) }}</td>
@@ -265,7 +271,9 @@
                   </td>
                 </tr>
                 <tr v-if="!report.product_sales.items?.length">
-                  <td colspan="8" class="px-3 py-6 text-center text-slate-400">No product sales</td>
+                  <td colspan="10" class="px-3 py-6 text-center text-slate-400">
+                    No product sales
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -307,6 +315,8 @@
                 <tr>
                   <th class="px-3 py-2 text-left">Service</th>
                   <th class="px-3 py-2 text-left">WO</th>
+                  <th class="px-3 py-2 text-left">Nopol</th>
+                  <th class="px-3 py-2 text-left">Pelanggan</th>
                   <th class="px-3 py-2 text-right">Qty</th>
                   <th class="px-3 py-2 text-right">Price</th>
                   <th class="px-3 py-2 text-right">HPP</th>
@@ -323,6 +333,8 @@
                 >
                   <td class="px-3 py-2">{{ it.service_name }}</td>
                   <td class="px-3 py-2">{{ it.workorder_no }}</td>
+                  <td class="px-3 py-2">{{ it.nopol || '-' }}</td>
+                  <td class="px-3 py-2">{{ it.customer_name || '-' }}</td>
                   <td class="px-3 py-2 text-right">{{ it.quantity }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.price) }}</td>
                   <td class="px-3 py-2 text-right">{{ formatCurrency(it.hpp) }}</td>
@@ -338,7 +350,9 @@
                   </td>
                 </tr>
                 <tr v-if="!report.service_sales.items?.length">
-                  <td colspan="8" class="px-3 py-6 text-center text-slate-400">No service sales</td>
+                  <td colspan="10" class="px-3 py-6 text-center text-slate-400">
+                    No service sales
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -549,6 +563,7 @@ import api from '@/user/axios'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import { useLoadingStore } from '@/stores/loading'
 import { BASE_URL } from '@/base.utils.url'
+import { resolveSupplierDisplayName, resolveVendorCode } from '@/utils/reportParties'
 
 export default {
   name: 'DailyReport',
@@ -602,6 +617,8 @@ export default {
                 ? data.purchase_orders.items.map((item) => ({
                     ...item,
                     purchase_order_no: item.purchase_order_no || item.po_no,
+                    vendor_code: resolveVendorCode(item) || null,
+                    supplier_name: resolveSupplierDisplayName(item) || null,
                     amount_paid: item.amount_paid ?? item.subtotal,
                   }))
                 : [],
@@ -817,14 +834,24 @@ export default {
         )
 
         const poPaymentRows = [
-          ['Payment ID', 'Date', 'PO', 'Supplier', 'Channel', 'Account', 'Amount Paid'],
+          [
+            'Payment ID',
+            'Date',
+            'PO',
+            'Kode Vendor',
+            'Supplier/Vendor',
+            'Channel',
+            'Account',
+            'Amount Paid',
+          ],
         ]
         ;(report.value.outflows?.purchase_order_payments?.items || []).forEach((item) => {
           poPaymentRows.push([
             item.payment_id,
             item.payment_date,
             item.purchase_order_no,
-            item.supplier_name,
+            getVendorCode(item),
+            getSupplierName(item),
             item.channel_code || item.payment_channel,
             item.account_name || item.account_code,
             item.amount_paid || 0,
@@ -838,7 +865,17 @@ export default {
 
         // Purchase Orders
         const poRows = []
-        poRows.push(['PO', 'Date', 'Supplier', 'Product', 'Qty', 'Price', 'Discount', 'Subtotal'])
+        poRows.push([
+          'PO',
+          'Date',
+          'Kode Vendor',
+          'Supplier/Vendor',
+          'Product',
+          'Qty',
+          'Price',
+          'Discount',
+          'Subtotal',
+        ])
         let poSubtotalTotal = 0
         ;(report.value.purchase_orders?.items || []).forEach((it) => {
           const subtotal =
@@ -846,7 +883,8 @@ export default {
           poRows.push([
             it.po_no,
             it.po_date,
-            it.supplier_name,
+            getVendorCode(it),
+            getSupplierName(it),
             it.product_name,
             it.quantity,
             it.price,
@@ -865,6 +903,7 @@ export default {
         prodRows.push([
           'WO',
           'Date',
+          'Nopol',
           'Customer',
           'Product',
           'Qty',
@@ -883,6 +922,7 @@ export default {
           prodRows.push([
             it.workorder_no,
             it.workorder_date,
+            it.nopol || '',
             it.customer_name,
             it.product_name,
             it.quantity,
@@ -897,7 +937,7 @@ export default {
         })
         // add empty row then totals row
         prodRows.push([])
-        prodRows.push(['', '', '', '', '', '', '', 'TOTAL', prodSubtotalTotal, prodProfitTotal])
+        prodRows.push(['', '', '', '', '', '', '', '', 'TOTAL', prodSubtotalTotal, prodProfitTotal])
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prodRows), 'Product Sales')
 
         // Service sales
@@ -905,6 +945,7 @@ export default {
         svcRows.push([
           'WO',
           'Date',
+          'Nopol',
           'Customer',
           'Service',
           'Qty',
@@ -923,6 +964,7 @@ export default {
           svcRows.push([
             it.workorder_no,
             it.workorder_date,
+            it.nopol || '',
             it.customer_name,
             it.service_name,
             it.quantity,
@@ -936,7 +978,7 @@ export default {
           svcProfitTotal += profit
         })
         svcRows.push([])
-        svcRows.push(['', '', '', '', '', '', '', 'TOTAL', svcSubtotalTotal, svcProfitTotal])
+        svcRows.push(['', '', '', '', '', '', '', '', 'TOTAL', svcSubtotalTotal, svcProfitTotal])
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(svcRows), 'Service Sales')
 
         // Profit & Loss details
@@ -1028,6 +1070,9 @@ export default {
       return labels[type] || type || 'Lainnya'
     }
 
+    const getVendorCode = (item) => resolveVendorCode(item)
+    const getSupplierName = (item) => resolveSupplierDisplayName(item)
+
     // utility: sum numeric field in entries
     const sum = (entries = [], field = 'debit') => {
       return (entries || []).reduce((s, it) => s + (Number(it?.[field]) || 0), 0)
@@ -1085,6 +1130,8 @@ export default {
       calculateTotalHpp,
       calculateGrossMarginPercent,
       calculateTotalWOCost,
+      getVendorCode,
+      getSupplierName,
       paymentStatusLabel,
       paymentChannelLabel,
     }

@@ -242,7 +242,8 @@
                   <p><strong>Total:</strong> {{ formatIDR(po.total) }}</p>
                 </div>
                 <div>
-                  <p><strong>Supplier:</strong> {{ po.supplier_name }}</p>
+                  <p><strong>Kode Vendor:</strong> {{ getVendorCode(po) || '-' }}</p>
+                  <p><strong>Supplier/Vendor:</strong> {{ getSupplierName(po) || '-' }}</p>
                   <p><strong>Pajak:</strong> {{ formatIDR(po.pajak) }}</p>
                   <p><strong>Pembayaran:</strong> {{ formatIDR(po.pembayaran) }}</p>
                   <p><strong>Created:</strong> {{ formatDateTime(po.created_at) }}</p>
@@ -273,6 +274,7 @@
 import { ref, computed } from 'vue'
 import api from '@/user/axios'
 import { BASE_URL } from '@/base.utils.url'
+import { resolveSupplierDisplayName, resolveVendorCode } from '@/utils/reportParties'
 
 const startDate = ref('')
 const endDate = ref('')
@@ -370,7 +372,7 @@ async function openPurchaseOrderModal(supplierId) {
   try {
     const response = await api.get(`${BASE_URL}purchase-orders/supplier/${supplierId}`)
     if (response.data.status === 'success') {
-      purchaseOrders.value = response.data.data
+      purchaseOrders.value = Array.isArray(response.data.data) ? response.data.data : []
     } else {
       alert('Gagal memuat purchase orders: ' + response.data.message)
       purchaseOrders.value = []
@@ -380,6 +382,14 @@ async function openPurchaseOrderModal(supplierId) {
     alert('Terjadi kesalahan saat memuat purchase orders.')
     purchaseOrders.value = []
   }
+}
+
+function getVendorCode(item) {
+  return resolveVendorCode(item)
+}
+
+function getSupplierName(item) {
+  return resolveSupplierDisplayName(item)
 }
 
 function closePurchaseOrderModal() {
