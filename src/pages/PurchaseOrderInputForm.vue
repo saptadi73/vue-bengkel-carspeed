@@ -308,6 +308,7 @@ import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import { buildSupplierOptionLabel, getSupplierCode, getSupplierName, mapSupplierDetails } from '@/utils/supplier'
+import { normalizeInventoryItem } from '@/utils/inventory'
 
 export default {
   components: { InputBoxSelectedDropDown, LoadingOverlay, ToastCard },
@@ -364,6 +365,7 @@ export default {
     this.fetchProducts()
     this.fetchUnits()
     this.getSatuans()
+    this.applyPrefillFromDashboard()
   },
   watch: {
     'form.supplier_id'(newVal) {
@@ -475,6 +477,40 @@ export default {
           Number(it.subtotal) ||
           Number(it.quantity || 0) * Number(it.price || 0) - Number(it.discount || 0),
       }))
+    },
+    applyPrefillFromDashboard() {
+      const raw = localStorage.getItem('prefillPurchaseFromDashboard')
+      if (!raw) return
+
+      try {
+        const parsed = JSON.parse(raw) || {}
+        const normalized = normalizeInventoryItem(parsed)
+        const productId = normalized.id || parsed.product_id || ''
+        const unitId = normalized.satuan_id || parsed.satuan_id || ''
+        const priceRaw =
+          normalized.purchase_price != null && !Number.isNaN(Number(normalized.purchase_price))
+            ? normalized.purchase_price
+            : normalized.hpp
+        const price = Number(priceRaw) && !Number.isNaN(Number(priceRaw)) ? Number(priceRaw) : 0
+
+        if (!productId) return
+
+        this.form.items = [
+          {
+            id: normalized.id || null,
+            product_id: productId,
+            satuan_id: unitId || '',
+            quantity: 1,
+            price,
+            discount: 0,
+            subtotal: Number(price) * 1,
+          },
+        ]
+      } catch (error) {
+        console.error('Error applying prefill data from dashboard:', error)
+      } finally {
+        localStorage.removeItem('prefillPurchaseFromDashboard')
+      }
     },
 
     async getSatuans() {

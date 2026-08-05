@@ -151,12 +151,20 @@ export default {
           .then((response) => {
             console.log('Form Submitted', this.formData)
             console.log('Form submitted successfully:', response.data)
+            const returnAfterCreateCustomer = localStorage.getItem('returnAfterCreateCustomer')
+            const returnTo = this.$route?.query?.returnTo
+            const returnRoute =
+              returnAfterCreateCustomer ||
+              (returnTo === 'wo-all' ? '/wo/all' : '/pelanggan/all')
+            localStorage.removeItem('returnAfterCreateCustomer')
+
             // Reset form after successful submission
             this.formData = this.getInitialFormData()
             this.loadingStore.hide()
             this.show_toast = true
             this.message_toast = response.data.message || 'Pelanggan Berhasil Ditambahkan'
             alert('Pelanggan Berhasil Ditambahkan')
+            this.$router.push(returnRoute)
           })
           .catch((error) => {
             console.error('Error submitting form:', error)

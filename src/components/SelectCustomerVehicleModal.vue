@@ -167,6 +167,15 @@
         <!-- Footer -->
         <div class="border-t bg-gray-50 px-6 py-4 flex justify-end gap-3">
           <button
+            v-if="!loading && filteredVehicles.length === 0"
+            type="button"
+            @click="createCustomer"
+            class="px-4 py-2 text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition font-medium flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-sm">person_add</span>
+            Create Baru
+          </button>
+          <button
             @click="close"
             class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition font-medium"
           >
@@ -204,6 +213,10 @@ export default {
     isOpen: {
       type: Boolean,
       default: false,
+    },
+    createCustomerRoute: {
+      type: String,
+      default: '/pelanggan/baru',
     },
   },
   data() {
@@ -272,6 +285,11 @@ export default {
       }
 
       this.$emit('selected', this.selectedVehicle)
+      this.close()
+    },
+    createCustomer() {
+      localStorage.setItem('returnAfterCreateCustomer', '/wo/all')
+      this.$router.push(this.createCustomerRoute)
       this.close()
     },
     close() {

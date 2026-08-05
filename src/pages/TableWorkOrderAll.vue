@@ -13,20 +13,34 @@
           {{ completedCount }}
         </p>
       </div>
-      <button
-        @click="showSelectCustomerModal = true"
-        class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 shadow-lg transition-all hover:shadow-xl"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-        Create New Work Order
-      </button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          @click="showSelectCustomerModal = true"
+          class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 shadow-lg transition-all hover:shadow-xl"
+        >
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Create New Work Order
+        </button>
+        <button
+          @click="$router.push('/finansial/purchase')"
+          class="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md"
+        >
+          Create Pembelian
+        </button>
+        <button
+          @click="$router.push('/finansial/biaya/input')"
+          class="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md"
+        >
+          Create Pengeluaran
+        </button>
+      </div>
     </div>
 
     <!-- Search and Filter Section -->
@@ -132,6 +146,54 @@
       <div class="bg-purple-50 border-l-4 border-purple-500 p-6 rounded-lg shadow-sm">
         <h3 class="text-sm font-medium text-purple-800 mb-1">Teknisi Aktif</h3>
         <p class="text-2xl font-bold text-purple-600">{{ uniqueTechnicians }}</p>
+      </div>
+    </div>
+
+    <!-- Low Stock Products -->
+    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-800">Barang yang Mau Habis (Min. Stok)</h2>
+        <a href="/inventory/list" class="text-sm text-blue-600 hover:underline">Lihat Semua Inventory</a>
+      </div>
+
+      <div v-if="lowStockLoading" class="text-sm text-gray-500">Memuat data barang...</div>
+      <div v-else-if="lowStockError" class="text-sm text-red-600">{{ lowStockError }}</div>
+      <div v-else-if="lowStockProducts.length === 0" class="text-sm text-gray-500">
+        Tidak ada barang yang masuk min stock.
+      </div>
+
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Produk</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Stok</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Min Stok</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Keterangan</th>
+              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr v-for="product in lowStockProducts" :key="product.id">
+              <td class="px-4 py-2 text-sm text-gray-900">{{ product.name }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900">{{ product.total_stock }}</td>
+              <td class="px-4 py-2 text-sm text-gray-900">{{ product.min_stock }}</td>
+              <td class="px-4 py-2 text-sm">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700"
+                  >Segera Beli</span
+                >
+              </td>
+              <td class="px-4 py-2">
+                <button
+                  @click="createPOFromProduct(product)"
+                  class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Buat Pembelian
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -613,6 +675,7 @@
   <!-- Select Customer Vehicle Modal -->
   <select-customer-vehicle-modal
     :isOpen="showSelectCustomerModal"
+    create-customer-route="/pelanggan/baru?returnTo=wo-all"
     @close="showSelectCustomerModal = false"
     @selected="handleSelectCustomerVehicle"
   />
@@ -627,6 +690,7 @@ import SelectCustomerVehicleModal from '@/components/SelectCustomerVehicleModal.
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import api from '@/user/axios'
+import { normalizeInventoryItem } from '@/utils/inventory'
 
 export default {
   name: 'TableWorkOrderAll',
@@ -648,6 +712,9 @@ export default {
       confirmAction: '',
       selectedOrder: null,
       workOrders: [],
+      lowStockProducts: [],
+      lowStockLoading: false,
+      lowStockError: '',
       currentPage: 1,
       itemsPerPage: 10,
       showSelectCustomerModal: false,
@@ -736,6 +803,7 @@ export default {
   created() {
     this.setToday()
     this.fetchWorkOrders()
+    this.fetchLowStockProducts()
   },
   watch: {
     searchQuery() {
@@ -785,6 +853,47 @@ export default {
       } finally {
         this.loadingStore.hide()
       }
+    },
+    async fetchLowStockProducts() {
+      this.lowStockLoading = true
+      this.lowStockError = ''
+
+      try {
+        const response = await api.get(`${BASE_URL}products/inventory/all`, {
+          params: { stock_status: 'reorder', limit: 20 },
+        })
+        const payload = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data
+            ? response.data
+            : { data: [] }
+        const items = Array.isArray(payload) ? payload : payload.data || []
+        const parsed = items
+          .map((item) => normalizeInventoryItem(item))
+          .filter((item) => Number(item.total_stock || 0) <= Number(item.min_stock || 0))
+        this.lowStockProducts = parsed.sort((a, b) => (a.total_stock || 0) - (b.total_stock || 0))
+      } catch (error) {
+        console.error('Error fetching low stock products:', error)
+        this.lowStockProducts = []
+        this.lowStockError = 'Gagal memuat data barang yang mau habis.'
+      } finally {
+        this.lowStockLoading = false
+      }
+    },
+    createPOFromProduct(product) {
+      const normalizedProduct = normalizeInventoryItem(product)
+      const initialProduct = {
+        product_id: normalizedProduct.id || '',
+        product_name: normalizedProduct.name || '',
+        product_name_safe: normalizedProduct.name || '',
+        min_stock: Number(normalizedProduct.min_stock || 0),
+        total_stock: Number(normalizedProduct.total_stock || 0),
+        purchase_price:
+          normalizedProduct.purchase_price == null ? Number(normalizedProduct.hpp || 0) : normalizedProduct.purchase_price,
+      }
+
+      localStorage.setItem('prefillPurchaseFromDashboard', JSON.stringify(initialProduct))
+      this.$router.push('/finansial/purchase')
     },
     formatDate(dateString) {
       if (!dateString) return '-'
