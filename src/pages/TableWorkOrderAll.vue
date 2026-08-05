@@ -156,45 +156,31 @@
         <a href="/inventory/list" class="text-sm text-blue-600 hover:underline">Lihat Semua Inventory</a>
       </div>
 
-      <div v-if="lowStockLoading" class="text-sm text-gray-500">Memuat data barang...</div>
-      <div v-else-if="lowStockError" class="text-sm text-red-600">{{ lowStockError }}</div>
-      <div v-else-if="lowStockProducts.length === 0" class="text-sm text-gray-500">
-        Tidak ada barang yang masuk min stock.
-      </div>
+      <reusable-data-table
+        :items="lowStockProducts"
+        :columns="lowStockColumns"
+        :loading="lowStockLoading"
+        :error="lowStockError"
+        empty-text="Tidak ada barang yang masuk min stock."
+        search-placeholder="Cari produk..."
+        :search-fields="['name']"
+        :initial-items-per-page="5"
+      >
+        <template #cell-status>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
+            Segera Beli
+          </span>
+        </template>
 
-      <div v-else class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Produk</th>
-              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Stok</th>
-              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Min Stok</th>
-              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Keterangan</th>
-              <th class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="product in lowStockProducts" :key="product.id">
-              <td class="px-4 py-2 text-sm text-gray-900">{{ product.name }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900">{{ product.total_stock }}</td>
-              <td class="px-4 py-2 text-sm text-gray-900">{{ product.min_stock }}</td>
-              <td class="px-4 py-2 text-sm">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700"
-                  >Segera Beli</span
-                >
-              </td>
-              <td class="px-4 py-2">
-                <button
-                  @click="createPOFromProduct(product)"
-                  class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Buat Pembelian
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        <template #cell-actions="{ item }">
+          <button
+            @click="createPOFromProduct(item)"
+            class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Buat Pembelian
+          </button>
+        </template>
+      </reusable-data-table>
     </div>
 
     <!-- Desktop Table View -->
@@ -232,6 +218,11 @@
                 class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
               >
                 Status
+              </th>
+              <th
+                class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider"
+              >
+                Keterangan Pembayaran
               </th>
 
               <th
@@ -324,6 +315,12 @@
                   {{ order.status }}
                 </span>
               </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span v-if="isCompletedStatus(order.status)">
+                  {{ getPaymentMethodLabel(order) }}
+                </span>
+                <span v-else class="text-sm text-gray-400">-</span>
+              </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                 <a
                   :href="`${BASE_URL2}pelanggan/history/${order.vehicle_id}`"
@@ -345,7 +342,7 @@
               </td>
             </tr>
             <tr v-if="paginatedOrders.length === 0">
-              <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                 <div class="flex flex-col items-center">
                   <svg
                     class="h-12 w-12 text-gray-400 mb-4"
@@ -521,6 +518,25 @@
               ><strong>Total Biaya:</strong> {{ formatCurrency(order.total_biaya) }}</span
             >
           </div>
+
+          <div v-if="isCompletedStatus(order.status)" class="flex items-center">
+            <svg
+              class="h-4 w-4 text-gray-400 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8c-2 0-3.5 1.5-3.5 3.5S10 15 12 15s3.5-1.5 3.5-3.5S14 8 12 8z M12 3v2m0 14v2m9-9h-2M5 12H3m13.657-6.343-1.414 1.414M6.757 17.243l-1.414 1.414m12.728 0-1.414-1.414M6.757 6.757 5.343 5.343"
+              />
+            </svg>
+            <span class="text-sm"
+              ><strong>Metode:</strong> {{ getPaymentMethodLabel(order) }}</span
+            >
+          </div>
         </div>
 
         <div class="flex gap-2 mt-4">
@@ -687,6 +703,7 @@ import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import SelectCustomerVehicleModal from '@/components/SelectCustomerVehicleModal.vue'
+import ReusableDataTable from '@/components/ReusableDataTable.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import api from '@/user/axios'
@@ -694,7 +711,7 @@ import { normalizeInventoryItem } from '@/utils/inventory'
 
 export default {
   name: 'TableWorkOrderAll',
-  components: { LoadingOverlay, ToastCard, SelectCustomerVehicleModal },
+  components: { LoadingOverlay, ToastCard, SelectCustomerVehicleModal, ReusableDataTable },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -721,6 +738,15 @@ export default {
     }
   },
   computed: {
+    lowStockColumns() {
+      return [
+        { key: 'name', label: 'Produk' },
+        { key: 'total_stock', label: 'Stok' },
+        { key: 'min_stock', label: 'Min Stok' },
+        { key: 'status', label: 'Keterangan' },
+        { key: 'actions', label: 'Aksi', tdClass: 'text-right' },
+      ]
+    },
     isAdmin() {
       return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
     },
@@ -931,6 +957,59 @@ export default {
         Cancelled: 'bg-red-100 text-red-800',
       }
       return classes[status] || 'bg-gray-100 text-gray-800'
+    },
+    isCompletedStatus(status) {
+      return ['selesai', 'completed', 'done'].includes((status || '').toLowerCase())
+    },
+    getPaymentMethodLabel(order) {
+      const rawMethod =
+        order.payment_method ||
+        order.paymentMethod ||
+        order.metode_pembayaran ||
+        order.metode_bayar ||
+        order.payment_method_name ||
+        order.paymentType ||
+        order.payment_type
+
+      const normalizeMethod = (value) => {
+        if (!value || typeof value !== 'string') return ''
+        const normalized = value.toLowerCase()
+        const map = {
+          tunai: 'Tunai',
+          cash: 'Cash',
+          transfer: 'Transfer',
+          qris: 'QRIS',
+          debit: 'Debit',
+          debit_card: 'Debit',
+          credit: 'Kartu Kredit',
+          kartu_kredit: 'Kartu Kredit',
+          kartu_debit: 'Debit',
+        }
+        return map[normalized] || value
+      }
+
+      const methodLabel = normalizeMethod(rawMethod)
+      const rawBank =
+        order.kas_bank_code ||
+        order.kasBankCode ||
+        order.bank_code ||
+        order.bankCode ||
+        order.bank_name ||
+        order.bankName
+
+      const bankLabel =
+        typeof rawBank === 'string'
+          ? rawBank
+          : rawBank?.name || rawBank?.code || rawBank?.bank_name || '-'
+
+      if (methodLabel && bankLabel && bankLabel !== '-') {
+        return `${methodLabel} (${bankLabel})`
+      }
+
+      if (methodLabel) return methodLabel
+      if (bankLabel && bankLabel !== '-') return bankLabel
+
+      return 'Belum ditentukan'
     },
     getServiceTypeClass(serviceType) {
       const classes = {
