@@ -201,6 +201,15 @@
                   </li>
                 </ul>
               </div>
+              <div v-if="canRegisterPayment" class="flex justify-end">
+                <button
+                  type="button"
+                  class="px-3 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700"
+                  @click="goToWorkOrderPayment(wo)"
+                >
+                  Register Payment
+                </button>
+              </div>
             </div>
           </div>
           <div v-else class="text-center text-gray-500">
@@ -259,6 +268,15 @@
                   </li>
                 </ul>
               </div>
+              <div v-if="canRegisterPayment" class="flex justify-end">
+                <button
+                  type="button"
+                  class="px-3 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700"
+                  @click="goToPurchasePayment(po)"
+                >
+                  Register Payment
+                </button>
+              </div>
             </div>
           </div>
           <div v-else class="text-center text-gray-500">
@@ -272,9 +290,26 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '@/user/axios'
 import { BASE_URL } from '@/base.utils.url'
 import { resolveSupplierDisplayName, resolveVendorCode } from '@/utils/reportParties'
+const router = useRouter()
+const canRegisterPayment = computed(() => {
+  const rawRole = localStorage.getItem('role') || localStorage.getItem('role_name')
+  let roleText = ''
+
+  if (rawRole) {
+    try {
+      const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
+      roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
+    } catch (error) {
+      roleText = rawRole.toString()
+    }
+  }
+
+  return roleText.toLowerCase().includes('admin')
+})
 
 const startDate = ref('')
 const endDate = ref('')
@@ -397,6 +432,24 @@ function closePurchaseOrderModal() {
   selectedSupplierId.value = ''
   selectedSupplierName.value = ''
   purchaseOrders.value = []
+}
+
+function goToWorkOrderPayment(wo) {
+  if (!wo || !wo.id) return
+  router.push({
+    name: 'edit work order',
+    params: { id: wo.id },
+    query: { openPayment: '1' },
+  })
+}
+
+function goToPurchasePayment(po) {
+  if (!po || !po.id) return
+  router.push({
+    name: 'edit purchase order',
+    params: { id: po.id },
+    query: { openPayment: '1' },
+  })
 }
 
 // Utils

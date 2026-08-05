@@ -614,6 +614,13 @@ export default {
     await this.getSatuans()
     await this.getPurchaseOrder()
     await this.checkPaymentStatus()
+    if (
+      this.$route.query.openPayment === '1' &&
+      this.serverStatus === 'diterima' &&
+      this.isAdmin
+    ) {
+      this.openPaymentModal()
+    }
   },
   watch: {
     'form.supplier_id'(newVal) {
@@ -670,6 +677,26 @@ export default {
         this.itemChanges.some((changed) => changed) ||
         this.form.items.some((item, index) => !this.originalItems[index])
       )
+    },
+    isAdmin() {
+      const rawRole =
+        localStorage.getItem('role') ||
+        localStorage.getItem('role_name') ||
+        localStorage.getItem('user') ||
+        localStorage.getItem('userData')
+      let roleText = ''
+
+      if (rawRole) {
+        try {
+          const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
+          roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
+        } catch (e) {
+          roleText = rawRole.toString()
+        }
+      }
+
+      roleText = roleText.toLowerCase().trim()
+      return roleText.includes('admin')
     },
     isCompleted() {
       return this.paymentStatus === 'dibayarkan'
@@ -1112,6 +1139,11 @@ export default {
       return /\.(jpeg|jpg|png)$/i.test(url)
     },
     openPaymentModal() {
+      if (!this.isAdmin) {
+        this.show_toast = true
+        this.message_toast = 'Hanya user dengan akses admin yang dapat membuat payment journal.'
+        return
+      }
       if (!this.form.supplier_id) {
         this.show_toast = true
         this.message_toast =

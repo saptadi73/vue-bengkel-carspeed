@@ -1687,6 +1687,9 @@ export default {
         this.form.dp_paid = this.dataWorkorder.dp_paid || false
         await this.checkPaymentStatus()
         await this.checkWorkOrderStatus()
+        if (this.$route.query.openPayment === '1' && this.form.status === 'selesai' && this.isAdmin) {
+          this.openPaymentModal()
+        }
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
         this.form.tanggal_masuk = this.dataWorkorder.tanggal_masuk
         this.form.product_ordered = (this.dataWorkorder.product_ordered || []).map((item) => ({
@@ -2447,6 +2450,11 @@ export default {
       }
     },
     openPaymentModal() {
+      if (!this.isAdmin) {
+        this.show_toast = true
+        this.message_toast = 'Hanya user dengan akses admin yang dapat memproses pembayaran.'
+        return
+      }
       if (this.form.status === 'selesai' && this.form.status_pembayaran !== 'lunas') {
         this.showPaymentModal = true
       }
