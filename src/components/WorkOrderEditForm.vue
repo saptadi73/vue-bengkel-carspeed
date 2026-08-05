@@ -1359,7 +1359,8 @@ import ToastCard from '@/components/ToastCard.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
-import { getInventoryUnitCost } from '@/utils/inventory'
+import { getInventoryUnitCost, resolveInventoryStock } from '@/utils/inventory'
+import { fetchProductInventoryStock } from '@/services/inventory'
 
 import jsPDF from 'jspdf'
 import logoImage from '@/assets/images/logo_carspeed.png'
@@ -1752,10 +1753,9 @@ export default {
       if (!item.product_id) return
       try {
         this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
-        const data = response.data.data
+        const { stock, payload: data } = await fetchProductInventoryStock(item.product_id)
         // Simpan stok di item
-        item.stockku = data.total_stock || 0
+        item.stockku = stock
         item.cost = getInventoryUnitCost(data)
 
         // Validasi: jika quantity melebihi stok, reset dan beri warning
@@ -2699,6 +2699,7 @@ export default {
         item.product_name = data.name
         item.cost = Number(data.cost) || 0
         if (data.price) item.price = data.price
+        item.stockku = resolveInventoryStock(data, item.stockku || 0)
         await this.getStock(item)
         this.productSubtotal(item)
       } catch (error) {

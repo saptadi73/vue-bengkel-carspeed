@@ -188,6 +188,8 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
+import { resolveInventoryStock } from '@/utils/inventory'
+import { fetchProductInventoryStock } from '@/services/inventory'
 
 export default {
   name: 'PaketOrderForm',
@@ -227,6 +229,7 @@ export default {
         const data = response.data.data
         item.satuan_id = data.satuan_id
         if (data.price) item.price = data.price
+        item.stockku = resolveInventoryStock(data, item.stockku)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -238,10 +241,10 @@ export default {
       if (!item.product_id) return
       try {
         this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/inventory/${item.product_id}`)
+        const { stock } = await fetchProductInventoryStock(item.product_id)
         // Update satuan_id dan price pada item yang dipilih
-        item.stockku = response.data.data.total_stock
-        console.log('hasil getStock: ', response.data.data.total_stock)
+        item.stockku = stock
+        console.log('hasil getStock: ', item.stockku)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -282,8 +285,9 @@ export default {
     },
 
     calculateSubtotal(item) {
-      this.getStock(item)
-      console.log('Stocknya: ', this.stockku)
+      if (item.product_id && item.stockku === '') {
+        this.getStock(item)
+      }
       const qty = item.quantity || 0
       const price = item.price || 0
       const discount = item.discount || 0
