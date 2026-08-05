@@ -229,7 +229,8 @@ export default {
         const data = response.data.data
         item.satuan_id = data.satuan_id
         if (data.price) item.price = data.price
-        item.stockku = resolveInventoryStock(data, item.stockku)
+        item.stockku = resolveInventoryStock(data, 0)
+        await this.getStock(item)
       } catch (error) {
         console.log('error: ', error)
       } finally {
@@ -285,7 +286,7 @@ export default {
     },
 
     calculateSubtotal(item) {
-      if (item.product_id && item.stockku === '') {
+      if (item.product_id && (item.stockku === '' || item.stockku === null || Number.isNaN(item.stockku))) {
         this.getStock(item)
       }
       const qty = item.quantity || 0

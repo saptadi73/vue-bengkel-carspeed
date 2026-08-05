@@ -273,6 +273,7 @@
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 import api from '@/user/axios'
+import { normalizeInventoryItem } from '@/utils/inventory'
 export default {
   name: 'InputSelectedDropDownConsigment',
   props: {
@@ -335,7 +336,7 @@ export default {
     async getProduct() {
       try {
         const response = await axios.get(`${BASE_URL}products/inventory/all/consignment`)
-        this.products = response.data.data
+        this.products = (response.data.data || []).map((product) => normalizeInventoryItem(product))
       } catch (error) {
         console.log('error: ', error)
       }

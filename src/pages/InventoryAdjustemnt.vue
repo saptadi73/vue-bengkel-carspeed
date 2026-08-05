@@ -205,6 +205,7 @@ import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import { BASE_URL } from '../base.utils.url'
+import { resolveInventoryStock } from '@/utils/inventory'
 
 export default {
   components: { LoadingOverlay, ToastCard },
@@ -309,7 +310,7 @@ export default {
       this.formData.product_id = product.id
       this.formData.searchQuery = product.name
       this.formData.satuan_id = product.satuan_id || ''
-      this.formData.previous_quantity = product.total_stock || 0
+      this.formData.previous_quantity = resolveInventoryStock(product, 0)
       this.formData.showSuggestions = false
       this.formData.activeIndex = -1
     },
@@ -352,7 +353,10 @@ export default {
       try {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/inventory/all/excconsignment`)
-        this.inventoryList = response.data.data || []
+        this.inventoryList = (response.data.data || []).map((product) => ({
+          ...product,
+          total_stock: resolveInventoryStock(product, 0),
+        }))
         console.log('Inventoriy: ', this.inventoryList)
       } catch (error) {
         console.error('Error fetching inventory:', error)

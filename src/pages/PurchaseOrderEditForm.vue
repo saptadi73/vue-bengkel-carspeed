@@ -542,7 +542,8 @@ import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import { buildSupplierOptionLabel, getSupplierCode, getSupplierName, mapSupplierDetails } from '@/utils/supplier'
-import { getInventoryUnitCost } from '@/utils/inventory'
+import { getInventoryUnitCost, normalizeInventoryItem, resolveInventoryStock } from '@/utils/inventory'
+import { fetchProductInventoryStock } from '@/services/inventory'
 
 export default {
   components: { LoadingOverlay, ToastCard, PaymentModal },
@@ -690,7 +691,7 @@ export default {
         try {
           const parsed = typeof rawRole === 'string' ? JSON.parse(rawRole) : rawRole
           roleText = (parsed?.role || parsed?.role_name || rawRole || '').toString()
-        } catch (e) {
+        } catch {
           roleText = rawRole.toString()
         }
       }
@@ -776,9 +777,10 @@ export default {
     async getCost(productId, index) {
       if (!productId) return
       try {
-        const response = await axios.get(`${BASE_URL}products/inventory/${productId}`)
-        console.log('Get Cost: ', response.data.data)
-        this.form.items[index].price = getInventoryUnitCost(response.data.data)
+        const { payload: data } = await fetchProductInventoryStock(productId)
+        console.log('Get Cost: ', data)
+        this.form.items[index].price = getInventoryUnitCost(data)
+        this.form.items[index].stockku = resolveInventoryStock(data, this.form.items[index].stockku || 0)
         this.calculateItemTotal(index)
       } catch (error) {
         console.error('Error fetching cost:', error)
@@ -854,7 +856,7 @@ export default {
     async fetchProducts() {
       try {
         const response = await axios.get(`${BASE_URL}products/inventory/all`)
-        this.products = response.data.data || []
+        this.products = (response.data.data || []).map((product) => normalizeInventoryItem(product))
       } catch (error) {
         console.error('Error fetching products:', error)
       }

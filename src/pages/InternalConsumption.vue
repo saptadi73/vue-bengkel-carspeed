@@ -355,6 +355,7 @@ import api from '@/user/axios'
 import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
+import { resolveInventoryStock } from '@/utils/inventory'
 
 const loadingStore = useLoadingStore()
 const loading = ref(false)
@@ -392,7 +393,13 @@ async function fetchProducts() {
     loading.value = true
     loadingStore.show()
     const res = await api.get('products/inventory/all')
-    products.value = (res.data && res.data.data) || []
+    products.value = ((res.data && res.data.data) || []).map((p) => ({
+      ...p,
+      total_stock: resolveInventoryStock(p, p.total_stock || 0),
+      min_stock: Number(p.min_stock || 0),
+      cost: Number(p.cost || 0),
+      stok_akhir: resolveInventoryStock(p, p.stok_akhir || 0),
+    }))
   } catch (err) {
     console.error(err)
     showToast('Gagal memuat daftar produk.')

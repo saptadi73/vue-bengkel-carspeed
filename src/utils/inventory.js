@@ -1,5 +1,6 @@
 export function normalizeInventoryItem(item) {
   const normalized = item || {}
+  const totalStock = resolveInventoryStock(normalized, normalized.total_stock ?? 0)
   const hpp = normalized.hpp ?? normalized.cost ?? 0
   const purchasePrice =
     normalized.purchase_price !== undefined
@@ -8,6 +9,7 @@ export function normalizeInventoryItem(item) {
 
   return {
     ...normalized,
+    total_stock: Number.isFinite(totalStock) ? totalStock : 0,
     hpp: hpp == null ? 0 : Number(hpp),
     purchase_price: purchasePrice == null ? null : Number(purchasePrice),
     vendor_code: normalized.vendor_code ?? normalized.supplier_code ?? null,

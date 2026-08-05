@@ -537,7 +537,7 @@ export default {
     async fetchProducts() {
       try {
         const response = await axios.get(`${BASE_URL}products/inventory/all`)
-        this.products = response.data.data || []
+        this.products = (response.data.data || []).map((product) => normalizeInventoryItem(product))
       } catch (error) {
         console.error('Error fetching products:', error)
       }
