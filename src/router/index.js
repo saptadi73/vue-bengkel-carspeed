@@ -167,7 +167,7 @@ const router = createRouter({
         {
           path: 'paket',
           name: 'paket',
-          component: () => import('../components/PaketOrderForm.vue'),
+          redirect: '/wo/paket/list',
         },
         {
           path: 'paket/baru',
@@ -178,6 +178,11 @@ const router = createRouter({
           path: 'paket/list',
           name: 'daftar paket',
           component: () => import('../pages/TablePacketList.vue'),
+        },
+        {
+          path: 'paket/:id/edit',
+          name: 'edit paket',
+          component: () => import('../components/PaketOrderForm.vue'),
         },
       ],
     },

@@ -1,894 +1,259 @@
-<template>
-  <div class="mx-auto bg-white rounded-xl shadow p-6 ipad:w-[75vw]">
-    <h2 class="text-xl font-bold mb-4">Form Paket Order</h2>
-    <form @submit.prevent="submitPaket">
-      <div class="info-card">
-        <div class="relative">
-          <label class="modern_label-label">Nama Paket</label>
-          <input v-model="paket.name" type="text" class="modern-input peer" required />
-        </div>
-      </div>
-
-      <!-- Product Order Section -->
-      <div class="info-card">
-        <label class="modern-label-label">Product Order (Sparepart)</label>
-        <div
-          v-for="(item, idx) in paket.product_line_packet_order"
-          :key="'prod-' + idx"
-          class="flex gap-2 mb-2"
-        >
-          <!-- Select Product -->
-          <select
-            v-model="item.product_id"
-            class="modern-select peer"
-            @change="getProductsId(item)"
+﻿<template>
+  <section class="max-w-7xl mx-auto p-4 md:p-8 bg-white rounded-xl shadow">
+    <div class="flex flex-wrap justify-between gap-4 mb-6">
+      <h1 class="text-2xl font-bold text-blue-700">
+        {{ isEdit ? 'Edit Paket Order' : 'Tambah Paket Order' }}
+      </h1>
+      <RouterLink to="/wo/paket/list" class="text-blue-700 underline">Daftar Paket</RouterLink>
+    </div>
+    <p v-if="loading" role="status">Memuat data paket dan pilihan item...</p>
+    <div v-if="error" role="alert" class="bg-red-50 text-red-700 p-3 rounded mb-4">{{ error }}</div>
+    <button v-if="loadFailed" type="button" class="button" @click="loadForm">Coba Lagi</button>
+    <form v-if="!loading && !loadFailed" @submit.prevent="submit">
+      <fieldset :disabled="saving" class="space-y-6">
+        <label class="block font-semibold"
+          >Nama Paket
+          <input
+            v-model="packet.name"
+            required
+            class="input mt-2"
+            placeholder="Contoh: Paket Servis Berkala"
+          />
+        </label>
+        <section v-for="group in groups" :key="group.kind" class="border rounded-lg p-4">
+          <h2 class="text-lg font-semibold mb-4">{{ group.label }}</h2>
+          <p v-if="!packet[group.key].length" class="text-gray-500 mb-3">Belum ada item.</p>
+          <div
+            v-for="(line, index) in packet[group.key]"
+            :key="line._key"
+            class="grid grid-cols-2 lg:grid-cols-7 gap-3 border-b pb-4 mb-4"
           >
-            <option value="" disabled selected>Pilih Product</option>
-            <option v-for="productku in products" :key="productku.id" :value="productku.id">
-              {{ productku.name }}
-            </option>
-          </select>
-          <div class="flex flex-col">
-            <label class="text-xs">Stock</label>
-            <input
-              v-model.number="item.stockku"
-              type="number"
-              class="w-14 text-xs border border-red-400 rounded-lg px-2 py-1 text-blue-600"
-              readonly
-            />
+            <label class="col-span-2 text-sm"
+              >{{ group.label }}
+              <select
+                v-model="line[group.id]"
+                required
+                class="input"
+                @change="selectItem(line, group)"
+              >
+                <option disabled value="">Pilih item</option>
+                <option
+                  v-if="
+                    line[group.id] && !choices(group).some((item) => item.id === line[group.id])
+                  "
+                  :value="line[group.id]"
+                >
+                  {{ line.product_name || line.service_name || line[group.id] }} (tidak tersedia)
+                </option>
+                <option v-for="item in choices(group)" :key="item.id" :value="item.id">
+                  {{ item.name }}
+                </option>
+              </select>
+            </label>
+            <label class="text-sm"
+              >Jumlah<input
+                v-model.number="line.quantity"
+                required
+                type="number"
+                min="0.000001"
+                step="any"
+                class="input"
+            /></label>
+            <label v-if="group.kind === 'product'" class="text-sm"
+              >Satuan
+              <select v-model="line.satuan_id" required class="input">
+                <option disabled value="">Pilih satuan</option>
+                <option
+                  v-if="line.satuan_id && !units.some((unit) => unit.id === line.satuan_id)"
+                  :value="line.satuan_id"
+                >
+                  {{ line.satuan_name || line.satuan_id }}
+                </option>
+                <option v-for="unit in units" :key="unit.id" :value="unit.id">
+                  {{ unit.name }}
+                </option>
+              </select>
+            </label>
+            <label class="text-sm"
+              >Harga (Rp)<input
+                v-model.number="line.price"
+                required
+                type="number"
+                min="0"
+                step="any"
+                class="input"
+            /></label>
+            <label class="text-sm"
+              >Diskon nominal (Rp)<input
+                v-model.number="line.discount"
+                required
+                type="number"
+                min="0"
+                :max="Number(line.quantity) * Number(line.price)"
+                step="any"
+                class="input"
+            /></label>
+            <div class="text-sm">
+              Subtotal
+              <p class="font-semibold mt-2">{{ currency(lineTotal(line)) }}</p>
+            </div>
+            <button
+              type="button"
+              class="text-red-700 text-sm text-left"
+              :aria-label="`Hapus ${group.label} baris ${index + 1}`"
+              @click="packet[group.key].splice(index, 1)"
+            >
+              Hapus baris
+            </button>
           </div>
-
-          <!-- Quantity -->
-          <input
-            v-model.number="item.quantity"
-            type="number"
-            placeholder="Quantity"
-            class="modern-input peer"
-            @input="calculateSubtotal(item)"
-          />
-
-          <!-- Select Product -->
-          <select v-model="item.satuan_id" class="modern-select peer">
-            <option value="" disabled selected>Pilih Satuan</option>
-            <option v-for="satuanku in satuans" :key="satuanku.id" :value="satuanku.id">
-              {{ satuanku.name }}
-            </option>
-          </select>
-
-          <!-- Price -->
-          <input
-            v-model.number="item.price"
-            type="number"
-            placeholder="Harga"
-            class="modern-input peer"
-            @input="calculateSubtotal(item)"
-          />
-
-          <!-- Discount -->
-          <input
-            v-model.number="item.discount"
-            type="number"
-            placeholder="Discount"
-            class="modern-input peer"
-            @input="calculateSubtotal(item)"
-          />
-
-          <!-- Subtotal -->
-          <input
-            v-model.number="item.subtotal"
-            type="number"
-            placeholder="subTotal"
-            class="modern-input peer"
-            readonly
-          />
-
-          <!-- Remove Product -->
-          <button type="button" @click="removeProduct(idx)" class="text-red-500 font-bold">
-            &times;
+          <button type="button" class="button" @click="addLine(group)">+ {{ group.label }}</button>
+        </section>
+        <p class="text-xl font-bold text-right">Total Paket: {{ currency(packetTotal(packet)) }}</p>
+        <div class="flex justify-end gap-3">
+          <button type="button" class="button secondary" @click="router.push('/wo/paket/list')">
+            Batal
+          </button>
+          <button type="submit" class="button">
+            {{ saving ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Simpan Paket' }}
           </button>
         </div>
-        <button
-          type="button"
-          @click="addProduct"
-          class="bg-blue-500 text-white px-2 py-1 rounded text-xs mt-1"
-        >
-          + Produk
-        </button>
-      </div>
-
-      <!-- Service Order Section -->
-      <div class="info-card">
-        <label class="modern-label-label">Service Order (Jasa)</label>
-        <div
-          v-for="(item, idx) in paket.service_line_packet_order"
-          :key="'svc-' + idx"
-          class="flex gap-2 mb-2"
-        >
-          <!-- Select Service -->
-          <select
-            v-model="item.service_id"
-            class="modern-select peer"
-            @change="getServicesId(item)"
-          >
-            <option value="" disabled selected>Pilih Service/Jasa</option>
-            <option v-for="serviceku in services" :key="serviceku.id" :value="serviceku.id">
-              {{ serviceku.name }}
-            </option>
-          </select>
-
-          <!-- Quantity -->
-          <input
-            v-model.number="item.quantity"
-            type="number"
-            placeholder="Quantity"
-            class="modern-input peer"
-            @input="calculateSubtotalService(item)"
-          />
-
-          <!-- Price -->
-          <input
-            v-model.number="item.price"
-            type="number"
-            placeholder="Harga"
-            class="modern-input peer"
-            @input="calculateSubtotalService(item)"
-          />
-
-          <!-- Discount -->
-          <input
-            v-model.number="item.discount"
-            type="number"
-            placeholder="Discount"
-            class="modern-input peer"
-            @input="calculateSubtotalService(item)"
-          />
-
-          <!-- Subtotal -->
-          <input
-            v-model.number="item.subtotal"
-            type="number"
-            placeholder="subTotal"
-            class="modern-input peer"
-            readonly
-          />
-
-          <!-- Remove Service -->
-          <button type="button" @click="removeService(idx)" class="text-red-500 font-bold">
-            &times;
-          </button>
-        </div>
-        <button
-          type="button"
-          @click="addService"
-          class="bg-blue-500 text-white px-2 py-1 rounded text-xs mt-1"
-        >
-          + Jasa
-        </button>
-      </div>
-
-      <div class="flex justify-end gap-2">
-        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded font-semibold">
-          Simpan Paket
-        </button>
-        <button type="button" @click="$emit('cancel')" class="bg-gray-300 px-4 py-2 rounded">
-          Batal
-        </button>
-      </div>
+      </fieldset>
     </form>
-  </div>
-  <loading-overlay />
-  <toast-card v-if="show_toast" :message="message_toast" @close="tutupToast" />
+  </section>
 </template>
 
-<script>
-import { ref } from 'vue'
+<script setup>
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import api from '@/user/axios'
-import { useLoadingStore } from '@/stores/loading'
-import LoadingOverlay from '@/components/LoadingOverlay.vue'
-import ToastCard from '@/components/ToastCard.vue'
-import axios from 'axios'
-import { BASE_URL, BASE_URL2 } from '../base.utils.url'
-import { resolveInventoryStock } from '@/utils/inventory'
-import { fetchProductInventoryStock } from '@/services/inventory'
+import { getPacket, savePacket } from '@/services/packetOrders'
+import {
+  lineTotal,
+  packetTotal,
+  packetPayload,
+  packetError,
+  responseData,
+} from '@/utils/packetOrders'
 
-export default {
-  name: 'PaketOrderForm',
-  components: { LoadingOverlay, ToastCard },
-  props: {
-    value: Object,
-  },
-  data() {
-    return {
-      paket: this.value
-        ? JSON.parse(JSON.stringify(this.value))
-        : { name: '', product_line_packet_order: [], service_line_packet_order: [] },
-      products: [],
-      services: [],
-      satuans: [],
-      productID: [],
-      stockku: '',
-    }
-  },
-  setup() {
-    const loadingStore = useLoadingStore()
-    const show_toast = ref(false)
-    const message_toast = ref('')
-    return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
-  },
-  created() {
-    this.getProduct()
-    this.getService()
-    this.getSatuans()
-  },
-  methods: {
-    async getProductsId(item) {
-      if (!item.product_id) return
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/${item.product_id}`)
-        const data = response.data.data
-        item.satuan_id = data.satuan_id
-        if (data.price) item.price = data.price
-        item.stockku = resolveInventoryStock(data, 0)
-        await this.getStock(item)
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-
-    async getStock(item) {
-      if (!item.product_id) return
-      try {
-        this.loadingStore.show()
-        const { stock } = await fetchProductInventoryStock(item.product_id)
-        // Update satuan_id dan price pada item yang dipilih
-        item.stockku = stock
-        console.log('hasil getStock: ', item.stockku)
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-    async getServicesId(item) {
-      if (!item.service_id) return
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
-        const data = response.data.data
-        // Update satuan_id dan price pada item yang dipilih
-        if (data.price) item.price = data.price
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-
-    async getSatuans() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/satuans/all`)
-        console.log('Satuan Data: ', response.data.data)
-        this.satuans = response.data.data
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-    tutupToast() {
-      this.show_toast = false
-      this.message_toast = ''
-      window.location.reload()
-    },
-
-    calculateSubtotal(item) {
-      if (item.product_id && (item.stockku === '' || item.stockku === null || Number.isNaN(item.stockku))) {
-        this.getStock(item)
-      }
-      const qty = item.quantity || 0
-      const price = item.price || 0
-      const discount = item.discount || 0
-      item.subtotal = price * qty - discount
-    },
-
-    calculateSubtotalService(item) {
-      const qty = item.quantity || 0
-      const price = item.price || 0
-      const discount = item.discount || 0
-      item.subtotal = price * qty - discount
-    },
-
-    async getProduct() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/all`)
-        console.log('Data Products: ', response.data.data)
-        this.products = response.data.data
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-    async getService() {
-      try {
-        this.loadingStore.show()
-        const response = await axios.get(`${BASE_URL}products/service/all`)
-        console.log('Data Services: ', response.data.data)
-        this.services = response.data.data
-      } catch (error) {
-        console.log('error: ', error)
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-    addProduct() {
-      this.paket.product_line_packet_order.push({
-        product_id: '',
-        quantity: 0,
-        satuan_id: '',
-        price: '',
-        discount: 0,
-        subtotal: 0,
-      })
-    },
-    removeProduct(idx) {
-      this.paket.product_line_packet_order.splice(idx, 1)
-    },
-    addService() {
-      this.paket.service_line_packet_order.push({
-        service_id: '',
-        quantity: 0,
-        price: '',
-        discount: 0,
-        subtotal: 0,
-      })
-    },
-    removeService(idx) {
-      this.paket.service_line_packet_order.splice(idx, 1)
-    },
-    async submitPaket() {
-      if (!this.paket.name?.trim()) {
-        this.show_toast = true
-        this.message_toast = 'Nama paket wajib diisi.'
-        return
-      }
-
-      const validProducts = this.paket.product_line_packet_order.filter(
-        (item) => item.product_id && Number(item.quantity) > 0 && item.satuan_id,
-      )
-      const validServices = this.paket.service_line_packet_order.filter(
-        (item) => item.service_id && Number(item.quantity) > 0,
-      )
-      if (!validProducts.length && !validServices.length) {
-        this.show_toast = true
-        this.message_toast = 'Tambahkan minimal satu produk atau jasa yang valid.'
-        return
-      }
-
-      const payload = {
-        name: this.paket.name.trim(),
-        product_line_packet_order: validProducts.map((item) => ({
-          product_id: item.product_id,
-          quantity: Number(item.quantity),
-          price: Number(item.price) || 0,
-          satuan_id: item.satuan_id,
-          discount: Number(item.discount) || 0,
-          subtotal:
-            Number(item.subtotal) ||
-            Number(item.price || 0) * Number(item.quantity || 0) - Number(item.discount || 0),
-        })),
-        service_line_packet_order: validServices.map((item) => ({
-          service_id: item.service_id,
-          quantity: Number(item.quantity),
-          price: Number(item.price) || 0,
-          discount: Number(item.discount) || 0,
-          subtotal:
-            Number(item.subtotal) ||
-            Number(item.price || 0) * Number(item.quantity || 0) - Number(item.discount || 0),
-        })),
-      }
-
-      this.$emit('save', JSON.parse(JSON.stringify(this.paket)))
-      console.log('Data :', payload)
-      try {
-        this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}packetorders/create/new`, payload)
-        console.log('add Packet Order: ', response.data.data)
-        this.show_toast = true
-        this.message_toast = response.data.message || 'Paket berhasil dibuat.'
-        this.paket = { name: '', product_line_packet_order: [], service_line_packet_order: [] }
-      } catch (error) {
-        console.error('Error Submit Data: ', error)
-        const validationDetail = error.response?.data?.detail
-        this.show_toast = true
-        this.message_toast =
-          error.response?.data?.message ||
-          (Array.isArray(validationDetail)
-            ? validationDetail.map((item) => item.msg).join(', ')
-            : validationDetail) ||
-          'Gagal membuat paket.'
-      } finally {
-        this.loadingStore.hide()
-      }
-    },
-  },
+const route = useRoute()
+const router = useRouter()
+const isEdit = computed(() => Boolean(route.params.id))
+const emptyPacket = () => ({
+  name: '',
+  product_line_packet_order: [],
+  service_line_packet_order: [],
+})
+const packet = ref(emptyPacket())
+const products = ref([])
+const services = ref([])
+const units = ref([])
+const loading = ref(false)
+const saving = ref(false)
+const loadFailed = ref(false)
+const error = ref('')
+let nextKey = 0
+let loadVersion = 0
+const groups = [
+  { kind: 'product', label: 'Produk', key: 'product_line_packet_order', id: 'product_id' },
+  { kind: 'service', label: 'Jasa', key: 'service_line_packet_order', id: 'service_id' },
+]
+const choices = (group) => (group.kind === 'product' ? products.value : services.value)
+const currency = (value) =>
+  new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+function addLine(group) {
+  packet.value[group.key].push({
+    _key: ++nextKey,
+    [group.id]: '',
+    satuan_id: '',
+    quantity: 1,
+    price: 0,
+    discount: 0,
+  })
 }
+function selectItem(line, group) {
+  const item = choices(group).find((item) => item.id === line[group.id])
+  if (!item) return
+  line.price = Number(item.price ?? 0)
+  if (group.kind === 'product') line.satuan_id = item.satuan_id || ''
+}
+async function loadForm() {
+  const version = ++loadVersion
+  loading.value = true
+  error.value = ''
+  loadFailed.value = false
+  try {
+    const [productResponse, serviceResponse, unitResponse, data] = await Promise.all([
+      api.get('products/all'),
+      api.get('products/service/all'),
+      api.get('products/satuans/all'),
+      isEdit.value ? getPacket(route.params.id) : Promise.resolve(emptyPacket()),
+    ])
+    if (version !== loadVersion) return
+    const lists = [productResponse, serviceResponse, unitResponse].map(responseData)
+    if (lists.some((list) => !Array.isArray(list)))
+      throw new Error('Data pilihan produk/jasa/satuan tidak valid.')
+    ;[products.value, services.value, units.value] = lists
+    packet.value = data
+    for (const group of groups) {
+      packet.value[group.key] = data[group.key].map((line) => ({
+        ...line,
+        discount: line.discount ?? 0,
+        _key: ++nextKey,
+      }))
+    }
+  } catch (failure) {
+    if (version !== loadVersion) return
+    error.value = packetError(failure)
+    loadFailed.value = true
+  } finally {
+    if (version === loadVersion) loading.value = false
+  }
+}
+async function submit() {
+  if (saving.value) return
+  error.value = ''
+  try {
+    const payload = packetPayload(packet.value)
+    saving.value = true
+    await savePacket(route.params.id, payload)
+    await router.push({
+      path: '/wo/paket/list',
+      query: { saved: isEdit.value ? 'updated' : 'created' },
+    })
+  } catch (failure) {
+    error.value = packetError(failure)
+  } finally {
+    saving.value = false
+  }
+}
+watch(() => route.params.id, loadForm, { immediate: true })
 </script>
 
 <style scoped>
-/* Custom Gradient Classes */
-.gradient-header {
-  background: linear-gradient(to right, #2563eb, #1e40af);
-}
-
-.gradient-summary {
-  background: linear-gradient(to right, #f9fafb, #eff6ff);
-}
-
-.gradient-modal-header {
-  background: linear-gradient(to right, #3b82f6, #1d4ed8);
-}
-
-/* Modern Input Styles */
-.modern-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  background-color: white;
-  color: #111827;
-  font-family: 'Lexend', sans-serif;
-  transition: all 0.3s ease-in-out;
-}
-
-.modern-input::placeholder {
-  color: #6b7280; /* Muted gray for visibility */
-}
-
-.modern-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.3);
-  background-color: rgba(239, 246, 255, 0.3);
-}
-
-.modern-input:hover {
-  border-color: #d1d5db;
-}
-
-/* Modern Select Styles */
-.modern-select {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-right: 2.5rem;
-  border: 2px solid #e5e7eb;
-  border-radius: 0.75rem;
-  background-color: white;
-  color: #111827;
-  font-family: 'Lexend', sans-serif;
-  transition: all 0.3s ease-in-out;
-  appearance: none;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.75rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-}
-
-.modern-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.3);
-  background-color: rgba(239, 246, 255, 0.3);
-}
-
-.modern-select:hover {
-  border-color: #d1d5db;
-}
-
-/* Floating Labels */
-.modern-label {
-  position: absolute;
-  left: 1rem;
-  top: 0.2rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-family: 'Lexend', sans-serif;
-  transition: all 0.3s ease-in-out;
-  pointer-events: none;
-  transform-origin: left top;
-}
-
-.modern-input:focus ~ .modern-label,
-.modern-input:not(:placeholder-shown) ~ .modern-label {
-  color: #2563eb;
-  font-size: 0.75rem;
-  transform: translateY(-1.75rem) scale(0.9);
-}
-
-.modern-select-label {
-  position: absolute;
-  left: 1rem;
-  top: 0.75rem;
-  color: #6b7280;
-  font-size: 0.875rem;
-  font-family: 'Lexend', sans-serif;
-  transition: all 0.3s ease-in-out;
-  pointer-events: none;
-  transform-origin: left top;
-}
-
-.modern-select:focus ~ .modern-select-label,
-.modern-select:not([value='']) ~ .modern-select-label {
-  color: #2563eb;
-  font-size: 0.75rem;
-  transform: translateY(-1.75rem) scale(0.9);
-}
-
-/* Button Styles */
-.modern-btn-primary {
-  background: linear-gradient(to right, #2563eb, #1d4ed8);
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  font-family: 'Lexend', sans-serif;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modern-btn-primary:hover {
-  background: linear-gradient(to right, #1d4ed8, #1e40af);
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
-}
-
-.modern-btn-secondary {
-  background: linear-gradient(to right, #7c3aed, #6d28d9);
-  color: white;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  font-family: 'Lexend', sans-serif;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modern-btn-secondary:hover {
-  background: linear-gradient(to right, #6d28d9, #5b21b6);
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
-}
-
-.modern-btn-success {
-  background: linear-gradient(to right, #059669, #047857);
-  color: white;
-  font-weight: 600;
-  padding: 1rem 2rem;
-  border-radius: 0.75rem;
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  font-family: 'Lexend', sans-serif;
-  font-size: 1.125rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modern-btn-success:hover {
-  background: linear-gradient(to right, #047857, #065f46);
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
-}
-
-.modern-btn-info {
-  background: linear-gradient(to right, #0891b2, #0e7490);
-  color: white;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  font-family: 'Lexend', sans-serif;
-  font-size: 0.875rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modern-btn-info:hover {
-  background: linear-gradient(to right, #0e7490, #155e75);
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
-}
-
-.modern-btn-activity {
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-family: 'Lexend', sans-serif;
-  font-size: 0.875rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.modern-btn-activity:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.modern-btn-cancel {
-  background: #f3f4f6;
-  color: #374151;
-  font-weight: 500;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-family: 'Lexend', sans-serif;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-}
-
-.modern-btn-cancel:hover {
-  background: #e5e7eb;
-}
-
-.delete-btn {
-  color: #ef4444;
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-family: 'Lexend', sans-serif;
-  font-size: 0.875rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.delete-btn:hover {
-  color: #dc2626;
-  background-color: #fef2f2;
-  transform: scale(1.05);
-}
-
-/* Info Cards */
-.info-card {
-  background: linear-gradient(to right, #f8fafc, #f1f5f9);
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  transition: all 0.3s ease-in-out;
-  font-weight: 600;
-}
-
-.info-card:hover {
-  border-color: #cbd5e1;
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.info-label {
+.input {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #64748b;
-  margin-bottom: 0.25rem;
-  font-family: 'Lexend', sans-serif;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  padding: 0.6rem;
+  background: white;
 }
-
-.info-value {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #1e293b;
-  font-family: 'Lexend', sans-serif;
+.input:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
 }
-
-/* Card Styles */
-.product-item-card {
-  background: linear-gradient(to right, #f0fdf4, #ecfdf5);
-  border: 2px solid #bbf7d0;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  transition: all 0.3s ease-in-out;
-  animation: fadeInUp 0.5s ease-out;
+.button {
+  background: #2563eb;
+  color: white;
+  border-radius: 0.5rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
 }
-
-.product-item-card:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border-color: #86efac;
+.secondary {
+  background: #e2e8f0;
+  color: #334155;
 }
-
-.service-item-card {
-  background: linear-gradient(to right, #faf5ff, #f3e8ff);
-  border: 2px solid #d8b4fe;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  transition: all 0.3s ease-in-out;
-  animation: fadeInUp 0.5s ease-out;
-}
-
-.service-item-card:hover {
-  box-shadow:
-    0 10px 15px -3px rgba(0, 0, 0, 0.1),
-    0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  border-color: #c084fc;
-}
-
-/* Subtotal Display */
-.subtotal-display {
-  background: linear-gradient(to right, #dbeafe, #bfdbfe);
-  border: 2px solid #93c5fd;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: #1e40af;
-  font-weight: bold;
-  font-size: 1.125rem;
-  text-align: center;
-  font-family: 'Lexend', sans-serif;
-}
-
-.subtotal-label {
-  position: absolute;
-  left: 1rem;
-  top: 0.75rem;
-  color: #2563eb;
-  font-size: 0.75rem;
-  font-family: 'Lexend', sans-serif;
-  pointer-events: none;
-  transform: translateY(-1.75rem) scale(0.9);
-}
-
-/* Empty State */
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #6b7280;
-}
-
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .modern-input,
-  .modern-select {
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
-  }
-
-  .modern-label,
-  .modern-select-label {
-    font-size: 0.75rem;
-  }
-
-  .modern-btn-primary,
-  .modern-btn-secondary {
-    padding: 0.625rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  .modern-btn-success {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-  }
-
-  .subtotal-display {
-    font-size: 1rem;
-    padding: 0.5rem 0.75rem;
-  }
-
-  .info-card {
-    padding: 0.75rem;
-  }
-
-  .product-item-card,
-  .service-item-card {
-    padding: 1rem;
-  }
-}
-
-/* Typography */
-h2,
-h3 {
-  font-family: 'Lexend', sans-serif;
-}
-
-/* Enhanced Shadow Effects */
-.product-item-card:hover,
-.service-item-card:hover {
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Bikin input “telanjang” */
-.naked-input {
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 0;
-  margin: 0;
-
-  /* Warisan tipografi dari parent supaya benar-benar terlihat seperti teks biasa */
-  font: inherit;
-  color: inherit;
-  line-height: inherit;
-
-  /* Lebar mengikuti panjang teks */
-  width: auto;
-  min-width: 1ch;
-  caret-color: currentColor;
-
-  /* Hilangkan styling default browser tertentu */
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/* Opsional: placeholder lebih samar */
-.naked-input::placeholder {
-  opacity: 0.4;
-}
-
-/* Opsional: garis tipis saat fokus biar aksesibel tapi tetap minimalis */
-.naked-input:focus {
-  box-shadow: inset 0 -1px 0 currentColor;
+fieldset:disabled {
+  opacity: 0.65;
 }
 </style>

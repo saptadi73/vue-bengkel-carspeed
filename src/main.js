@@ -5,6 +5,7 @@ import App from './App.vue'
 import router from './router'
 import mitt from 'mitt'
 import { createPinia } from 'pinia'
+import { installUppercaseInputs } from './utils/uppercaseInputs'
 
 const emitter = mitt()
 
@@ -22,4 +23,6 @@ app.provide('$emitter', emitter)
 
 app.use(router)
 app.use(createPinia())
+const removeUppercaseInputs = installUppercaseInputs(document)
+if (import.meta.hot) import.meta.hot.dispose(removeUppercaseInputs)
 app.mount('#app')

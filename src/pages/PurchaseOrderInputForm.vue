@@ -7,157 +7,30 @@
 
       <!-- Supplier Information -->
       <div class="border-t pt-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Supplier Information</h3>
-        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <p class="text-sm font-semibold text-gray-700">Sumber Vendor</p>
-          <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <button
-              type="button"
-              class="rounded-xl border px-4 py-3 text-left transition"
-              :class="
-                form.supplier_mode === 'existing'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600'
-              "
-              @click="setSupplierMode('existing')"
-            >
-              <p class="font-semibold">Pilih dari master supplier</p>
-              <p class="mt-1 text-xs">Gunakan supplier yang sudah tersimpan.</p>
-            </button>
-            <button
-              type="button"
-              class="rounded-xl border px-4 py-3 text-left transition"
-              :class="
-                form.supplier_mode === 'manual'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600'
-              "
-              @click="setSupplierMode('manual')"
-            >
-              <p class="font-semibold">Input vendor manual</p>
-              <p class="mt-1 text-xs">Dipakai saat vendor belum ada di master.</p>
-            </button>
-          </div>
-        </div>
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label for="supplier_id" class="block text-sm font-medium text-gray-700"
-              >Supplier Name</label
-            >
-            <select
-              v-model="form.supplier_id"
-              id="supplier_id"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              :disabled="form.supplier_mode !== 'existing'"
-            >
-              <option value="">
-                {{
-                  form.supplier_mode === 'existing' ? 'Select Supplier' : 'Mode manual aktif'
-                }}
-              </option>
-              <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                {{ buildSupplierOptionLabel(supplier) }}
-              </option>
-            </select>
-            <p v-if="supplierError" class="mt-1 text-sm text-red-600">
-              Pilih supplier atau isi vendor manual.
-            </p>
-          </div>
-          <div>
-            <label for="vendor_code" class="block text-sm font-medium text-gray-700"
-              >Vendor Code</label
-            >
-            <input
-              v-model="form.vendor_code"
-              type="text"
-              id="vendor_code"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              :disabled="form.supplier_mode !== 'manual'"
-              :placeholder="
-                form.supplier_mode === 'manual' ? 'Contoh: VND-001' : 'Terisi otomatis dari supplier'
-              "
-            />
-          </div>
-          <div>
-            <label for="vendor_name" class="block text-sm font-medium text-gray-700"
-              >Vendor Name</label
-            >
-            <input
-              v-model="form.vendor_name"
-              type="text"
-              id="vendor_name"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              :disabled="form.supplier_mode !== 'manual'"
-              :placeholder="
-                form.supplier_mode === 'manual'
-                  ? 'Nama vendor untuk transaksi ini'
-                  : 'Terisi otomatis dari supplier'
-              "
-            />
-          </div>
-          <div>
-            <label for="supplierAddress" class="block text-sm font-medium text-gray-700"
-              >Supplier Address</label
-            >
-            <textarea
-              v-model="form.alamat"
-              id="supplierAddress"
-              rows="3"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled
-            ></textarea>
-          </div>
-          <div>
-            <label for="supplierPhone" class="block text-sm font-medium text-gray-700"
-              >Supplier Phone</label
-            >
-            <input
-              v-model="form.hp"
-              type="tel"
-              id="supplierPhone"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled
-            />
-          </div>
-          <div>
-            <label for="supplierEmail" class="block text-sm font-medium text-gray-700"
-              >Supplier Email</label
-            >
-            <input
-              v-model="form.email"
-              type="email"
-              id="supplierEmail"
-              class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled
-            />
-          </div>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label for="toko" class="block text-sm font-medium text-gray-700">Nama Toko</label>
-          <input
-            v-model="form.toko"
-            type="text"
-            id="toko"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Nama Toko Jika Ada"
-            disabled
-          />
-        </div>
-        <div>
-          <label for="perusahaan" class="block text-sm font-medium text-gray-700"
-            >Nama Perusahaan</label
+        <label for="supplier_id" class="block text-sm font-medium text-gray-700">Vendor</label>
+        <div class="mt-2 flex items-center gap-2">
+          <select
+            v-model="form.supplier_id"
+            id="supplier_id"
+            class="min-w-0 flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-          <input
-            v-model="form.perusahaan"
-            type="text"
-            id="perusahaan"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Nama Perusahaan Jika Ada"
-            disabled
-          />
+            <option value="">Pilih vendor</option>
+            <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+              {{ getSupplierName(supplier) || 'Vendor tanpa nama' }}
+            </option>
+          </select>
+          <router-link
+            :to="{ name: 'supplier baru' }"
+            target="_blank"
+            rel="noopener"
+            class="shrink-0 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Tambah vendor baru (buka di tab baru)"
+            title="Tambah vendor baru di tab baru"
+          >
+            + Tambah Vendor
+          </router-link>
         </div>
+        <p v-if="supplierError" class="mt-1 text-sm text-red-600">Pilih vendor terlebih dahulu.</p>
       </div>
 
       <!-- Delivery and Payment -->
@@ -307,7 +180,7 @@ import InputBoxSelectedDropDown from '@/components/InputBoxSelectedDropDown.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
-import { buildSupplierOptionLabel, getSupplierCode, getSupplierName, mapSupplierDetails } from '@/utils/supplier'
+import { getSupplierCode, getSupplierName, mapSupplierDetails } from '@/utils/supplier'
 import { normalizeInventoryItem } from '@/utils/inventory'
 
 export default {
@@ -361,15 +234,20 @@ export default {
     return { loadingStore, show_toast, message_toast, BASE_URL, BASE_URL2 }
   },
   mounted() {
+    window.addEventListener('focus', this.fetchSuppliers)
     this.fetchSuppliers()
     this.fetchProducts()
     this.fetchUnits()
     this.getSatuans()
     this.applyPrefillFromDashboard()
   },
+  beforeUnmount() {
+    window.removeEventListener('focus', this.fetchSuppliers)
+  },
   watch: {
     'form.supplier_id'(newVal) {
-      if (newVal && this.form.supplier_mode === 'existing') {
+      if (newVal) {
+        this.form.supplier_mode = 'existing'
         const supplier = this.suppliers.find((s) => s.id == newVal)
         if (supplier) {
           Object.assign(this.form, mapSupplierDetails(supplier))
@@ -411,23 +289,7 @@ export default {
     },
   },
   methods: {
-    buildSupplierOptionLabel,
-    setSupplierMode(mode) {
-      this.form.supplier_mode = mode
-      this.supplierError = false
-
-      if (mode === 'existing') {
-        this.form.vendor_code = ''
-        this.form.vendor_name = ''
-        if (this.form.supplier_id && this.selectedSupplier) {
-          Object.assign(this.form, mapSupplierDetails(this.selectedSupplier))
-        }
-        return
-      }
-
-      this.form.supplier_id = ''
-      this.clearSupplierDetails()
-    },
+    getSupplierName,
     clearSupplierDetails() {
       this.form.alamat = ''
       this.form.hp = ''
@@ -589,7 +451,7 @@ export default {
       if (!this.hasValidSupplierSelection()) {
         this.supplierError = true
         this.show_toast = true
-        this.message_toast = 'Lengkapi supplier atau vendor manual terlebih dahulu.'
+        this.message_toast = 'Pilih vendor terlebih dahulu.'
         return
       }
       // validate required date
