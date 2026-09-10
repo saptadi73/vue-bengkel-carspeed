@@ -18,6 +18,14 @@
             />
           </div>
           <div class="flex items-center space-x-2 mg:space-x-4">
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-red-700 bg-red-50 hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-red-600"
+              @click="logout"
+            >
+              <font-awesome-icon icon="fa-solid fa-right-from-bracket" />
+              Logout
+            </button>
             <div class="hidden md:block relative">
               <HeaderSearchBengkel></HeaderSearchBengkel>
             </div>
@@ -93,7 +101,7 @@
                       @click="logout"
                       class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200 border-t"
                     >
-                      <i class="fas fa-sign-out-alt mr-2"></i>Sign out
+                      <font-awesome-icon icon="fa-solid fa-right-from-bracket" class="mr-2" />Logout
                     </button>
                   </PopoverPanel>
                 </transition>
@@ -110,6 +118,7 @@
 import { Popover, PopoverButton, PopoverGroup, PopoverPanel } from '@headlessui/vue'
 import HeaderSearchBengkel from '../components/HeaderSearchBengkel.vue'
 import router from '../router'
+import { clearAuthSession } from '@/utils/authSession'
 
 import { inject, ref, onMounted } from 'vue'
 
@@ -117,16 +126,8 @@ const $emitter = inject('$emitter')
 const username = ref('')
 
 const logout = () => {
-  if (confirm('Yakin ingin logout?')) {
-    // Clear localStorage
-    localStorage.removeItem('token')
-    localStorage.removeItem('username')
-    localStorage.removeItem('email')
-    localStorage.removeItem('roles')
-
-    // Redirect ke login
-    router.push('/')
-  }
+  clearAuthSession()
+  router.replace('/login')
 }
 
 onMounted(() => {

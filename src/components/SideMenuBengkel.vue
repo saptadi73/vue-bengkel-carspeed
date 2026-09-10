@@ -34,6 +34,16 @@
         </li>
       </ul>
     </li>
+    <li class="mt-4 border-t border-white/20 pt-3">
+      <button
+        type="button"
+        class="flex w-full items-center gap-3 rounded-md px-4 py-3 text-left text-sm font-semibold text-white hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-white"
+        @click="logout"
+      >
+        <font-awesome-icon icon="fa-solid fa-right-from-bracket" />
+        Logout
+      </button>
+    </li>
   </ul>
 </template>
 
@@ -43,6 +53,14 @@ import SideMenuSubItem from '../components/SideMenuSubItem.vue'
 import { reactive, inject, computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import { BASE_URL } from '../base.utils.url'
+import { useRouter } from 'vue-router'
+import { clearAuthSession } from '@/utils/authSession'
+
+const router = useRouter()
+function logout() {
+  clearAuthSession()
+  router.replace('/login')
+}
 
 const $emitter = inject('$emitter')
 

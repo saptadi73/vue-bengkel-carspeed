@@ -38,16 +38,15 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { clearAuthSession } from '@/utils/authSession'
 
 const router = useRouter()
 
 function goToLogin() {
   // Bersihkan token dan data user
-  localStorage.removeItem('token')
-  localStorage.removeItem('role')
-  localStorage.removeItem('email')
+  clearAuthSession()
   // Redirect ke halaman login
-  router.push({ name: 'login' })
+  router.replace('/login')
 }
 </script>
 

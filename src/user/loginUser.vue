@@ -69,16 +69,14 @@ import axios from 'axios'
 import { ref } from 'vue'
 import { BASE_URL } from '../base.utils.url.ts'
 import router from '../router'
+import { clearAuthSession } from '@/utils/authSession'
 import ToastCard from '../components/ToastCard.vue'
 
 const showToast = ref(false)
 const toastMessage = ref('')
 
 async function login() {
-  localStorage.removeItem('token')
-  localStorage.removeItem('username')
-  localStorage.removeItem('email')
-  localStorage.removeItem('roles')
+  clearAuthSession()
   const username = document.getElementById('username').value
   const password = document.getElementById('password').value
   const dataLogin = { username: username, password: password }

@@ -1,8 +1,17 @@
+import { clearAuthSession } from '@/utils/authSession'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    {
+      path: '/logout',
+      name: 'logout',
+      beforeEnter: () => {
+        clearAuthSession()
+        return '/login'
+      },
+    },
     {
       path: '/',
       name: 'login',
@@ -24,6 +33,7 @@ const router = createRouter({
       path: '/main',
       name: 'main',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'dashboard',
@@ -41,6 +51,7 @@ const router = createRouter({
       path: '/pelanggan',
       name: 'pelanggan',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'all',
@@ -83,6 +94,7 @@ const router = createRouter({
       path: '/wo',
       name: 'work order',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'booking',
@@ -190,6 +202,7 @@ const router = createRouter({
       path: '/karyawan',
       name: 'karyawan',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'list',
@@ -227,6 +240,7 @@ const router = createRouter({
       path: '/inventory',
       name: 'inventory',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'list',
@@ -314,6 +328,7 @@ const router = createRouter({
       path: '/finansial',
       name: 'finansial',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'cashflow',
@@ -406,6 +421,7 @@ const router = createRouter({
       path: '/users',
       name: 'users',
       component: () => import('../layouts/LayoutDefaultBengkel.vue'),
+      meta: { requiresAuth: true },
       children: [
         {
           path: 'table',
