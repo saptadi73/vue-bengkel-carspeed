@@ -4,7 +4,7 @@
       {{ isEdit ? 'Edit Form Pengeluaran' : 'Form Input Pengeluaran' }}
     </h2>
 
-    <form @submit.prevent="submitForm" class="space-y-6">
+    <form @submit.prevent="submitForm('expense')" class="space-y-6">
       <!-- Expense Details -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
@@ -112,6 +112,15 @@
         >
           {{ isEdit ? 'Update Pengeluaran' : 'Submit Pengeluaran' }}
         </button>
+        <button
+          v-if="!isEdit"
+          type="button"
+          @click="submitForm('payable-and-payment')"
+          :disabled="isProcessingCombinedJournal"
+          class="ml-2 px-6 py-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {{ isProcessingCombinedJournal ? 'Memproses...' : 'Journal Hutang & Bayar' }}
+        </button>
         <div class="flex justify-center">
           <button
             type="button"
@@ -180,6 +189,8 @@ export default {
       showModal: false,
       modalUrl: '',
       showPaymentModal: false,
+      isProcessingCombinedJournal: false,
+      pendingCombinedJournal: false,
       expenseStatus: null,
       form: {
         id: null,
@@ -234,7 +245,7 @@ export default {
     handleFileChange(event) {
       this.form.bukti_transfer = event.target.files[0]
     },
-    async submitForm() {
+    async submitForm(mode = 'expense') {
       if (!this.form.description?.trim()) {
         this.message_toast = 'Deskripsi pengeluaran wajib diisi.'
         this.show_toast = true
@@ -265,6 +276,23 @@ export default {
           await this.checkExpenseStatus()
         } else {
           response = await api.post(`${BASE_URL}expenses/create`, formData)
+          const createdExpense = response.data?.data || response.data?.expense || response.data
+          const createdExpenseId =
+            createdExpense?.id || createdExpense?.expense_id || response.data?.id
+
+          if (mode === 'payable-and-payment') {
+            if (!createdExpenseId) {
+              throw new Error('ID expense tidak ditemukan dari response create expense')
+            }
+            this.form.id = createdExpenseId
+            this.pendingCombinedJournal = true
+            this.message_toast =
+              'Expense berhasil dibuat. Lengkapi pembayaran untuk mencatat jurnal hutang dan pelunasan.'
+            this.show_toast = true
+            this.openPaymentModal()
+            return
+          }
+
           this.message_toast = 'Expense berhasil dibuat'
           // Reset form
           this.form = {
@@ -352,17 +380,35 @@ export default {
       }
       console.log('Form :', form)
       try {
+        this.isProcessingCombinedJournal = this.pendingCombinedJournal
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}accounting/expense-payment-journal`, form)
+        let response
+        if (this.pendingCombinedJournal) {
+          const expenseJournalForm = {
+            date: paymentData.date,
+            memo: paymentData.description,
+            amount: paymentData.amount,
+            expense_id: paymentData.expenseId,
+            expense_code: expense_code,
+          }
+          await api.post(`${BASE_URL}accounting/expense-journal`, expenseJournalForm)
+        }
+        response = await api.post(`${BASE_URL}accounting/expense-payment-journal`, form)
         this.message_toast = response.data.message || 'Pembayaran Expense berhasil!'
         this.show_toast = true
         await this.checkExpenseStatus()
+        this.pendingCombinedJournal = false
         // Optionally refresh or redirect after payment
       } catch (error) {
         console.error('Error processing payment:', error)
-        this.message_toast = 'Gagal memproses pembayaran'
+        this.message_toast =
+          error.response?.data?.message ||
+          (this.pendingCombinedJournal
+            ? 'Gagal mencatat jurnal hutang dan pembayaran'
+            : 'Gagal memproses pembayaran')
         this.show_toast = true
       } finally {
+        this.isProcessingCombinedJournal = false
         this.loadingStore.hide()
       }
     },
