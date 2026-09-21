@@ -306,6 +306,10 @@ const navItems = reactive([
         url: '/finansial/cashbook',
       },
       {
+        text: 'Chart of Account (COA)',
+        url: '/finansial/coa',
+      },
+      {
         text: 'Daftar Biaya',
         url: '/finansial/biaya',
       },
