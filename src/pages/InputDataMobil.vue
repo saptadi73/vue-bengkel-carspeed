@@ -216,6 +216,19 @@ import ToastCard from '@/components/ToastCard.vue'
 import axios from 'axios'
 import BrandModal from '@/pages/BrandModal.vue'
 
+const createInitialVehicleData = () => ({
+  customer_id: '',
+  type: '',
+  brand_id: '',
+  model: '',
+  tahun: '',
+  no_rangka: '',
+  no_mesin: '',
+  kapasitas: '',
+  no_pol: '',
+  warna: '',
+})
+
 export default {
   name: 'InputDataMobil',
   components: { LoadingOverlay, ToastCard, BrandModal },
@@ -227,18 +240,7 @@ export default {
   },
   data() {
     return {
-      formData: {
-        customer_id: '',
-        type: '',
-        brand_id: '',
-        model: '',
-        tahun: '',
-        no_rangka: '',
-        no_mesin: '',
-        kapasitas: '',
-        no_pol: '',
-        warna: '',
-      },
+      formData: createInitialVehicleData(),
       showBrandModal: false,
       newBrandName: '',
       customers: [
@@ -256,6 +258,37 @@ export default {
     this.getbrandsAll()
   },
   methods: {
+    buildPayload() {
+      const textOrNull = (value) => (value || '').toString().trim() || null
+      const year = this.formData.tahun === '' ? null : Number(this.formData.tahun)
+      return {
+        customer_id: this.formData.customer_id,
+        brand_id: this.formData.brand_id,
+        type: textOrNull(this.formData.type),
+        model: textOrNull(this.formData.model),
+        tahun: Number.isInteger(year) ? year : null,
+        no_rangka: textOrNull(this.formData.no_rangka),
+        no_mesin: textOrNull(this.formData.no_mesin),
+        kapasitas: textOrNull(this.formData.kapasitas),
+        no_pol: textOrNull(this.formData.no_pol)?.toUpperCase() || null,
+        warna: textOrNull(this.formData.warna),
+      }
+    },
+    errorMessage(error) {
+      const body = error.response?.data
+      const rawBody = typeof body === 'string' ? body : JSON.stringify(body || '')
+      if (/invalid input syntax for type uuid.*add-vehicle/i.test(rawBody)) {
+        return 'Layanan backend belum dapat menambah kendaraan karena konflik route. Hubungi administrator backend untuk memperbaiki route pelanggan.'
+      }
+      if (typeof body === 'string' && body.trim()) return body
+      const detail = body?.detail
+      if (Array.isArray(detail)) return detail.map((item) => item.msg).join(', ')
+      if (typeof detail === 'string') return detail
+      if (detail && typeof detail === 'object') {
+        return detail.message || detail.error || JSON.stringify(detail)
+      }
+      return body?.message || body?.error || body?.data?.message || 'Gagal menambahkan kendaraan.'
+    },
     async addBrand() {
       if (!this.newBrandName || !this.newBrandName.trim()) return
       try {
@@ -289,32 +322,19 @@ export default {
     async handleSubmit() {
       try {
         this.loadingStore.show()
-        const response = await api.post(`${BASE_URL}customers/add-vehicle`, this.formData)
+        const payload = this.buildPayload()
+        console.log('Add vehicle payload:', payload)
+        const response = await api.post(`${BASE_URL}customers/add-vehicle`, payload)
         this.message_toast = response.data.message || 'Vehicle added successfully!'
         this.show_toast = true
         console.log('Form submitted successfully:', response.data)
-        console.log('Form Data to be submitted:', this.formData)
+        this.formData = createInitialVehicleData()
       } catch (error) {
-        this.message_toast =
-          (error.response && error.response.data && error.response.data.message) ||
-          'An error occurred while submitting the form.'
+        this.message_toast = this.errorMessage(error)
         this.show_toast = true
         console.error('Error submitting form:', error)
       } finally {
         this.loadingStore.hide()
-        // Reset form after submission
-        this.formData = {
-          customer_id: '',
-          type: '',
-          brand_id: '',
-          model: '',
-          tahun: '',
-          no_rangka: '',
-          no_mesin: '',
-          kapasitas: '',
-          no_pol: '',
-          warna: '',
-        }
       }
     },
 

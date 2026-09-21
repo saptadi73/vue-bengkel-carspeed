@@ -754,15 +754,9 @@ export default {
       let filtered = this.workOrders
 
       // Filter by search query
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase()
-        filtered = filtered.filter(
-          (order) =>
-            order.no_wo.toLowerCase().includes(query) ||
-            order.customer_name.toLowerCase().includes(query) ||
-            order.vehicle_no_pol.toLowerCase().includes(query) ||
-            order.karyawan_name.toLowerCase().includes(query),
-        )
+      if (this.searchQuery.trim()) {
+        const query = this.searchQuery.trim().toLocaleLowerCase('id-ID')
+        filtered = filtered.filter((order) => this.matchesSearch(order, query))
       }
 
       // Filter by date range (by tanggal_masuk, inclusive)
@@ -858,6 +852,25 @@ export default {
       this.endDate = s
       this.currentPage = 1
       this.dateWarning = false
+    },
+    matchesSearch(order, query) {
+      // The work-order API has used more than one field shape. Search all known
+      // aliases so WO number, customer name, and plate number always work.
+      const values = [
+        order.no_wo,
+        order.workorder_no,
+        order.work_order_no,
+        order.customer_name,
+        order.customer?.name,
+        order.customer?.nama,
+        order.nama,
+        order.vehicle_no_pol,
+        order.no_pol,
+        order.nopol,
+        order.vehicle?.no_pol,
+        order.vehicle?.nopol,
+      ]
+      return values.some((value) => String(value ?? '').toLocaleLowerCase('id-ID').includes(query))
     },
     validateDateRange() {
       if (this.startDate && this.endDate) {

@@ -956,6 +956,7 @@ import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import { getInventoryUnitCost, resolveInventoryStock } from '@/utils/inventory'
 import { fetchProductInventoryStock } from '@/services/inventory'
+import { listPackets } from '@/services/packetOrders'
 
 import jsPDF from 'jspdf'
 
@@ -1420,10 +1421,9 @@ export default {
     async getPacketOrders() {
       try {
         this.loadingStore.show()
-        // use authenticated client; some endpoints return 400 without token
-        const response = await api.get(`${BASE_URL}packetorders/all`)
-        console.log('Packet Orders: ', response.data.data)
-        this.packetorders = response.data.data || []
+        // Normalize the API response so current packet fields and legacy fields
+        // are both available when a package is applied to this work order.
+        this.packetorders = await listPackets()
       } catch (error) {
         console.log('error: ', error)
         this.packetorders = []
@@ -1717,7 +1717,7 @@ export default {
         item.product_name = data.name
         item.cost = Number(data.cost) || 0
         item.stockku = resolveInventoryStock(data, item.stockku || 0)
-        if (data.price) item.price = data.price
+        if (data.price && !item.preservePacketPrice) item.price = data.price
         await this.getStock(item)
         this.productSubtotal(item)
       } catch (error) {
@@ -1732,8 +1732,8 @@ export default {
         this.loadingStore.show()
         const response = await axios.get(`${BASE_URL}products/service/${item.service_id}`)
         const data = response.data.data
-        // Update satuan_id dan price pada item yang dipilih
-        if (data.price) item.price = data.price
+        item.service_name = data.name || item.service_name || ''
+        if (data.price && !item.preservePacketPrice) item.price = data.price
         if (data.cost) item.cost = Number(data.cost) || 0
         this.updateServiceSubtotal(item)
       } catch (error) {
@@ -1794,27 +1794,62 @@ export default {
         return
       }
       const paket = this.packetorders.find((p) => String(p.id) === String(this.selectedPaket))
-      console.log('Paket data:', paket)
-      if (paket && paket.product_line && paket.service_line) {
+      if (paket) {
+        const productLines = paket.product_line_packet_order ?? paket.product_line ?? []
+        const serviceLines = paket.service_line_packet_order ?? paket.service_line ?? []
+        if (!Array.isArray(productLines) || !Array.isArray(serviceLines)) {
+          this.message_toast = 'Format item produk atau jasa pada paket tidak valid.'
+          this.show_toast = true
+          return
+        }
+
         this.form.keterangan = paket.name
-        this.form.product_ordered = JSON.parse(JSON.stringify(paket.product_line))
-        this.form.service_ordered = JSON.parse(JSON.stringify(paket.service_line))
-        // Jalankan getProductsId dan getStock untuk setiap item produk hasil paket
+        this.form.product_ordered = productLines.map((line) => {
+          const product = this.products.find((item) => String(item.id) === String(line.product_id))
+          const productName = line.product_name || product?.name || ''
+          return {
+            ...line,
+            quantity: Number(line.quantity) || 0,
+            price: Number(line.price) || 0,
+            discount: Number(line.discount) || 0,
+            product_name: productName,
+            searchQuery: productName,
+            stockku: 0,
+            cost: Number(line.cost ?? product?.cost) || 0,
+            showSuggestions: false,
+            activeIndex: -1,
+            preservePacketPrice: true,
+          }
+        })
+        this.form.service_ordered = serviceLines.map((line) => {
+          const service = this.services.find((item) => String(item.id) === String(line.service_id))
+          const serviceName = line.service_name || service?.name || ''
+          return {
+            ...line,
+            quantity: Number(line.quantity) || 0,
+            price: Number(line.price) || 0,
+            discount: Number(line.discount) || 0,
+            service_name: serviceName,
+            searchQuery: serviceName,
+            cost: Number(line.cost ?? service?.cost) || 0,
+            showSuggestions: false,
+            activeIndex: -1,
+            preservePacketPrice: true,
+          }
+        })
+
         await Promise.all(
           this.form.product_ordered.map(async (item) => {
-            await this.getProductsId(item)
-            await this.getStock(item)
+            if (!item.product_name) await this.getProductsId(item)
+            else await this.getStock(item)
           }),
         )
-        // Hitung subtotal untuk produk
         this.form.product_ordered.forEach((item) => this.productSubtotal(item))
-        // Jalankan getServicesId untuk setiap item service hasil paket
         await Promise.all(
           this.form.service_ordered.map(async (item) => {
-            await this.getServicesId(item)
+            if (!item.service_name) await this.getServicesId(item)
           }),
         )
-        // Hitung subtotal untuk service
         this.form.service_ordered.forEach((item) => this.updateServiceSubtotal(item))
       } else {
         console.error(

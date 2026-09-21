@@ -26,7 +26,7 @@
           <div
             v-for="(line, index) in packet[group.key]"
             :key="line._key"
-            class="grid grid-cols-2 lg:grid-cols-7 gap-3 border-b pb-4 mb-4"
+            class="grid grid-cols-2 lg:grid-cols-8 gap-3 border-b pb-4 mb-4"
           >
             <label class="col-span-2 text-sm"
               >{{ group.label }}
@@ -74,6 +74,15 @@
                 </option>
               </select>
             </label>
+            <div v-if="group.kind === 'product'" class="text-sm">
+              Stok tersedia
+              <p class="font-semibold mt-2" :class="line.stockError ? 'text-red-700' : ''">
+                {{ line.stockLoading ? 'Memuat...' : formatStock(line.stock) }}
+              </p>
+              <p v-if="line.stockError" class="text-xs text-red-700 mt-1">
+                {{ line.stockError }}
+              </p>
+            </div>
             <label class="text-sm"
               >Harga (Rp)<input
                 v-model.number="line.price"
@@ -127,6 +136,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '@/user/axios'
 import { getPacket, savePacket } from '@/services/packetOrders'
+import { fetchProductInventoryStock } from '@/services/inventory'
 import {
   lineTotal,
   packetTotal,
@@ -160,6 +170,7 @@ const groups = [
 const choices = (group) => (group.kind === 'product' ? products.value : services.value)
 const currency = (value) =>
   new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(value)
+const formatStock = (value) => Number(value || 0).toLocaleString('id-ID')
 function addLine(group) {
   packet.value[group.key].push({
     _key: ++nextKey,
@@ -168,13 +179,41 @@ function addLine(group) {
     quantity: 1,
     price: 0,
     discount: 0,
+    stock: 0,
+    stockLoading: false,
+    stockError: '',
   })
 }
-function selectItem(line, group) {
+async function selectItem(line, group) {
   const item = choices(group).find((item) => item.id === line[group.id])
   if (!item) return
   line.price = Number(item.price ?? 0)
-  if (group.kind === 'product') line.satuan_id = item.satuan_id || ''
+  if (group.kind === 'product') {
+    line.satuan_id = item.satuan_id || ''
+    await loadProductStock(line)
+  }
+}
+async function loadProductStock(line) {
+  const productId = line.product_id
+  if (!productId) {
+    line.stock = 0
+    return
+  }
+
+  line.stockLoading = true
+  line.stockError = ''
+  try {
+    // Stock must come from inventory, not the product-master endpoint.
+    const { stock } = await fetchProductInventoryStock(productId, { client: api })
+    if (line.product_id !== productId) return
+    line.stock = stock
+  } catch {
+    if (line.product_id !== productId) return
+    line.stock = 0
+    line.stockError = 'Stok tidak dapat dimuat.'
+  } finally {
+    if (line.product_id === productId) line.stockLoading = false
+  }
 }
 async function loadForm() {
   const version = ++loadVersion
@@ -198,9 +237,13 @@ async function loadForm() {
       packet.value[group.key] = data[group.key].map((line) => ({
         ...line,
         discount: line.discount ?? 0,
+        stock: 0,
+        stockLoading: false,
+        stockError: '',
         _key: ++nextKey,
       }))
     }
+    await Promise.all(packet.value.product_line_packet_order.map((line) => loadProductStock(line)))
   } catch (failure) {
     if (version !== loadVersion) return
     error.value = packetError(failure)
