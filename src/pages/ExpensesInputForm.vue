@@ -197,7 +197,7 @@ export default {
         name: '',
         description: '',
         expense_type: '',
-        amount: 0,
+        amount: 1,
         date: new Date().toISOString().split('T')[0],
         bukti_transfer: null,
       },
@@ -300,7 +300,7 @@ export default {
             name: '',
             description: '',
             expense_type: '',
-            amount: 0,
+            amount: 1,
             date: new Date().toISOString().split('T')[0],
             bukti_transfer: null,
           }

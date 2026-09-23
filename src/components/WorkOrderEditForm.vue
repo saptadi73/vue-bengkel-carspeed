@@ -1087,7 +1087,14 @@
           <div class="flex justify-end gap-4">
             <button
               type="button"
-              class="modern-btn-info flex items-center gap-2"
+              :disabled="form.status === 'selesai' || form.status === 'dibayar'"
+              :class="[
+                'modern-btn-info flex items-center gap-2',
+                {
+                  'opacity-50 cursor-not-allowed':
+                    form.status === 'selesai' || form.status === 'dibayar',
+                },
+              ]"
               @click="openPdfPreview"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1104,12 +1111,10 @@
               type="button"
               class="modern-btn-payment flex items-center gap-2"
               @click="openPaymentModal"
-              :disabled="
-                form.status !== 'selesai' || paymentStatus === 'lunas' || isProcessingPayment
-              "
+              :disabled="form.status !== 'selesai' || isProcessingPayment"
               :class="{
                 'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' || paymentStatus === 'lunas' || isProcessingPayment,
+                  form.status !== 'selesai' || isProcessingPayment,
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1151,6 +1156,38 @@
                 />
               </svg>
               Selesai
+            </button>
+            <button
+              type="button"
+              :disabled="
+                hasUnconfirmedChanges ||
+                initialStatus === 'selesai' ||
+                workOrderStatus === 'selesai' ||
+                workOrderStatus === 'dibayar' ||
+                isOpeningCombinedPayment
+              "
+              :class="[
+                'modern-btn-payment flex items-center gap-2',
+                {
+                  'opacity-50 cursor-not-allowed':
+                    hasUnconfirmedChanges ||
+                    initialStatus === 'selesai' ||
+                    workOrderStatus === 'selesai' ||
+                    workOrderStatus === 'dibayar' ||
+                    isOpeningCombinedPayment,
+                },
+              ]"
+              @click="submitFormSelesaiDanBayar"
+            >
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 9V7a2 2 0 00-2-2H5a2 2 0 002 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              {{ isOpeningCombinedPayment ? 'Menyimpan...' : 'Selesai & Bayar' }}
             </button>
             <button
               type="submit"
@@ -1386,6 +1423,8 @@ export default {
       initialStatus: '', // Menyimpan status awal dari database
       workOrderUpdated: false, // Flag to track if work order has been updated
       isProcessingPayment: false, // Flag to prevent double payment processing
+      isOpeningCombinedPayment: false,
+      pendingCombinedJournal: false,
       form: {
         customer_id: '',
         vehicle_id: '',
@@ -2027,6 +2066,23 @@ export default {
     async submitFormSelesai() {
       return this.submitFormWithStatus('selesai')
     },
+    async submitFormSelesaiDanBayar() {
+      if (!this.isAdmin) {
+        this.show_toast = true
+        this.message_toast = 'Hanya user dengan akses admin yang dapat memproses pembayaran.'
+        return
+      }
+
+      this.isOpeningCombinedPayment = true
+      try {
+        const workOrderSaved = await this.submitFormWithStatus('selesai')
+        if (workOrderSaved) {
+          this.openPaymentModal(true)
+        }
+      } finally {
+        this.isOpeningCombinedPayment = false
+      }
+    },
     async submitFormWithStatus(targetStatus) {
       this.form.status = targetStatus
       // Tanggal masuk: set as Date object
@@ -2081,15 +2137,15 @@ export default {
         this.initialStatus = this.form.status // Update initialStatus setelah submit berhasil
         this.workOrderUpdated = true // Set flag bahwa work order telah diupdate
         this.getBookingData()
+        return true
       } catch (error) {
         console.log('error: ', error)
         this.show_toast = true
         this.message_toast = 'Gagal submit work order!'
+        return false
       } finally {
         this.loadingStore.hide()
       }
-
-      console.log('Form Data:', this.form)
     },
     buildPdfDocument() {
       const doc = new jsPDF('p', 'mm', 'a4')
@@ -2449,13 +2505,16 @@ export default {
         this.loadingStore.hide()
       }
     },
-    openPaymentModal() {
+    openPaymentModal(createSalesJournal = false) {
       if (!this.isAdmin) {
         this.show_toast = true
         this.message_toast = 'Hanya user dengan akses admin yang dapat memproses pembayaran.'
         return
       }
-      if (this.form.status === 'selesai' && this.form.status_pembayaran !== 'lunas') {
+      if (this.form.status === 'selesai') {
+        if (createSalesJournal === true) {
+          this.pendingCombinedJournal = true
+        }
         this.showPaymentModal = true
       }
     },
@@ -2476,6 +2535,7 @@ export default {
         return
       }
 
+      const shouldCreateSalesJournal = this.pendingCombinedJournal
       this.isProcessingPayment = true
 
       try {
@@ -2494,6 +2554,21 @@ export default {
         }
 
         console.log('Payment Data:', paymentPayload)
+
+        if (shouldCreateSalesJournal) {
+          const salesJournalPayload = {
+            date: paymentData.date,
+            memo: paymentData.description,
+            customer_id: this.form.customer_id,
+            workorder_id: this.$route.params.id,
+            harga_product: this.totalProductHarga,
+            harga_service: this.totalServiceHarga,
+            hpp_product: this.totalProductCost,
+            hpp_service: this.totalServiceCost,
+            pajak: this.pajakAmount,
+          }
+          await api.post(`${this.BASE_URL}accounting/sales-journal`, salesJournalPayload)
+        }
 
         // Submit payment to backend
         const response = await api.post(
@@ -2519,10 +2594,15 @@ export default {
         // Refresh data
         await this.getWorkOrderData()
         await this.checkPaymentStatus()
+        this.pendingCombinedJournal = false
       } catch (error) {
         console.error('Error processing payment:', error)
         this.show_toast = true
-        this.message_toast = error.response?.data?.message || 'Gagal memproses pembayaran!'
+        this.message_toast =
+          error.response?.data?.message ||
+          (shouldCreateSalesJournal
+            ? 'Gagal mencatat jurnal piutang dan pembayaran!'
+            : 'Gagal memproses pembayaran!')
       } finally {
         this.loadingStore.hide()
         this.isProcessingPayment = false

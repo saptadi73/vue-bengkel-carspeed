@@ -44,7 +44,8 @@
                 {{ acc.is_active }}
               </span>
             </td>
-            <td class="px-4 py-2 text-center">
+            <td class="px-4 py-2">
+              <div class="flex items-center justify-center gap-2">
               <button
                 @click="openEditModal(idx, acc.id)"
                 class="px-2 py-1 rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 transition flex items-center gap-1"
@@ -66,6 +67,16 @@
                 </svg>
                 Edit
               </button>
+              <button
+                type="button"
+                @click="openDeleteModal(acc)"
+                class="px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 transition flex items-center gap-1"
+                title="Delete account"
+              >
+                <span class="material-symbols-outlined text-base">delete</span>
+                Delete
+              </button>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -161,6 +172,73 @@
         </div>
       </div>
     </transition>
+
+    <!-- Double Confirmation Delete Modal -->
+    <transition name="fade">
+      <div
+        v-if="showDeleteModal"
+        class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      >
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md mx-4">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-3xl text-red-600">warning</span>
+            <div>
+              <h3 class="font-bold text-lg text-slate-800">
+                {{ deleteConfirmationStep === 1 ? 'Konfirmasi Hapus Account' : 'Konfirmasi Terakhir' }}
+              </h3>
+              <p class="mt-2 text-sm text-slate-600">
+                <template v-if="deleteConfirmationStep === 1">
+                  Account <strong>{{ accountToDelete?.code }} - {{ accountToDelete?.name }}</strong>
+                  akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.
+                </template>
+                <template v-else>
+                  Ketik kode account <strong>{{ accountToDelete?.code }}</strong> untuk melanjutkan.
+                </template>
+              </p>
+            </div>
+          </div>
+
+          <input
+            v-if="deleteConfirmationStep === 2"
+            v-model.trim="deleteConfirmationCode"
+            type="text"
+            class="mt-4 border rounded px-3 py-2 w-full focus:ring focus:ring-red-200"
+            :placeholder="accountToDelete?.code"
+            autocomplete="off"
+          />
+
+          <div class="flex justify-end gap-2 mt-6">
+            <button
+              type="button"
+              @click="closeDeleteModal"
+              :disabled="isDeleting"
+              class="px-4 py-2 rounded-lg bg-gray-200 text-slate-700 font-semibold hover:bg-gray-300 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              v-if="deleteConfirmationStep === 1"
+              type="button"
+              @click="continueDeleteConfirmation"
+              class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700"
+            >
+              Lanjutkan
+            </button>
+            <button
+              v-else
+              type="button"
+              @click="deleteAccount"
+              :disabled="
+                deleteConfirmationCode !== String(accountToDelete?.code || '') || isDeleting
+              "
+              class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {{ isDeleting ? 'Menghapus...' : 'Hapus Permanen' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 
   <loading-overlay />
@@ -199,6 +277,11 @@ export default {
         is_active: 'active',
       },
       editingIndex: -1,
+      showDeleteModal: false,
+      accountToDelete: null,
+      deleteConfirmationStep: 1,
+      deleteConfirmationCode: '',
+      isDeleting: false,
     }
   },
   methods: {
@@ -230,6 +313,67 @@ export default {
     closeModal() {
       this.showModal = false
       this.editingIndex = -1
+    },
+    getAccountPrefix(account) {
+      return String(account?.code || '').trim().slice(0, 2)
+    },
+    openDeleteModal(account) {
+      const prefix = this.getAccountPrefix(account)
+      const accountsInGroup = this.accounts.filter(
+        (item) =>
+          item.account_type === account.account_type && this.getAccountPrefix(item) === prefix,
+      )
+
+      if (!prefix || accountsInGroup.length <= 1) {
+        this.message_toast = `Account terakhir untuk type '${account.account_type}' dengan prefix '${prefix}' tidak boleh dihapus`
+        this.show_toast = true
+        return
+      }
+
+      this.accountToDelete = account
+      this.deleteConfirmationStep = 1
+      this.deleteConfirmationCode = ''
+      this.showDeleteModal = true
+    },
+    continueDeleteConfirmation() {
+      this.deleteConfirmationStep = 2
+      this.deleteConfirmationCode = ''
+    },
+    closeDeleteModal() {
+      if (this.isDeleting) return
+      this.showDeleteModal = false
+      this.accountToDelete = null
+      this.deleteConfirmationStep = 1
+      this.deleteConfirmationCode = ''
+    },
+    async deleteAccount() {
+      if (
+        !this.accountToDelete ||
+        this.deleteConfirmationCode !== String(this.accountToDelete.code) ||
+        this.isDeleting
+      ) {
+        return
+      }
+
+      this.isDeleting = true
+      this.loadingStore.show()
+      try {
+        const response = await api.delete(
+          `${this.BASE_URL}accounting/account/${this.accountToDelete.id}`,
+        )
+        const deletedAccountId = this.accountToDelete.id
+        this.accounts = this.accounts.filter((account) => account.id !== deletedAccountId)
+        this.isDeleting = false
+        this.closeDeleteModal()
+        this.message_toast = response.data.message || 'Account berhasil dihapus'
+        this.show_toast = true
+      } catch (error) {
+        this.message_toast = error.response?.data?.message || 'Gagal menghapus account'
+        this.show_toast = true
+      } finally {
+        this.isDeleting = false
+        this.loadingStore.hide()
+      }
     },
     async fetchAccounts() {
       try {

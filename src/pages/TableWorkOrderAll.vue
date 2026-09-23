@@ -333,6 +333,16 @@
                   ><span class="material-symbols-outlined text-green-800">edit_document</span></a
                 >
                 <button
+                  v-if="order.status === 'selesai' && isAdmin"
+                  type="button"
+                  @click="goToPayment(order)"
+                  title="Proses Pembayaran"
+                  aria-label="Proses Pembayaran"
+                  class="cursor-pointer"
+                >
+                  <span class="material-symbols-outlined text-blue-700">payments</span>
+                </button>
+                <button
                   @click="openConfirmModal('delete', order)"
                   title="Hapus Work Order"
                   class="cursor-pointer"
@@ -551,6 +561,15 @@
             </svg>
             Sales Order
           </a>
+          <button
+            v-if="order.status === 'selesai' && isAdmin"
+            type="button"
+            @click="goToPayment(order)"
+            class="modern-btn-payment flex flex-1 items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined text-base">payments</span>
+            Bayar
+          </button>
         </div>
       </div>
     </div>
@@ -842,6 +861,14 @@ export default {
     },
   },
   methods: {
+    goToPayment(order) {
+      if (!order?.id) return
+      this.$router.push({
+        name: 'edit work order',
+        params: { id: order.id },
+        query: { openPayment: '1' },
+      })
+    },
     setToday() {
       const today = new Date()
       const y = today.getFullYear()
