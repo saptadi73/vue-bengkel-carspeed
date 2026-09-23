@@ -50,7 +50,7 @@
             <tr>
               <th class="px-4 py-2">Item Details</th>
               <th class="px-4 py-2">Qty</th>
-              <th class="px-4 py-2">Unit Price</th>
+              <th class="px-4 py-2">Harga Satuan</th>
               <th class="px-4 py-2">Total</th>
             </tr>
           </thead>

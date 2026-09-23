@@ -155,7 +155,7 @@
             <th class="px-3 py-2 text-right">Qty</th>
             <th class="px-3 py-2 text-right">Harga Beli</th>
             <th class="px-3 py-2 text-right">Harga Jual</th>
-            <th class="px-3 py-2 text-right">Price</th>
+            <th class="px-3 py-2 text-right">Harga</th>
             <th class="px-3 py-2 text-right">HPP</th>
             <th class="px-3 py-2 text-left">No WO</th>
             <th class="px-3 py-2 text-left">No PO</th>

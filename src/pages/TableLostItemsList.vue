@@ -200,7 +200,7 @@
             >
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-600 text-sm">Cost Satuan:</span>
+            <span class="text-gray-600 text-sm">Biaya Satuan:</span>
             <span class="font-semibold">{{ formatCurrency(loss.cost_per_unit || 0) }}</span>
           </div>
           <div class="flex justify-between items-center">
@@ -311,7 +311,7 @@
 
           <!-- Cost -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Cost Per Unit</label>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Biaya per Unit</label>
             <input
               v-model.number="editingLoss.cost_per_unit"
               type="number"

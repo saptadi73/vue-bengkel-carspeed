@@ -112,7 +112,7 @@
                   <th class="px-4 py-2 text-left">Customer Name</th>
                   <th class="px-4 py-2 text-left">Product Name</th>
                   <th class="px-4 py-2 text-right">Quantity</th>
-                  <th class="px-4 py-2 text-right">Price</th>
+                  <th class="px-4 py-2 text-right">Harga</th>
                   <th class="px-4 py-2 text-right">Discount</th>
                   <th class="px-4 py-2 text-right">Subtotal</th>
                 </tr>
@@ -149,7 +149,7 @@
                   <th class="px-4 py-2 text-left">Customer Name</th>
                   <th class="px-4 py-2 text-left">Service Name</th>
                   <th class="px-4 py-2 text-right">Quantity</th>
-                  <th class="px-4 py-2 text-right">Price</th>
+                  <th class="px-4 py-2 text-right">Harga</th>
                   <th class="px-4 py-2 text-right">Discount</th>
                   <th class="px-4 py-2 text-right">Subtotal</th>
                 </tr>

@@ -239,7 +239,7 @@
                   <th class="px-3 py-2 text-left">Nopol</th>
                   <th class="px-3 py-2 text-left">Pelanggan</th>
                   <th class="px-3 py-2 text-right">Qty</th>
-                  <th class="px-3 py-2 text-right">Price</th>
+                  <th class="px-3 py-2 text-right">Harga</th>
                   <th class="px-3 py-2 text-right">HPP</th>
                   <th class="px-3 py-2 text-right">Discount</th>
                   <th class="px-3 py-2 text-right">Subtotal</th>
@@ -318,7 +318,7 @@
                   <th class="px-3 py-2 text-left">Nopol</th>
                   <th class="px-3 py-2 text-left">Pelanggan</th>
                   <th class="px-3 py-2 text-right">Qty</th>
-                  <th class="px-3 py-2 text-right">Price</th>
+                  <th class="px-3 py-2 text-right">Harga</th>
                   <th class="px-3 py-2 text-right">HPP</th>
                   <th class="px-3 py-2 text-right">Discount</th>
                   <th class="px-3 py-2 text-right">Subtotal</th>
@@ -445,7 +445,7 @@
                 }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-slate-600">Cost (HPP):</span>
+                <span class="text-slate-600">Biaya (HPP):</span>
                 <span class="font-semibold">{{
                   formatCurrency(report.product_sales.total_hpp || 0)
                 }}</span>
@@ -472,7 +472,7 @@
                 }}</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-slate-600">Cost (HPP):</span>
+                <span class="text-slate-600">Biaya (HPP):</span>
                 <span class="font-semibold">{{
                   formatCurrency(report.service_sales.total_hpp || 0)
                 }}</span>
@@ -872,7 +872,7 @@ export default {
           'Supplier/Vendor',
           'Product',
           'Qty',
-          'Price',
+          'Harga',
           'Discount',
           'Subtotal',
         ])
@@ -907,7 +907,7 @@ export default {
           'Customer',
           'Product',
           'Qty',
-          'Price',
+          'Harga',
           'HPP',
           'Discount',
           'Subtotal',
@@ -949,7 +949,7 @@ export default {
           'Customer',
           'Service',
           'Qty',
-          'Price',
+          'Harga',
           'HPP',
           'Discount',
           'Subtotal',

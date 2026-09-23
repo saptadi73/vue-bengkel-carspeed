@@ -79,7 +79,7 @@
                   </span>
                 </div>
                 <div class="flex justify-between">
-                  <span>Cost / Unit</span
+                  <span>Biaya / Unit</span
                   ><span class="font-medium">{{ formatCurrency(selectedProduct.cost) }}</span>
                 </div>
                 <div class="flex items-center gap-2">
@@ -122,7 +122,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-xs text-gray-600 mb-1">Cost per unit</label>
+                  <label class="block text-xs text-gray-600 mb-1">Biaya per unit</label>
                   <input
                     v-model.number="displayCost"
                     type="text"
@@ -132,7 +132,7 @@
                 </div>
 
                 <div>
-                  <label class="block text-xs text-gray-600 mb-1">Total Cost</label>
+                  <label class="block text-xs text-gray-600 mb-1">Total Biaya</label>
                   <input
                     :value="formatCurrency(totalCost)"
                     type="text"
@@ -270,7 +270,7 @@
                   <th class="px-3 py-2">Nama</th>
                   <th class="px-3 py-2">Kategori</th>
                   <th class="px-3 py-2">Brand</th>
-                  <th class="px-3 py-2 text-right">Cost</th>
+                  <th class="px-3 py-2 text-right">Biaya</th>
                   <th class="px-3 py-2 text-right">Stock</th>
                   <th class="px-3 py-2 text-center">Aksi</th>
                 </tr>

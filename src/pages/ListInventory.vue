@@ -32,7 +32,7 @@
           <p class="text-gray-600 text-sm font-lexend">
             Sales: {{ formatCurrency(product.salesPrice) }}
           </p>
-          <p class="text-gray-600 text-sm font-lexend">Cost: {{ formatCurrency(product.cost) }}</p>
+          <p class="text-gray-600 text-sm font-lexend">Biaya: {{ formatCurrency(product.cost) }}</p>
           <p class="text-gray-600 text-sm font-lexend">
             Last Stock-In: {{ formatDate(product.lastStockIn) }}
           </p>

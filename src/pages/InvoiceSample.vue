@@ -35,7 +35,7 @@
           <th>Product</th>
           <th>Quantity</th>
           <th>UOM</th>
-          <th>Price</th>
+          <th>Harga</th>
           <th>Tax 11%</th>
           <th>Sub Total</th>
         </tr>
@@ -57,7 +57,7 @@
     <div class="total">
       <div><strong>Tax (11%):</strong> {{ formatCurrency(tax) }}</div>
       <div>
-        <strong>Total Price:</strong>
+        <strong>Total Harga:</strong>
         <span class="total-price">{{ formatCurrency(total) }}</span>
       </div>
     </div>
@@ -147,7 +147,7 @@ export default {
       // Sales Order Lines Table
       doc.autoTable({
         startY: 70,
-        head: [['No', 'Product', 'Quantity', 'UOM', 'Price', 'Tax 11%', 'Sub Total']],
+        head: [['No', 'Product', 'Quantity', 'UOM', 'Harga', 'Tax 11%', 'Sub Total']],
         body: this.formData.salesOrderLines.map((line, index) => [
           index + 1,
           line.product,
@@ -169,7 +169,7 @@ export default {
       // Tax and Total Price
       doc.text(`Tax (11%): ${this.formatCurrency(this.tax)}`, 150, doc.lastAutoTable.finalY + 10)
       doc.text(
-        `Total Price: ${this.formatCurrency(this.total + this.tax)}`,
+        `Total Harga: ${this.formatCurrency(this.total + this.tax)}`,
         150,
         doc.lastAutoTable.finalY + 20,
       )

@@ -66,7 +66,7 @@
                   <span class="text-xs text-gray-500">Stock: {{ product.total_stock || 0 }}</span>
                 </div>
                 <div class="text-xs text-gray-500 flex items-center gap-2">
-                  <span>Cost {{ formatCurrency(product.cost) }}</span>
+                  <span>Biaya {{ formatCurrency(product.cost) }}</span>
                   <span>•</span>
                   <span>{{ product.satuan_name || '—' }}</span>
                 </div>

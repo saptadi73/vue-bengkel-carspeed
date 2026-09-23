@@ -184,7 +184,7 @@
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Price</label>
+              <label class="block text-sm font-medium text-gray-700">Harga</label>
               <input
                 v-model.number="newProduct.price"
                 type="number"
@@ -194,7 +194,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Cost</label>
+              <label class="block text-sm font-medium text-gray-700">Biaya</label>
               <input
                 v-model.number="newProduct.cost"
                 type="number"

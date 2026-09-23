@@ -183,7 +183,7 @@
                   <th class="px-3 py-2 text-left w-28">Item</th>
                   <th class="px-3 py-2 text-left w-36">Item ID</th>
                   <th class="px-3 py-2 text-left">Description</th>
-                  <th class="px-3 py-2 text-right w-28">Unit Cost</th>
+                  <th class="px-3 py-2 text-right w-28">Biaya Satuan</th>
                   <th class="px-3 py-2 text-right w-20">Qty</th>
                   <th class="px-3 py-2 text-right w-28">Amount</th>
                   <th class="px-3 py-2 w-12"></th>

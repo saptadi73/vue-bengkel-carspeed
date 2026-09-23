@@ -262,7 +262,7 @@
                 <h3 class="font-semibold mb-2">Lines:</h3>
                 <ul class="list-disc list-inside">
                   <li v-for="line in po.lines" :key="line.id">
-                    {{ line.product_name }} - Qty: {{ line.quantity }}, Price:
+                    {{ line.product_name }} - Qty: {{ line.quantity }}, Harga:
                     {{ formatIDR(line.price) }}, Discount: {{ line.discount }}%, Subtotal:
                     {{ formatIDR(line.subtotal) }}
                   </li>

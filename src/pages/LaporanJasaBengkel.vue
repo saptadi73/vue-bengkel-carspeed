@@ -108,7 +108,7 @@
             <th class="px-4 py-3 text-left">Service</th>
             <th class="px-4 py-3 text-left">Nopol</th>
             <th class="px-4 py-3 text-right">Qty</th>
-            <th class="px-4 py-3 text-right">Price</th>
+            <th class="px-4 py-3 text-right">Harga</th>
             <th class="px-4 py-3 text-right">HPP</th>
             <th class="px-4 py-3 text-right">Discount</th>
             <th class="px-4 py-3 text-right">Subtotal</th>

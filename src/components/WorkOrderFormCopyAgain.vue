@@ -1267,7 +1267,7 @@ export default {
       doc.text('Nama', 10, y)
       doc.text('quantity', 60, y)
       doc.text('Satuan', 75, y)
-      doc.text('price', 95, y)
+      doc.text('Harga', 95, y)
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
@@ -1289,7 +1289,7 @@ export default {
       doc.text('Nama', 10, y)
       doc.text('quantity', 60, y)
       doc.text('Satuan', 75, y)
-      doc.text('price', 95, y)
+      doc.text('Harga', 95, y)
       doc.text('Disc', 120, y)
       doc.text('Subtotal', 140, y)
       y += 4
