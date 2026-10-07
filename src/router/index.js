@@ -458,8 +458,8 @@ router.beforeEach((to, from, next) => {
     // Redirect ke login jika belum login
     next('/login')
   } else if ((to.path === '/' || to.path === '/dashboard') && token) {
-    // Jika sudah login dan menuju root atau dashboard, arahkan ke daftar work order
-    next('/wo/all')
+    // Jika sudah login dan menuju root atau dashboard, arahkan ke ringkasan dashboard
+    next('/main/dashboard')
   } else {
     // Izinkan akses ke /login meski token masih ada (agar bisa re-login)
     next()

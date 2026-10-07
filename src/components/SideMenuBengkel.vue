@@ -101,7 +101,7 @@ onMounted(() => {
 const navItems = reactive([
   {
     text: 'Dashboard',
-    url: '/',
+    url: '/main/dashboard',
     icon: 'fa-solid fa-house',
     open: false,
     badge: {

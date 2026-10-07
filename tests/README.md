@@ -25,3 +25,21 @@ API: `GET packetorders/all`, `GET packetorders/{id}`, `POST packetorders/create/
 Perubahan backend terkait berada di `routes/routes_packet_order.py` dan `services/services_packet_order.py` pada proyek `fastapi-bengkel`. Sertakan perubahan kedua proyek saat deployment dan restart backend agar perbaikan satuan, transaksi, serta respons kegagalan aktif. Tidak ada migrasi database.
 
 Build dan tes mock tidak menggantikan uji browser dengan backend/database yang berjalan.
+
+## Dashboard: pencarian dan stok menipis
+
+Dashboard menampilkan pencarian WO (pelanggan, nomor mobil, HP, nomor WO),
+PO (vendor/nomor PO), biaya (nama/deskripsi/tipe), dan stok barang yang
+kurang dari atau sama dengan minimum stok. Tekan Cari atau Enter untuk
+mencari; hasil dari seluruh tanggal ditampilkan lima per halaman.
+Tautan Buka menuju detail/edit transaksi. Tombol Refresh juga memuat
+ulang hasil aktif dan stok menipis.
+
+```powershell
+node --test tests\dashboard.test.mjs
+npx.cmd eslint src\components\DashboardLookup.vue src\pages\DashboardBengkel.vue src\utils\dashboard.js tests\dashboard.test.mjs
+..\fastapi-bengkel\venv\Scripts\python.exe -m pytest ..\fastapi-bengkel\tests\test_dashboard_search.py -q
+```
+
+Deploy juga perubahan pencarian dashboard pada backend `fastapi-bengkel`
+dan restart backend. Tidak ada migrasi database.

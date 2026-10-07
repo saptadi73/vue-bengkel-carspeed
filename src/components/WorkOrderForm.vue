@@ -1594,18 +1594,17 @@ export default {
         this.show_toast = true
         this.message_toast = response.data.message
         // console.log('Response: ', response.data.data)
-        this.getBookingData()
+        await this.getBookingData()
+        await this.$router.push('/wo/all')
       } catch (error) {
         console.log('error: ', error)
         this.show_toast = true
         this.message_toast = 'Gagal submit work order!'
       } finally {
         this.loadingStore.hide()
-        this.$router.push('/wo/all')
       }
 
       console.log('Form Data:', this.form)
-      this.$router.push('/wo/all')
     },
     printPDF() {
       const doc = new jsPDF()

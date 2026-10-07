@@ -57,6 +57,57 @@
       </div>
     </div>
 
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <dashboard-lookup
+        ref="workorderLookup"
+        title="Cari WO"
+        input-id="dashboard-search-wo"
+        input-label="Nama pelanggan, nomor mobil, atau nomor HP"
+        placeholder="Contoh: Budi, B 1234 ABC, atau 081234..."
+        endpoint="dashboard/search/workorders"
+        list-path="/wo/all"
+        detail-path="/wo/edit"
+        :columns="workorderColumns"
+      />
+      <dashboard-lookup
+        ref="purchaseLookup"
+        title="Cari PO"
+        input-id="dashboard-search-po"
+        input-label="Nama vendor atau nomor PO"
+        placeholder="Masukkan nama vendor atau nomor PO"
+        endpoint="dashboard/search/purchase-orders"
+        list-path="/finansial/purchase/all"
+        detail-path="/finansial/purchase"
+        :columns="purchaseColumns"
+      />
+      <dashboard-lookup
+        ref="expenseLookup"
+        title="Cari Biaya"
+        input-id="dashboard-search-expense"
+        input-label="Nama, deskripsi, atau tipe biaya"
+        placeholder="Contoh: listrik, gaji, atau keterangan biaya"
+        endpoint="dashboard/search/expenses"
+        list-path="/finansial/biaya"
+        detail-path="/finansial/biaya"
+        :columns="expenseColumns"
+      />
+      <dashboard-lookup
+        ref="stockLookup"
+        title="Barang yang Mau Habis"
+        input-id="dashboard-search-stock"
+        input-label="Cari barang dengan stok menipis"
+        placeholder="Masukkan nama barang"
+        description="Barang dengan stok saat ini kurang dari atau sama dengan minimum stok, termasuk stok habis."
+        endpoint="products/inventory/all"
+        list-path="/inventory/list"
+        :search-required="false"
+        :params="{ stock_status: 'reorder' }"
+        :columns="stockColumns"
+        result-label="barang perlu dibeli kembali"
+        empty-text="Tidak ada barang dengan stok menipis."
+      />
+    </div>
+
     <!-- Chart Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
       <!-- Pie Chart -->
@@ -106,6 +157,8 @@ import {
   Filler,
 } from 'chart.js'
 import api from '@/user/axios'
+import DashboardLookup from '@/components/DashboardLookup.vue'
+import { dashboardCurrency } from '@/utils/dashboard'
 
 ChartJS.register(
   Title,
@@ -123,9 +176,47 @@ ChartJS.register(
 export default {
   name: 'DashboardBengkel',
   components: {
+    DashboardLookup,
     PieChart: Pie,
     LineChart: Line,
     MixedChart: Bar,
+  },
+  computed: {
+    workorderColumns() {
+      return [
+        { key: 'no_wo', label: 'Nomor WO' },
+        { key: 'customer_name', label: 'Pelanggan' },
+        { key: 'no_pol', label: 'Nomor Mobil' },
+        { key: 'hp', label: 'HP' },
+        { key: 'status', label: 'Status' },
+      ]
+    },
+    purchaseColumns() {
+      return [
+        { key: 'po_no', label: 'Nomor PO' },
+        { key: 'vendor_name', label: 'Vendor' },
+        { key: 'date', label: 'Tanggal' },
+        { key: 'total', label: 'Total', render: (item) => dashboardCurrency(item.total) },
+        { key: 'status', label: 'Status' },
+      ]
+    },
+    expenseColumns() {
+      return [
+        { key: 'name', label: 'Nama Biaya' },
+        { key: 'description', label: 'Deskripsi' },
+        { key: 'expense_type', label: 'Tipe' },
+        { key: 'date', label: 'Tanggal' },
+        { key: 'amount', label: 'Jumlah', render: (item) => dashboardCurrency(item.amount) },
+      ]
+    },
+    stockColumns() {
+      return [
+        { key: 'name', label: 'Barang' },
+        { key: 'total_stock', label: 'Stok Saat Ini' },
+        { key: 'min_stock', label: 'Minimum Stok' },
+        { key: 'satuan_name', label: 'Satuan' },
+      ]
+    },
   },
   data() {
     return {
@@ -252,16 +343,28 @@ export default {
 
       // New API shape: { labels: [...], values: [...] }
       if (Array.isArray(payload?.labels) && Array.isArray(payload?.values)) {
-        this.pieChartData.labels = payload.labels
-        this.pieChartData.datasets[0].data = payload.values
+        this.pieChartData = {
+          ...this.pieChartData,
+          labels: payload.labels,
+          datasets: this.pieChartData.datasets.map((dataset) => ({
+            ...dataset,
+            data: payload.values,
+          })),
+        }
         return
       }
 
       // Backward compatibility: { completed, pending }
       const completed = payload?.completed ?? 0
       const pending = payload?.pending ?? 0
-      this.pieChartData.labels = ['Completed', 'Pending']
-      this.pieChartData.datasets[0].data = [completed, pending]
+      this.pieChartData = {
+        ...this.pieChartData,
+        labels: ['Completed', 'Pending'],
+        datasets: this.pieChartData.datasets.map((dataset) => ({
+          ...dataset,
+          data: [completed, pending],
+        })),
+      }
     },
     async fetchSales() {
       const { data } = await api.get('dashboard/sales-monthly', {
@@ -269,8 +372,14 @@ export default {
       })
       const payload = data?.data ?? data ?? {}
       const normalized = this.normalizeMonthlyPayload(payload)
-      this.salesData.labels = normalized.labels
-      this.salesData.datasets[0].data = normalized.values
+      this.salesData = {
+        ...this.salesData,
+        labels: normalized.labels,
+        datasets: this.salesData.datasets.map((dataset) => ({
+          ...dataset,
+          data: normalized.values,
+        })),
+      }
     },
     async fetchPurchase() {
       const { data } = await api.get('dashboard/purchase-monthly', {
@@ -278,8 +387,14 @@ export default {
       })
       const payload = data?.data ?? data ?? {}
       const normalized = this.normalizeMonthlyPayload(payload)
-      this.purchasesData.labels = normalized.labels
-      this.purchasesData.datasets[0].data = normalized.values
+      this.purchasesData = {
+        ...this.purchasesData,
+        labels: normalized.labels,
+        datasets: this.purchasesData.datasets.map((dataset) => ({
+          ...dataset,
+          data: normalized.values,
+        })),
+      }
     },
     async fetchCombined() {
       const { data } = await api.get('dashboard/combined-monthly', {
@@ -308,13 +423,20 @@ export default {
         expenses = Array.isArray(payload.expenses) ? payload.expenses : []
       }
 
-      this.mixedChartData.labels = labels
-      this.mixedChartData.datasets[0].data = purchase
-      this.mixedChartData.datasets[1].data = expenses
-      this.mixedChartData.datasets[2].data = sales
+      this.mixedChartData = {
+        ...this.mixedChartData,
+        labels,
+        datasets: this.mixedChartData.datasets.map((dataset, index) => ({
+          ...dataset,
+          data: [purchase, expenses, sales][index],
+        })),
+      }
     },
     handleRefresh() {
       this.fetchAll()
+      for (const name of ['workorderLookup', 'purchaseLookup', 'expenseLookup', 'stockLookup']) {
+        this.$refs[name]?.refresh()
+      }
     },
   },
 }

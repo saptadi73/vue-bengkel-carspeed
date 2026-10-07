@@ -26,6 +26,8 @@
 
       <!-- Form Content -->
       <div class="px-8 py-8">
+        <!-- prettier-ignore -->
+        <fieldset :disabled="isWorkOrderLocked" class="m-0 min-w-0 border-0 p-0">
         <!-- Customer Information Section -->
         <div class="mb-8">
           <div class="flex items-center gap-2 mb-2">
@@ -202,8 +204,11 @@
             </div>
           </div>
         </div>
+        </fieldset>
 
         <form @submit.prevent="submitForm">
+          <!-- prettier-ignore -->
+          <fieldset :disabled="isWorkOrderLocked" class="m-0 min-w-0 border-0 p-0">
           <!-- Input Keluhan dan Saran -->
           <div class="mb-6 grid grid-cols-1 gap-6">
             <div class="relative">
@@ -1082,12 +1087,13 @@
               </button>
             </div>
           </div>
+          </fieldset>
 
           <!-- Submit Button -->
           <div class="flex justify-end gap-4">
             <button
               type="button"
-              :disabled="form.status === 'selesai' || form.status === 'dibayar'"
+              :disabled="isWorkOrderLocked"
               :class="[
                 'modern-btn-info flex items-center gap-2',
                 {
@@ -1113,8 +1119,7 @@
               @click="openPaymentModal"
               :disabled="form.status !== 'selesai' || isProcessingPayment"
               :class="{
-                'opacity-50 cursor-not-allowed':
-                  form.status !== 'selesai' || isProcessingPayment,
+                'opacity-50 cursor-not-allowed': form.status !== 'selesai' || isProcessingPayment,
               }"
             >
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1129,20 +1134,11 @@
             </button>
             <button
               type="button"
-              :disabled="
-                hasUnconfirmedChanges ||
-                initialStatus === 'selesai' ||
-                workOrderStatus === 'selesai' ||
-                workOrderStatus === 'dibayar'
-              "
+              :disabled="hasUnconfirmedChanges || isWorkOrderLocked"
               :class="[
                 'modern-btn-secondary flex items-center gap-2',
                 {
-                  'opacity-50 cursor-not-allowed':
-                    hasUnconfirmedChanges ||
-                    initialStatus === 'selesai' ||
-                    workOrderStatus === 'selesai' ||
-                    workOrderStatus === 'dibayar',
+                  'opacity-50 cursor-not-allowed': hasUnconfirmedChanges || isWorkOrderLocked,
                 },
               ]"
               @click="submitFormSelesai"
@@ -1159,22 +1155,12 @@
             </button>
             <button
               type="button"
-              :disabled="
-                hasUnconfirmedChanges ||
-                initialStatus === 'selesai' ||
-                workOrderStatus === 'selesai' ||
-                workOrderStatus === 'dibayar' ||
-                isOpeningCombinedPayment
-              "
+              :disabled="hasUnconfirmedChanges || isWorkOrderLocked || isOpeningCombinedPayment"
               :class="[
                 'modern-btn-payment flex items-center gap-2',
                 {
                   'opacity-50 cursor-not-allowed':
-                    hasUnconfirmedChanges ||
-                    initialStatus === 'selesai' ||
-                    workOrderStatus === 'selesai' ||
-                    workOrderStatus === 'dibayar' ||
-                    isOpeningCombinedPayment,
+                    hasUnconfirmedChanges || isWorkOrderLocked || isOpeningCombinedPayment,
                 },
               ]"
               @click="submitFormSelesaiDanBayar"
@@ -1191,20 +1177,11 @@
             </button>
             <button
               type="submit"
-              :disabled="
-                hasUnconfirmedChanges ||
-                initialStatus === 'selesai' ||
-                workOrderStatus === 'selesai' ||
-                workOrderStatus === 'dibayar'
-              "
+              :disabled="hasUnconfirmedChanges || isWorkOrderLocked"
               :class="[
                 'modern-btn-success flex items-center gap-2',
                 {
-                  'opacity-50 cursor-not-allowed':
-                    hasUnconfirmedChanges ||
-                    initialStatus === 'selesai' ||
-                    workOrderStatus === 'selesai' ||
-                    workOrderStatus === 'dibayar',
+                  'opacity-50 cursor-not-allowed': hasUnconfirmedChanges || isWorkOrderLocked,
                 },
               ]"
             >
@@ -1520,6 +1497,11 @@ export default {
       )
       return hasUnconfirmedProduct || hasUnconfirmedService
     },
+    isWorkOrderLocked() {
+      return [this.initialStatus, this.workOrderStatus].some((status) =>
+        ['selesai', 'dibayar'].includes(String(status || '').toLowerCase()),
+      )
+    },
     isCompleted() {
       // Consider completed only if status is selesai/dibayar AND payment is already lunas
       // This allows updating WO while payment status is not lunas
@@ -1727,7 +1709,11 @@ export default {
         this.form.dp_paid = this.dataWorkorder.dp_paid || false
         await this.checkPaymentStatus()
         await this.checkWorkOrderStatus()
-        if (this.$route.query.openPayment === '1' && this.form.status === 'selesai' && this.isAdmin) {
+        if (
+          this.$route.query.openPayment === '1' &&
+          this.form.status === 'selesai' &&
+          this.isAdmin
+        ) {
           this.openPaymentModal()
         }
         this.form.vehicle_id = this.dataWorkorder.vehicle_id
@@ -2075,7 +2061,7 @@ export default {
 
       this.isOpeningCombinedPayment = true
       try {
-        const workOrderSaved = await this.submitFormWithStatus('selesai')
+        const workOrderSaved = await this.submitFormWithStatus('selesai', false)
         if (workOrderSaved) {
           this.openPaymentModal(true)
         }
@@ -2083,7 +2069,7 @@ export default {
         this.isOpeningCombinedPayment = false
       }
     },
-    async submitFormWithStatus(targetStatus) {
+    async submitFormWithStatus(targetStatus, returnToList = true) {
       this.form.status = targetStatus
       // Tanggal masuk: set as Date object
       this.form.tanggal_masuk = new Date()
@@ -2136,7 +2122,10 @@ export default {
         console.log('Workorder id: ', this.form.workorder_id)
         this.initialStatus = this.form.status // Update initialStatus setelah submit berhasil
         this.workOrderUpdated = true // Set flag bahwa work order telah diupdate
-        this.getBookingData()
+        await this.getBookingData()
+        if (returnToList) {
+          await this.$router.push('/wo/all')
+        }
         return true
       } catch (error) {
         console.log('error: ', error)
