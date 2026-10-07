@@ -6,11 +6,11 @@
     <div class="flex items-center justify-between mb-8">
       <div class="text-left">
         <h1 class="text-3xl md:text-4xl font-bold text-green-500 mb-2 font-lexend">
-          Daftar Work Order
+          Daftar Work Order Open
         </h1>
         <p class="text-gray-600 text-lg">
-          Total Work Order: {{ filteredOrders.length }} | Progress: {{ progressCount }} | Selesai:
-          {{ completedCount }}
+          Total WO Open: {{ filteredOrders.length }} | Draft: {{ draftCount }} | Progress:
+          {{ progressCount }}
         </p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -27,18 +27,6 @@
             />
           </svg>
           Create New Work Order
-        </button>
-        <button
-          @click="$router.push('/finansial/purchase')"
-          class="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md"
-        >
-          Create Pembelian
-        </button>
-        <button
-          @click="$router.push('/finansial/biaya/input')"
-          class="flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md"
-        >
-          Create Pengeluaran
         </button>
       </div>
     </div>
@@ -87,10 +75,9 @@
             id="statusFilter"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
-            <option value="">Semua Status</option>
+            <option value="">Semua WO Open</option>
             <option value="draft">Draft</option>
             <option value="dikerjakan">Dikerjakan</option>
-            <option value="selesai">Selesai</option>
           </select>
         </div>
       </div>
@@ -126,9 +113,9 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg shadow-sm">
-        <h3 class="text-sm font-medium text-blue-800 mb-1">Total Work Order</h3>
+        <h3 class="text-sm font-medium text-blue-800 mb-1">Total WO Open</h3>
         <p class="text-2xl font-bold text-blue-600">{{ filteredOrders.length }}</p>
       </div>
       <div class="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-lg shadow-sm">
@@ -139,48 +126,10 @@
         <h3 class="text-sm font-medium text-orange-800 mb-1">Dalam Progress</h3>
         <p class="text-2xl font-bold text-orange-600">{{ progressCount }}</p>
       </div>
-      <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-lg shadow-sm">
-        <h3 class="text-sm font-medium text-green-800 mb-1">Selesai</h3>
-        <p class="text-2xl font-bold text-green-600">{{ completedCount }}</p>
-      </div>
       <div class="bg-purple-50 border-l-4 border-purple-500 p-6 rounded-lg shadow-sm">
         <h3 class="text-sm font-medium text-purple-800 mb-1">Teknisi Aktif</h3>
         <p class="text-2xl font-bold text-purple-600">{{ uniqueTechnicians }}</p>
       </div>
-    </div>
-
-    <!-- Low Stock Products -->
-    <div class="bg-white rounded-xl shadow-md p-4 mb-8">
-      <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-800">Barang yang Mau Habis (Min. Stok)</h2>
-        <a href="/inventory/list" class="text-sm text-blue-600 hover:underline">Lihat Semua Inventory</a>
-      </div>
-
-      <reusable-data-table
-        :items="lowStockProducts"
-        :columns="lowStockColumns"
-        :loading="lowStockLoading"
-        :error="lowStockError"
-        empty-text="Tidak ada barang yang masuk min stock."
-        search-placeholder="Cari produk..."
-        :search-fields="['name']"
-        :initial-items-per-page="5"
-      >
-        <template #cell-status>
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700">
-            Segera Beli
-          </span>
-        </template>
-
-        <template #cell-actions="{ item }">
-          <button
-            @click="createPOFromProduct(item)"
-            class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Buat Pembelian
-          </button>
-        </template>
-      </reusable-data-table>
     </div>
 
     <!-- Desktop Table View -->
@@ -543,9 +492,7 @@
                 d="M12 8c-2 0-3.5 1.5-3.5 3.5S10 15 12 15s3.5-1.5 3.5-3.5S14 8 12 8z M12 3v2m0 14v2m9-9h-2M5 12H3m13.657-6.343-1.414 1.414M6.757 17.243l-1.414 1.414m12.728 0-1.414-1.414M6.757 6.757 5.343 5.343"
               />
             </svg>
-            <span class="text-sm"
-              ><strong>Metode:</strong> {{ getPaymentMethodLabel(order) }}</span
-            >
+            <span class="text-sm"><strong>Metode:</strong> {{ getPaymentMethodLabel(order) }}</span>
           </div>
         </div>
 
@@ -722,15 +669,14 @@ import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import SelectCustomerVehicleModal from '@/components/SelectCustomerVehicleModal.vue'
-import ReusableDataTable from '@/components/ReusableDataTable.vue'
 import axios from 'axios'
 import { BASE_URL, BASE_URL2 } from '../base.utils.url'
 import api from '@/user/axios'
-import { normalizeInventoryItem } from '@/utils/inventory'
+import { isOpenWorkOrder } from '@/utils/workorders'
 
 export default {
   name: 'TableWorkOrderAll',
-  components: { LoadingOverlay, ToastCard, SelectCustomerVehicleModal, ReusableDataTable },
+  components: { LoadingOverlay, ToastCard, SelectCustomerVehicleModal },
   setup() {
     const loadingStore = useLoadingStore()
     const show_toast = ref(false)
@@ -748,29 +694,17 @@ export default {
       confirmAction: '',
       selectedOrder: null,
       workOrders: [],
-      lowStockProducts: [],
-      lowStockLoading: false,
-      lowStockError: '',
       currentPage: 1,
       itemsPerPage: 10,
       showSelectCustomerModal: false,
     }
   },
   computed: {
-    lowStockColumns() {
-      return [
-        { key: 'name', label: 'Produk' },
-        { key: 'total_stock', label: 'Stok' },
-        { key: 'min_stock', label: 'Min Stok' },
-        { key: 'status', label: 'Keterangan' },
-        { key: 'actions', label: 'Aksi', tdClass: 'text-right' },
-      ]
-    },
     isAdmin() {
       return (localStorage.getItem('role') || 'guest').toLowerCase() === 'admin'
     },
     filteredOrders() {
-      let filtered = this.workOrders
+      let filtered = this.workOrders.filter(isOpenWorkOrder)
 
       // Filter by search query
       if (this.searchQuery.trim()) {
@@ -796,7 +730,9 @@ export default {
 
       // Filter by status
       if (this.statusFilter) {
-        filtered = filtered.filter((order) => order.status === this.statusFilter)
+        filtered = filtered.filter(
+          (order) => String(order.status).trim().toLowerCase() === this.statusFilter,
+        )
       }
 
       return filtered
@@ -826,23 +762,24 @@ export default {
       return pages
     },
     progressCount() {
-      return this.workOrders.filter((order) => order.status === 'dikerjakan').length
+      return this.filteredOrders.filter(
+        (order) => String(order.status).trim().toLowerCase() === 'dikerjakan',
+      ).length
     },
     draftCount() {
-      return this.workOrders.filter((order) => order.status === 'draft').length
-    },
-    completedCount() {
-      return this.workOrders.filter((order) => order.status === 'selesai').length
+      return this.filteredOrders.filter(
+        (order) => String(order.status).trim().toLowerCase() === 'draft',
+      ).length
     },
     uniqueTechnicians() {
-      const technicians = new Set(this.workOrders.map((order) => order.karyawan_name))
+      const technicians = new Set(
+        this.filteredOrders.map((order) => order.karyawan_name).filter(Boolean),
+      )
       return technicians.size
     },
   },
   created() {
-    this.setToday()
     this.fetchWorkOrders()
-    this.fetchLowStockProducts()
   },
   watch: {
     searchQuery() {
@@ -897,7 +834,11 @@ export default {
         order.vehicle?.no_pol,
         order.vehicle?.nopol,
       ]
-      return values.some((value) => String(value ?? '').toLocaleLowerCase('id-ID').includes(query))
+      return values.some((value) =>
+        String(value ?? '')
+          .toLocaleLowerCase('id-ID')
+          .includes(query),
+      )
     },
     validateDateRange() {
       if (this.startDate && this.endDate) {
@@ -919,47 +860,6 @@ export default {
       } finally {
         this.loadingStore.hide()
       }
-    },
-    async fetchLowStockProducts() {
-      this.lowStockLoading = true
-      this.lowStockError = ''
-
-      try {
-        const response = await api.get(`${BASE_URL}products/inventory/all`, {
-          params: { stock_status: 'reorder', limit: 20 },
-        })
-        const payload = Array.isArray(response.data)
-          ? response.data
-          : response.data?.data
-            ? response.data
-            : { data: [] }
-        const items = Array.isArray(payload) ? payload : payload.data || []
-        const parsed = items
-          .map((item) => normalizeInventoryItem(item))
-          .filter((item) => Number(item.total_stock || 0) <= Number(item.min_stock || 0))
-        this.lowStockProducts = parsed.sort((a, b) => (a.total_stock || 0) - (b.total_stock || 0))
-      } catch (error) {
-        console.error('Error fetching low stock products:', error)
-        this.lowStockProducts = []
-        this.lowStockError = 'Gagal memuat data barang yang mau habis.'
-      } finally {
-        this.lowStockLoading = false
-      }
-    },
-    createPOFromProduct(product) {
-      const normalizedProduct = normalizeInventoryItem(product)
-      const initialProduct = {
-        product_id: normalizedProduct.id || '',
-        product_name: normalizedProduct.name || '',
-        product_name_safe: normalizedProduct.name || '',
-        min_stock: Number(normalizedProduct.min_stock || 0),
-        total_stock: Number(normalizedProduct.total_stock || 0),
-        purchase_price:
-          normalizedProduct.purchase_price == null ? Number(normalizedProduct.hpp || 0) : normalizedProduct.purchase_price,
-      }
-
-      localStorage.setItem('prefillPurchaseFromDashboard', JSON.stringify(initialProduct))
-      this.$router.push('/finansial/purchase')
     },
     formatDate(dateString) {
       if (!dateString) return '-'

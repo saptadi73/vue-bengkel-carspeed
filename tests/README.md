@@ -34,9 +34,18 @@ kurang dari atau sama dengan minimum stok. Tekan Cari atau Enter untuk
 mencari; hasil dari seluruh tanggal ditampilkan lima per halaman.
 Tautan Buka menuju detail/edit transaksi. Tombol Refresh juga memuat
 ulang hasil aktif dan stok menipis.
+Tombol Create Pembelian dan Create Pengeluaran (Biaya) tersedia di dashboard,
+bukan di daftar WO.
+
+Daftar `/wo/all` hanya menampilkan WO open (draft dan dikerjakan).
+WO selesai tidak ditampilkan meskipun belum lunas. Saat halaman dibuka,
+semua tanggal ditampilkan agar WO lama yang masih open tidak terlewat.
+Filter tanggal dan tombol Hari ini tetap tersedia. Ringkasan mengikuti
+hasil filter WO open. Stok menipis hanya ditampilkan di dashboard.
 
 ```powershell
 node --test tests\dashboard.test.mjs
+node --test tests\workorders.test.mjs
 npx.cmd eslint src\components\DashboardLookup.vue src\pages\DashboardBengkel.vue src\utils\dashboard.js tests\dashboard.test.mjs
 ..\fastapi-bengkel\venv\Scripts\python.exe -m pytest ..\fastapi-bengkel\tests\test_dashboard_search.py -q
 ```

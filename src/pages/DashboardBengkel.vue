@@ -29,6 +29,21 @@
       <div class="text-sm text-gray-500" v-else-if="loading">Memuat data dashboard...</div>
     </div>
 
+    <div class="flex flex-wrap justify-end gap-3">
+      <router-link
+        to="/finansial/purchase"
+        class="px-5 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-md"
+      >
+        Create Pembelian
+      </router-link>
+      <router-link
+        to="/finansial/biaya/input"
+        class="px-5 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md"
+      >
+        Create Pengeluaran (Biaya)
+      </router-link>
+    </div>
+
     <!-- Summary Section -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       <div
