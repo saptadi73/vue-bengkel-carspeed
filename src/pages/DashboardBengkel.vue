@@ -36,6 +36,13 @@
       >
         Create Pembelian
       </router-link>
+      <button
+        type="button"
+        @click="showSelectCustomerModal = true"
+        class="px-5 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-green-700 shadow-md transition-all"
+      >
+        Create New Work Order
+      </button>
       <router-link
         to="/finansial/biaya/input"
         class="px-5 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-md"
@@ -153,6 +160,13 @@
         <mixed-chart :data="mixedChartData" />
       </div>
     </div>
+
+    <select-customer-vehicle-modal
+      :isOpen="showSelectCustomerModal"
+      create-customer-route="/pelanggan/baru?returnTo=wo-all"
+      @close="showSelectCustomerModal = false"
+      @selected="handleSelectCustomerVehicle"
+    />
   </div>
 </template>
 
@@ -173,6 +187,7 @@ import {
 } from 'chart.js'
 import api from '@/user/axios'
 import DashboardLookup from '@/components/DashboardLookup.vue'
+import SelectCustomerVehicleModal from '@/components/SelectCustomerVehicleModal.vue'
 import { dashboardCurrency } from '@/utils/dashboard'
 
 ChartJS.register(
@@ -192,6 +207,7 @@ export default {
   name: 'DashboardBengkel',
   components: {
     DashboardLookup,
+    SelectCustomerVehicleModal,
     PieChart: Pie,
     LineChart: Line,
     MixedChart: Bar,
@@ -238,6 +254,7 @@ export default {
       months: 6,
       loading: false,
       errorMessage: '',
+      showSelectCustomerModal: false,
       totalWorkOrders: 0,
       completedWorkOrders: 0,
       pendingWorkOrders: 0,
@@ -452,6 +469,26 @@ export default {
       for (const name of ['workorderLookup', 'purchaseLookup', 'expenseLookup', 'stockLookup']) {
         this.$refs[name]?.refresh()
       }
+    },
+    handleSelectCustomerVehicle(vehicle) {
+      const vehicleData = {
+        vehicle_id: vehicle.id,
+        customer_id: vehicle.customer.id,
+        nama: vehicle.customer.nama,
+        hp: vehicle.customer.hp,
+        email: vehicle.customer.email,
+        alamat: vehicle.customer.alamat,
+        no_pol: vehicle.no_pol,
+        brand: vehicle.brand_name,
+        type: vehicle.type,
+        model: vehicle.model,
+        warna: vehicle.warna,
+        tahun: vehicle.tahun,
+        kapasitas: vehicle.kapasitas,
+      }
+
+      localStorage.setItem('newWorkOrderCustomerVehicle', JSON.stringify(vehicleData))
+      this.$router.push(`/wo/new/form/${vehicle.id}`)
     },
   },
 }

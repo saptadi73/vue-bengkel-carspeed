@@ -18,29 +18,7 @@
             required
           />
         </div>
-        <div>
-          <label for="expense_type" class="block text-sm font-medium text-gray-700"
-            >Jenis Pengeluaran</label
-          >
-          <select
-            v-model="form.expense_type"
-            id="expense_type"
-            class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          >
-            <option value="">Pilih Jenis Pengeluaran</option>
-            <option value="listrik">Listrik</option>
-            <option value="gaji">Gaji</option>
-            <option value="air">Air</option>
-            <option value="internet">Internet</option>
-            <option value="transportasi">Transportasi</option>
-            <option value="komunikasi">Komunikasi</option>
-            <option value="konsumsi">Konsumsi</option>
-            <option value="entertaint">Entertaint</option>
-            <option value="umum">Umum</option>
-            <option value="lain_lain">Lain-lain</option>
-          </select>
-        </div>
+        <expense-type-select v-model="form.expense_type" id="expense_type" />
         <div>
           <label for="amount" class="block text-sm font-medium text-gray-700">Jumlah</label>
           <input
@@ -177,13 +155,15 @@ import { useLoadingStore } from '@/stores/loading'
 import LoadingOverlay from '@/components/LoadingOverlay.vue'
 import ToastCard from '@/components/ToastCard.vue'
 import PaymentModal from '@/components/PaymentModal.vue'
+import ExpenseTypeSelect from '@/components/ExpenseTypeSelect.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL } from '../base.utils.url'
+import { resolveExpenseAccountCode } from '@/utils/expenses'
 
 export default {
   name: 'ExpensesInputForm',
-  components: { LoadingOverlay, ToastCard, PaymentModal },
+  components: { LoadingOverlay, ToastCard, PaymentModal, ExpenseTypeSelect },
   data() {
     return {
       showModal: false,
@@ -356,19 +336,7 @@ export default {
     },
     async handlePaymentSubmit(paymentData) {
       console.log('PaymentData :', paymentData)
-      const expenseTypeToCode = {
-        umum: '6010',
-        lain_lain: '6010',
-        listrik: '6011',
-        gaji: '6012',
-        air: '6013',
-        internet: '6014',
-        transportasi: '6015',
-        komunikasi: '6016',
-        konsumsi: '6017',
-        entertaint: '6018',
-      }
-      const expense_code = expenseTypeToCode[this.form.expense_type] || '6010'
+      let expense_code = resolveExpenseAccountCode(this.form.expense_type)
       const form = {
         date: paymentData.date,
         memo: paymentData.description,
@@ -382,6 +350,20 @@ export default {
       try {
         this.isProcessingCombinedJournal = this.pendingCombinedJournal
         this.loadingStore.show()
+        if (!expense_code) {
+          const accountsResponse = await api.get(`${BASE_URL}accounting/account/all`)
+          expense_code = resolveExpenseAccountCode(
+            this.form.expense_type,
+            accountsResponse.data?.data || [],
+          )
+        }
+        if (!expense_code) {
+          throw new Error(
+            `Akun biaya untuk jenis "${this.form.expense_type}" tidak ditemukan. Buat akun biaya dengan nama yang sama.`,
+          )
+        }
+        form.expense_code = expense_code
+
         let response
         if (this.pendingCombinedJournal) {
           const expenseJournalForm = {
@@ -403,6 +385,7 @@ export default {
         console.error('Error processing payment:', error)
         this.message_toast =
           error.response?.data?.message ||
+          error.message ||
           (this.pendingCombinedJournal
             ? 'Gagal mencatat jurnal hutang dan pembayaran'
             : 'Gagal memproses pembayaran')

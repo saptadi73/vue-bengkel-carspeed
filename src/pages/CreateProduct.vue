@@ -77,6 +77,21 @@
           />
         </div>
       </div>
+      <div class="info-card">
+        <div class="relative">
+          <label for="stock" class="modern-label-label">Stok Awal</label>
+          <input
+            v-model.number="form.stock"
+            type="number"
+            id="stock"
+            min="0"
+            step="1"
+            required
+            class="modern-input peer"
+            placeholder="1"
+          />
+        </div>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-3 bg-blue-100 p-3 rounded-md shadow-lg">
@@ -417,6 +432,7 @@ export default {
         satuan_id: '',
         description: '',
         min_stock: '',
+        stock: 1,
         price: '',
         cost: '',
         // New consignment fields
@@ -641,6 +657,13 @@ export default {
       }
     },
     async submitForm() {
+      const initialStock = Number(this.form.stock)
+      if (this.form.stock === '' || !Number.isInteger(initialStock) || initialStock < 0) {
+        this.show_toast = true
+        this.message_toast = 'Stok awal harus berupa bilangan bulat minimal 0.'
+        return
+      }
+
       try {
         this.loadingStore.show()
         // Build payload to match backend expectations
@@ -651,6 +674,7 @@ export default {
           price: this.form.price,
           cost: this.form.cost || null,
           min_stock: this.form.min_stock,
+          stock: initialStock,
           brand_id: this.form.brand_id,
           satuan_id: this.form.satuan_id,
           category_id: this.form.category_id,

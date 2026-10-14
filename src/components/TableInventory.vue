@@ -449,6 +449,20 @@
             />
           </div>
 
+          <!-- Initial Stock -->
+          <div v-if="!isEditing">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Stok Awal</label>
+            <input
+              v-model.number="formData.stock"
+              type="number"
+              min="0"
+              step="1"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="1"
+            />
+          </div>
+
           <!-- Description -->
           <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Keterangan</label>
@@ -577,6 +591,7 @@ export default {
         price: 0,
         cost: 0,
         min_stock: 0,
+        stock: 1,
         description: '',
       },
     }
@@ -679,7 +694,12 @@ export default {
       if (typeof data?.detail === 'string') return data.detail
       if (typeof data?.message === 'string') return data.message
       if (Array.isArray(data?.detail)) {
-        return data.detail.map((item) => item.msg).filter(Boolean).join(', ') || fallback
+        return (
+          data.detail
+            .map((item) => item.msg)
+            .filter(Boolean)
+            .join(', ') || fallback
+        )
       }
       return fallback
     },
@@ -703,6 +723,7 @@ export default {
         price: 0,
         cost: 0,
         min_stock: 0,
+        stock: 1,
         description: '',
       }
       this.showFormModal = true
@@ -741,6 +762,16 @@ export default {
         return
       }
 
+      const initialStock = Number(this.formData.stock)
+      if (
+        !this.isEditing &&
+        (this.formData.stock === '' || !Number.isInteger(initialStock) || initialStock < 0)
+      ) {
+        this.show_toast = true
+        this.message_toast = 'Stok awal harus berupa bilangan bulat minimal 0.'
+        return
+      }
+
       try {
         this.isSaving = true
         this.loadingStore.show()
@@ -763,7 +794,10 @@ export default {
           this.message_toast = 'Produk berhasil diupdate'
         } else {
           // Create new product
-          await api.post(`${BASE_URL}products/create/new`, payload)
+          await api.post(`${BASE_URL}products/create/new`, {
+            ...payload,
+            stock: initialStock,
+          })
           this.show_toast = true
           this.message_toast = 'Produk berhasil ditambahkan'
         }

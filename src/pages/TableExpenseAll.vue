@@ -53,16 +53,9 @@
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           >
             <option value="">Semua Tipe</option>
-            <option value="listrik">Listrik</option>
-            <option value="gaji">Gaji</option>
-            <option value="air">Air</option>
-            <option value="internet">Internet</option>
-            <option value="transportasi">Transportasi</option>
-            <option value="komunikasi">Komunikasi</option>
-            <option value="konsumsi">Konsumsi</option>
-            <option value="entertaint">Entertaint</option>
-            <option value="umum">Umum</option>
-            <option value="lain_lain">Lain-lain</option>
+            <option v-for="type in availableExpenseTypes" :key="type" :value="type">
+              {{ type }}
+            </option>
           </select>
         </div>
 
@@ -440,6 +433,7 @@ import PaymentModal from '@/components/PaymentModal.vue'
 import axios from 'axios'
 import api from '@/user/axios'
 import { BASE_URL } from '../base.utils.url'
+import { resolveExpenseAccountCode } from '@/utils/expenses'
 
 export default {
   name: 'TableExpenseAll',
@@ -466,6 +460,9 @@ export default {
     }
   },
   computed: {
+    availableExpenseTypes() {
+      return [...new Set(this.expenses.map((expense) => expense.expense_type).filter(Boolean))]
+    },
     filteredExpenses() {
       let filtered = this.expenses
 
@@ -625,19 +622,7 @@ export default {
     },
     async handlePaymentSubmit(paymentData) {
       console.log('PaymentData :', paymentData)
-      const expenseTypeToCode = {
-        umum: '6010',
-        lain_lain: '6010',
-        listrik: '6011',
-        gaji: '6012',
-        air: '6013',
-        internet: '6014',
-        transportasi: '6015',
-        komunikasi: '6016',
-        konsumsi: '6017',
-        entertaint: '6018',
-      }
-      const expense_code = expenseTypeToCode[this.selectedExpenseForPayment.expense_type] || '6010'
+      let expense_code = resolveExpenseAccountCode(this.selectedExpenseForPayment.expense_type)
       const form = {
         date: paymentData.date,
         memo: paymentData.description,
@@ -650,13 +635,28 @@ export default {
       console.log('Form :', form)
       try {
         this.loadingStore.show()
+        if (!expense_code) {
+          const accountsResponse = await api.get(`${BASE_URL}accounting/account/all`)
+          expense_code = resolveExpenseAccountCode(
+            this.selectedExpenseForPayment.expense_type,
+            accountsResponse.data?.data || [],
+          )
+        }
+        if (!expense_code) {
+          throw new Error(
+            `Akun biaya untuk jenis "${this.selectedExpenseForPayment.expense_type}" tidak ditemukan. Buat akun biaya dengan nama yang sama.`,
+          )
+        }
+        form.expense_code = expense_code
+
         const response = await api.post(`${BASE_URL}accounting/expense-payment-journal`, form)
         this.message_toast = response.data.message || 'Pembayaran Expense berhasil!'
         this.show_toast = true
         this.fetchExpenses() // Refresh data
       } catch (error) {
         console.error('Error processing payment:', error)
-        this.message_toast = 'Gagal memproses pembayaran'
+        this.message_toast =
+          error.response?.data?.message || error.message || 'Gagal memproses pembayaran'
         this.show_toast = true
       } finally {
         this.loadingStore.hide()

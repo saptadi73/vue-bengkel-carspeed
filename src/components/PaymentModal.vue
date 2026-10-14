@@ -75,6 +75,7 @@
             <label class="block text-sm font-semibold text-gray-700 mb-2">Bank Code</label>
             <select
               v-model="form.bankCode"
+              :disabled="isCashPayment"
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               required
             >
@@ -83,6 +84,10 @@
                 {{ bank.name }}
               </option>
             </select>
+            <p v-if="isCashPayment && !cashBankCode" class="mt-1 text-sm text-red-600">
+              Bank Code untuk pembayaran tunai tidak tersedia. Periksa data Kas/Bank terlebih
+              dahulu.
+            </p>
           </div>
           <div class="mb-4">
             <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Payment</label>
@@ -134,7 +139,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import axios from 'axios'
 import { BASE_URL } from '@/base.utils.url'
 
@@ -164,7 +169,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submit'])
 
 const bankCodes = ref(['Kas Kecil', 'Bank BCA', 'Bank Mandiri', 'Petty Cash'])
-
 const form = reactive({
   amount: 0,
   bankCode: '',
@@ -174,6 +178,25 @@ const form = reactive({
   paymentMethod: '',
   createdBy: '',
   paymentNo: '',
+})
+
+const isCashPayment = computed(() => form.paymentMethod === 'tunai')
+const cashBankCode = computed(() => {
+  const cashierCashAccount = bankCodes.value.find(
+    (bank) =>
+      String(bank.code || '')
+        .trim()
+        .toUpperCase() === 'CASHIER_CASH' ||
+      String(bank.type || '')
+        .trim()
+        .toLowerCase() === 'cashier_cash',
+  )
+  if (cashierCashAccount) return cashierCashAccount.code
+
+  const cashAccount = bankCodes.value.find((bank) =>
+    /tunai|cash|kas kasir/i.test(`${bank.code || ''} ${bank.name || ''}`),
+  )
+  return cashAccount?.code || ''
 })
 
 const paymentMethodLabels = {
@@ -211,8 +234,16 @@ watch(
       const methodLabel = paymentMethodLabels[newVal] || newVal
       form.description = `${props.expenseName} - ${props.expenseType} - ${methodLabel}`
     }
+
+    form.bankCode = newVal === 'tunai' ? cashBankCode.value : ''
   },
 )
+
+watch(cashBankCode, (newCode) => {
+  if (form.paymentMethod === 'tunai') {
+    form.bankCode = newCode
+  }
+})
 
 const formatNumber = (value) => {
   if (!value) return ''
@@ -234,6 +265,10 @@ const closeModal = () => {
 }
 
 const handleSubmit = () => {
+  if (form.paymentMethod === 'tunai' && !cashBankCode.value) {
+    alert('Bank Code untuk pembayaran tunai tidak tersedia. Periksa data Kas/Bank terlebih dahulu.')
+    return
+  }
   if (!form.amount || !form.paymentMethod || !form.bankCode || !form.date) {
     alert('Amount, Metode Pembayaran, Bank Code, dan Tanggal wajib diisi!')
     return
@@ -254,7 +289,8 @@ async function getBankCodes() {
     const kodeBank = await axios.get(`${BASE_URL}accounting/bankcodes`)
     bankCodes.value = kodeBank.data.data
   } catch (error) {
-    console.log('Error: ', error)
+    console.error('Error fetching bank codes:', error)
+    alert('Gagal memuat Bank Code. Silakan coba lagi.')
   }
 }
 </script>
