@@ -1460,7 +1460,7 @@ export default {
     addProductOrder() {
       this.form.product_ordered.push({
         product_id: '',
-        quantity: 0,
+        quantity: 1,
         satuan_id: '',
         price: 0,
         discount: 0,
@@ -1477,7 +1477,7 @@ export default {
     addServiceOrder() {
       this.form.service_ordered.push({
         service_id: '',
-        quantity: 0,
+        quantity: 1,
         price: 0,
         discount: 0,
         subtotal: 0,
