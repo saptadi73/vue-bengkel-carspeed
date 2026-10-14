@@ -227,7 +227,7 @@
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700">Biaya</label>
+              <label class="block text-sm font-medium text-gray-700">HPP</label>
               <input
                 v-model.number="newProduct.cost"
                 type="number"

@@ -911,7 +911,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"
-            >Biaya
+            >HPP
             <span class="text-xs font-semibold font-lexend text-gray-500"
               >(sebaiknya dibiarkan tetap 0 karena biaya jasa akan dikreditkan menjadi minus di
               laporan biaya. Jarang dibutuhkan kecuali perhitungan Profit Jasa secara
